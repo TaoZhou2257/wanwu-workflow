@@ -9,8 +9,8 @@
   "maintainers": [],
   "sideEffects": false,
   "scripts": {
-    "build": "IS_OPEN_SOURCE=true rsbuild build",
-    "dev": "IS_OPEN_SOURCE=true CUSTOM_VERSION=release rsbuild dev",
+    "build": "rsbuild build",
+    "dev": "rsbuild dev",
     "lint": "eslint ./ --cache --quiet",
     "preview": "rsbuild preview",
     "test": "vitest --run --passWithNoTests",
