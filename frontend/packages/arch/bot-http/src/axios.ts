@@ -136,6 +136,12 @@ axiosInstance.interceptors.request.use(config => {
     }
     return config.headers[key];
   };
+
+  const vuex = JSON.parse(localStorage.getItem("access_cert")) || {}
+  const {token, userInfo = {}} = vuex.user || {}
+  setHeader('Authorization', "Bearer " + token);
+  setHeader('x-user-id', userInfo.uid);
+  setHeader('x-org-id', userInfo.orgId);
   setHeader('x-requested-with', 'XMLHttpRequest');
   if (
     ['post', 'get'].includes(config.method?.toLowerCase() ?? '') &&
