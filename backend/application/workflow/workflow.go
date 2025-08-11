@@ -29,14 +29,14 @@ import (
 
 	"github.com/cloudwego/eino/schema"
 
+	"github.com/coze-dev/coze-studio/backend/api/model/app/bot_common"
 	model "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/knowledge"
 	pluginmodel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/plugin"
-	"github.com/coze-dev/coze-studio/backend/api/model/ocean/cloud/bot_common"
-	"github.com/coze-dev/coze-studio/backend/api/model/ocean/cloud/playground"
-	pluginAPI "github.com/coze-dev/coze-studio/backend/api/model/ocean/cloud/plugin_develop"
-	"github.com/coze-dev/coze-studio/backend/api/model/ocean/cloud/workflow"
-	common "github.com/coze-dev/coze-studio/backend/api/model/plugin_develop_common"
-	"github.com/coze-dev/coze-studio/backend/api/model/table"
+	"github.com/coze-dev/coze-studio/backend/api/model/data/database/table"
+	"github.com/coze-dev/coze-studio/backend/api/model/playground"
+	pluginAPI "github.com/coze-dev/coze-studio/backend/api/model/plugin_develop"
+	common "github.com/coze-dev/coze-studio/backend/api/model/plugin_develop/common"
+	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	appknowledge "github.com/coze-dev/coze-studio/backend/application/knowledge"
 	appmemory "github.com/coze-dev/coze-studio/backend/application/memory"
@@ -1379,7 +1379,9 @@ func (w *ApplicationService) OpenAPIStreamRun(ctx context.Context, req *workflow
 	}
 
 	var appID, agentID *int64
-	if req.IsSetProjectID() {
+	if req.IsSetAppID() {
+		appID = ptr.Of(mustParseInt64(req.GetAppID()))
+	} else if req.IsSetProjectID() {
 		appID = ptr.Of(mustParseInt64(req.GetProjectID()))
 	}
 	if req.IsSetBotID() {
@@ -1526,7 +1528,9 @@ func (w *ApplicationService) OpenAPIRun(ctx context.Context, req *workflow.OpenA
 	}
 
 	var appID, agentID *int64
-	if req.IsSetProjectID() {
+	if req.IsSetAppID() {
+		appID = ptr.Of(mustParseInt64(req.GetAppID()))
+	} else if req.IsSetProjectID() {
 		appID = ptr.Of(mustParseInt64(req.GetProjectID()))
 	}
 	if req.IsSetBotID() {
@@ -2504,12 +2508,6 @@ func (w *ApplicationService) GetApiDetail(ctx context.Context, req *workflow.Get
 	outputVars, err := slices.TransformWithErrorCheck(toolInfo.Outputs, toVariable)
 	if err != nil {
 		return nil, err
-	}
-
-	for _, v := range outputVars {
-		if err := crossplugin.GetPluginService().UnwrapArrayItemFieldsInVariable(v); err != nil {
-			return nil, err
-		}
 	}
 
 	toolDetailInfo := &vo.ToolDetailInfo{
@@ -3520,8 +3518,14 @@ func toVariable(p *workflow.APIParameter) (*vo.Variable, error) {
 		v.Type = vo.VariableTypeBoolean
 	case workflow.ParameterType_Array:
 		v.Type = vo.VariableTypeList
-		if len(p.SubParameters) > 0 {
-			subVs := make([]*vo.Variable, 0)
+		if len(p.SubParameters) == 1 {
+			av, err := toVariable(p.SubParameters[0])
+			if err != nil {
+				return nil, err
+			}
+			v.Schema = &av
+		} else if len(p.SubParameters) > 1 {
+			subVs := make([]any, 0)
 			for _, ap := range p.SubParameters {
 				av, err := toVariable(ap)
 				if err != nil {
@@ -3534,7 +3538,6 @@ func toVariable(p *workflow.APIParameter) (*vo.Variable, error) {
 				Schema: subVs,
 			}
 		}
-
 	case workflow.ParameterType_Object:
 		v.Type = vo.VariableTypeObject
 		vs := make([]*vo.Variable, 0)

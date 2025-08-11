@@ -33,9 +33,9 @@ import (
 
 	"github.com/coze-dev/coze-studio/backend/infra/contract/cache"
 
+	"github.com/coze-dev/coze-studio/backend/api/model/app/bot_common"
 	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/database"
-	"github.com/coze-dev/coze-studio/backend/api/model/ocean/cloud/bot_common"
-	"github.com/coze-dev/coze-studio/backend/api/model/table"
+	"github.com/coze-dev/coze-studio/backend/api/model/data/database/table"
 	"github.com/coze-dev/coze-studio/backend/crossdomain/contract/crossvariables"
 	entity2 "github.com/coze-dev/coze-studio/backend/domain/memory/database/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/memory/database/internal/convertor"
@@ -1075,7 +1075,16 @@ func (d databaseService) executeCustomSQL(ctx context.Context, req *ExecuteSQLRe
 	if err != nil {
 		return nil, fmt.Errorf("parse sql failed: %v", err)
 	}
-
+	// add rw mode
+	if tableInfo.RwMode == table.BotTableRWMode_LimitedReadWrite && len(req.UserID) != 0 {
+		switch operation {
+		case sqlparsercontract.OperationTypeSelect, sqlparsercontract.OperationTypeUpdate, sqlparsercontract.OperationTypeDelete:
+			parsedSQL, err = sqlparser.NewSQLParser().AppendSQLFilter(parsedSQL, sqlparsercontract.SQLFilterOpAnd, fmt.Sprintf("%s = '%s'", database.DefaultUidColName, req.UserID))
+			if err != nil {
+				return nil, fmt.Errorf("append sql filter failed: %v", err)
+			}
+		}
+	}
 	insertResult := make([]map[string]interface{}, 0)
 	if operation == sqlparsercontract.OperationTypeInsert {
 		cid := consts.CozeConnectorID

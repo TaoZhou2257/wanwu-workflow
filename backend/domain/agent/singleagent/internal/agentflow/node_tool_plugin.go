@@ -25,8 +25,8 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/agent/singleagent/entity"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 
+	"github.com/coze-dev/coze-studio/backend/api/model/app/bot_common"
 	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/plugin"
-	"github.com/coze-dev/coze-studio/backend/api/model/ocean/cloud/bot_common"
 	"github.com/coze-dev/coze-studio/backend/crossdomain/contract/crossplugin"
 	pluginEntity "github.com/coze-dev/coze-studio/backend/domain/plugin/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/plugin/service"
@@ -121,6 +121,7 @@ func (p *pluginInvokableTool) InvokableRun(ctx context.Context, argumentsInJSON 
 	}
 
 	opts := []pluginEntity.ExecuteToolOpt{
+		plugin.WithInvalidRespProcessStrategy(plugin.InvalidResponseProcessStrategyOfReturnDefault),
 		plugin.WithToolVersion(p.toolInfo.GetVersion()),
 		plugin.WithProjectInfo(p.projectInfo),
 	}
