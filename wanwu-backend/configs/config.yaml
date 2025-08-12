@@ -1,0 +1,68 @@
+server:
+  http_endpoint: :8999
+  max_req_body_size: 209715200 # 1024 * 1024 * 200 = 200M
+
+log:
+  std: true
+  level: debug
+  logs:
+    - enable: true
+      filename: log/workflow-info.log
+      level: info
+      max_size: 10
+      max_backups: 10
+      max_age: 30
+    - enable: true
+      filename: log/workflow-err.log
+      level: error
+      max_size: 10
+      max_backups: 10
+      max_age: 30
+
+db:
+  name: mysql # mysql | postgres | tidb | oceanbase
+  mysql:
+    address: localhost:3306
+    user: root
+    password: Wanwu123456
+    database: workflow_service
+    max_open_conns: 16
+    max_idle_conns: 16
+    log_mode: true
+  postgres:
+    address: localhost:5432
+    user: postgres
+    password: Wanwu123456
+    database: workflow_service
+    max_open_conns: 16
+    max_idle_conns: 16
+    log_mode: true
+  tidb:
+    address: localhost:4000
+    user: root
+    password: Wanwu123456
+    database: workflow_service
+    max_open_conns: 16
+    max_idle_conns: 16
+    log_mode: true
+  oceanbase:
+    address: localhost:2881
+    user: root
+    password: Wanwu123456
+    database: workflow_service
+    max_open_conns: 16
+    max_idle_conns: 16
+    log_mode: true
+
+redis:
+  host: localhost
+  port: 6379
+  username:
+  password: Wanwu123456
+  standalone: true
+  master_name: mymaster
+
+minio:
+  endpoint: localhost:9000
+  user: root
+  password: Wanwu123456

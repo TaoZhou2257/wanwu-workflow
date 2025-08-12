@@ -1,0 +1,5 @@
+{"level":"FATAL","ts":"2025-08-06T18:19:43.771+0800","caller":"cmd/main.go:55","msg":"init db err: dial tcp 127.0.0.1:3306: connect: connection refused"}
+{"level":"FATAL","ts":"2025-08-06T18:21:42.868+0800","caller":"cmd/main.go:55","msg":"init db err: dial tcp 127.0.0.1:3306: connect: connection refused"}
+{"level":"FATAL","ts":"2025-08-06T18:22:50.382+0800","caller":"cmd/main.go:55","msg":"init db err: dial tcp 127.0.0.1:3306: connect: connection refused"}
+{"level":"FATAL","ts":"2025-08-06T18:31:35.250+0800","caller":"cmd/main.go:55","msg":"init db err: dial tcp 127.0.0.1:3306: connect: connection refused"}
+{"level":"FATAL","ts":"2025-08-06T18:31:51.311+0800","caller":"cmd/main.go:55","msg":"init db err: dial tcp 127.0.0.1:3306: connect: connection refused"}
