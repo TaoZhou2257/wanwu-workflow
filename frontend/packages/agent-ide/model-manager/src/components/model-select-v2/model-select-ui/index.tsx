@@ -170,6 +170,7 @@ export function ModelSelectUI({
             extraHeaderSlot={modelListExtraHeaderSlot}
             onModelClick={(m: Model) => {
               const res = onModelChange(m);
+              console.log(res, m, '--------------------onModelChangeres')
               const success = isBoolean(res) ? res : true;
               if (success && clickToHide) {
                 setPopoverVisible(false);

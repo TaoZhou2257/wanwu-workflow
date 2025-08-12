@@ -120,6 +120,7 @@ export function ModelOption({
           { [styles['model-option_selected']]: selected },
         )}
         onClick={() => {
+          console.log(disabled, onClick, '--------------------disabled')
           if (disabled) {
             return;
           }
@@ -130,10 +131,10 @@ export function ModelOption({
           onClick();
         }}
       >
-        <ModelOptionAvatar model={model} />
+        {/*<ModelOptionAvatar model={model} />*/}
         <div
           className={cls(
-            'h-[80px] py-[12px] w-full',
+            'h-[46px] py-[12px] w-full',
             'flex flex-col overflow-hidden',
             'border-0 border-b border-solid coz-stroke-primary',
             styles['model-info-border'],
@@ -153,7 +154,7 @@ export function ModelOption({
             <Typography.Title fontSize="14px" ellipsis={{ showTooltip: true }}>
               {model.name}
             </Typography.Title>
-            <div className="shrink-0 flex gap-[6px]">
+           {/* <div className="shrink-0 flex gap-[6px]">
               {model.model_status_details?.is_free_model &&
               scene !== BotCreatorScene.DouyinBot ? (
                 <Tag size="mini" color="primary" className="!coz-mg-plus">
@@ -175,9 +176,9 @@ export function ModelOption({
                     </Tag>
                   ))
                 : null}
-            </div>
+            </div>*/}
           </div>
-          <div className="flex items-center text-[12px] leading-[16px] coz-fg-dim overflow-hidden">
+          {/*<div className="flex items-center text-[12px] leading-[16px] coz-fg-dim overflow-hidden">
             <ModelTag isFirst>
               {((model.model_quota?.token_limit || 0) / 1024).toFixed(0)}K
             </ModelTag>
@@ -213,15 +214,15 @@ export function ModelOption({
                 </span>
               </Tooltip>
             ) : null}
-          </div>
-          <Typography.Text
+          </div>*/}
+          {/*<Typography.Text
             className="mt-[4px] text-[12px] leading-[16px] coz-fg-secondary"
             ellipsis={{ showTooltip: true }}
           >
             {model.model_brief_desc}
-          </Typography.Text>
+          </Typography.Text>*/}
         </div>
-        {isHovering ? (
+        {/*{isHovering ? (
           <div className="absolute right-[12px] h-full flex items-center gap-[3px]">
             {props.enableConfig ? (
               <IconButton
@@ -262,7 +263,7 @@ export function ModelOption({
               />
             ) : null}
           </div>
-        ) : null}
+        ) : null}*/}
       </article>
       {premiumPaywallModal}
     </>

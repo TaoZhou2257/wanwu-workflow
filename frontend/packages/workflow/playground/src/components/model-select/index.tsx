@@ -164,7 +164,7 @@ export const ModelSelect: FC<ModelSelectProps> = ({
           popoverPosition={popoverPosition}
           triggerRender={triggerRender}
         />
-        <Popover
+        {/*<Popover
           autoAdjustOverflow={popoverAutoAdjustOverflow || false}
           className="rounded-md w-[660px]"
           trigger="click"
@@ -197,7 +197,7 @@ export const ModelSelect: FC<ModelSelectProps> = ({
             size="small"
             icon={<IconCozSetting />}
           />
-        </Popover>
+        </Popover>*/}
       </div>
     </PopupContainer>
   );
