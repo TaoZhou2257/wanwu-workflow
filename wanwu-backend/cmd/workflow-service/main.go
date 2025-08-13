@@ -12,7 +12,8 @@ import (
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/pkg/redis"
 	"github.com/UnicomAI/wanwu/pkg/db"
 	"github.com/UnicomAI/wanwu/pkg/log"
-	"github.com/coze-dev/coze-studio/backend/infra/impl/storage/minio"
+	coze_minio "github.com/coze-dev/coze-studio/backend/infra/impl/storage/minio"
+	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 )
 
 var (
@@ -43,6 +44,8 @@ func main() {
 		log.Fatalf("init cfg err: %v", err)
 	}
 
+	logs.SetLevel(logs.LevelTrace)
+
 	if err := log.InitLog(config.Cfg().Log.Std, config.Cfg().Log.Level, config.Cfg().Log.Logs...); err != nil {
 		log.Fatalf("init log err: %v", err)
 	}
@@ -59,13 +62,13 @@ func main() {
 	}
 
 	// minio
-	minioCli, err := minio.New(ctx, config.Cfg().Minio.Endpoint, config.Cfg().Minio.User, config.Cfg().Minio.Password, config.WorkflowBucket, false)
+	minioCli, err := coze_minio.New(ctx, config.Cfg().Minio.Endpoint, config.Cfg().Minio.User, config.Cfg().Minio.Password, config.WorkflowBucket, false)
 	if err != nil {
 		log.Fatalf("init minio err: %v", err)
 	}
 
 	// workflow
-	if err := workflow.Init(workflow.Config{DB: dbCli, Cache: redis.Workflow(), Storage: minioCli}); err != nil {
+	if err := workflow.Init(ctx, workflow.Infra{DB: dbCli, Cache: redis.Workflow(), Storage: minioCli}); err != nil {
 		log.Fatalf("init workflow service err: %v", err)
 	}
 

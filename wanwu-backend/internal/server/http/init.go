@@ -2,14 +2,17 @@ package http
 
 import (
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/config"
+	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/server/http/middleware"
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/server/http/router"
+	jwt_util "github.com/UnicomAI/wanwu/pkg/jwt-util"
 	hertz_server "github.com/cloudwego/hertz/pkg/app/server"
 	hertz_config "github.com/cloudwego/hertz/pkg/common/config"
-	"github.com/coze-dev/coze-studio/backend/api/middleware"
+	coze_middleware "github.com/coze-dev/coze-studio/backend/api/middleware"
 	hertz_cors "github.com/hertz-contrib/cors"
 )
 
 func Init() {
+	jwt_util.InitUserJWT(config.Cfg().JWT.SigningKey)
 
 	opts := []hertz_config.Option{
 		hertz_server.WithHostPorts(config.Cfg().Server.HttpEndpoint),
@@ -25,15 +28,16 @@ func Init() {
 	corsHandler := hertz_cors.New(corsCfg)
 
 	// Middleware order matters
-	s.Use(middleware.ContextCacheMW())     // must be first
-	s.Use(middleware.RequestInspectorMW()) // must be second
-	s.Use(middleware.SetHostMW())
-	s.Use(middleware.SetLogIDMW())
+	s.Use(coze_middleware.ContextCacheMW())     // must be first
+	s.Use(coze_middleware.RequestInspectorMW()) // must be second
+	s.Use(coze_middleware.SetHostMW())
+	s.Use(coze_middleware.SetLogIDMW())
 	s.Use(corsHandler)
-	s.Use(middleware.AccessLogMW())
-	s.Use(middleware.OpenapiAuthMW())
-	s.Use(middleware.SessionAuthMW())
-	s.Use(middleware.I18nMW()) // must after SessionAuthMW
+	s.Use(coze_middleware.AccessLogMW())
+	// s.Use(coze_middleware.OpenapiAuthMW())
+	// s.Use(coze_middleware.SessionAuthMW())
+	s.Use(middleware.JwtUser)
+	s.Use(middleware.I18n) // must after JwtUser
 
 	router.Register(s)
 	s.Spin()
