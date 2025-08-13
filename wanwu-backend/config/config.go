@@ -14,6 +14,7 @@ var (
 type Config struct {
 	Server ServerConfig `json:"server" mapstructure:"server"`
 	Log    LogConfig    `json:"log" mapstructure:"log"`
+	JWT    JWTConfig    `json:"jwt" mapstructure:"jwt"`
 	DB     db.Config    `json:"db" mapstructure:"db"`
 	Redis  redis.Config `json:"redis" mapstructure:"redis"`
 	Minio  MinioConfig  `json:"minio" mapstructure:"minio"`
@@ -28,6 +29,10 @@ type LogConfig struct {
 	Std   bool         `json:"std" mapstructure:"std"`
 	Level string       `json:"level" mapstructure:"level"`
 	Logs  []log.Config `json:"logs" mapstructure:"logs"`
+}
+
+type JWTConfig struct {
+	SigningKey string `json:"signing-key" mapstructure:"signing-key"`
 }
 
 type MinioConfig struct {

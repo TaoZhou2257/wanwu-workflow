@@ -18,5 +18,6 @@ check:
 	docker run --rm -t -v $(PWD):/app -w /app golangci/golangci-lint:v1.64.8 bash -c 'golangci-lint run -v --timeout 3m'
 
 init:
+	cp ../docker/volumes/mysql/schema.sql configs/
 	go mod tidy
 	go mod vendor

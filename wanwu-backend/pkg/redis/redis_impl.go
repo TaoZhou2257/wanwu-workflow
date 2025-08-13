@@ -8,9 +8,9 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// ！！！同步于：github.com/coze-dev/coze-studio/blob/main/backend/infra/impl/cache/redis/redis.go
-// ！！！同步于：github.com/coze-dev/coze-studio/blob/main/backend/infra/impl/cache/redis/redis.go
-// ！！！同步于：github.com/coze-dev/coze-studio/blob/main/backend/infra/impl/cache/redis/redis.go
+// ！！！同步于：backend/infra/impl/cache/redis/redis.go
+// ！！！同步于：backend/infra/impl/cache/redis/redis.go
+// ！！！同步于：backend/infra/impl/cache/redis/redis.go
 
 // Del implements cache.Cmdable.
 func (r *redisImpl) Del(ctx context.Context, keys ...string) cache.IntCmd {
