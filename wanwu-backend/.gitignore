@@ -30,4 +30,5 @@ bin/amd64/*
 bin/arm64/*
 cache
 cmd/*-client
+log
 project
