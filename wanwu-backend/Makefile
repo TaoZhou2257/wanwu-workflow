@@ -7,10 +7,10 @@ LDFLAGS := -X main.buildTime=$(shell date +%Y-%m-%d,%H:%M:%S) \
 			-X main.builder=$(shell git config user.name)
 
 build-amd64:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod vendor -ldflags "$(LDFLAGS)" -o ./bin/amd64/ ./cmd/workflow-service
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod vendor -ldflags "$(LDFLAGS)" -o ./bin/amd64/ ./cmd/workflow-wanwu
 
 build-arm64:
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -mod vendor -ldflags "$(LDFLAGS)" -o ./bin/arm64/ ./cmd/workflow-service
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -mod vendor -ldflags "$(LDFLAGS)" -o ./bin/arm64/ ./cmd/workflow-wanwu
 
 check:
 	go vet ./...
