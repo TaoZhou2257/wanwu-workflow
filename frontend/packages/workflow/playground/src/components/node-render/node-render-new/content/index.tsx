@@ -63,6 +63,7 @@ const ContentMap = {
   [StandardNodeType.Intent]: IntentContent,
   [StandardNodeType.SubWorkflow]: SubWorkflowContentV2,
   [StandardNodeType.Dataset]: DatasetContent,
+  [StandardNodeType.DatasetWanwu]: DatasetContent,
   [StandardNodeType.DatasetWrite]: DatasetContent,
   [StandardNodeType.Question]: QuestionContent,
   [StandardNodeType.Output]: OutputContent,
@@ -91,7 +92,6 @@ const ContentMap = {
   [StandardNodeType.Api]: PluginContent,
   [StandardNodeType.Variable]: VariableContent,
   [StandardNodeType.JsonStringify]: JsonStringifyContent,
-  [StandardNodeType.RagKnowledge]: DatasetContent
   // The cli script inserts the identifier (registry), do not modify/delete this line comment
 };
 

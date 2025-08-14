@@ -14,4 +14,4 @@
  * limitations under the License.
  */
 
-export { DATASET_NODE_REGISTRY } from './node-registry';
+export { DATASET_NODE_REGISTRY_WANWU } from './node-registry';

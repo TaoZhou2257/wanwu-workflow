@@ -26,10 +26,10 @@ import { type NodeTestMeta } from '@/test-run-kit';
 
 import { test } from './node-test';
 import { DATASET_NODE_FORM_META } from './form-meta';
-export const DATASET_NODE_REGISTRY: WorkflowNodeRegistry<NodeTestMeta> = {
-  type: StandardNodeType.Dataset,
+export const DATASET_NODE_REGISTRY_WANWU: WorkflowNodeRegistry<NodeTestMeta> = {
+  type: StandardNodeType.DatasetWanwu,
   meta: {
-    nodeDTOType: StandardNodeType.Dataset,
+    nodeDTOType: StandardNodeType.DatasetWanwu,
     style: {
       width: 484,
     },
