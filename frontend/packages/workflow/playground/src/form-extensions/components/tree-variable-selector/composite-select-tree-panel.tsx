@@ -54,7 +54,7 @@ const CompositeSelectTreePanel = React.forwardRef(
     treeRef,
   ) => {
     const treeDataSortByGroup = useMemo(
-      () => sortTreeDataByGroup(treeData),
+      () => sortTreeDataByGroup(treeData).filter(item => !item.groupId), // 过滤掉全局变量配置，通过是否有groupId
       [treeData],
     );
 
@@ -75,6 +75,7 @@ const CompositeSelectTreePanel = React.forwardRef(
 
     const isNodeVariable = value?.length === 1;
 
+    console.log(treeDataSortByGroup, '-------------------------------treeDataSortByGroup')
     const renderContent = () => {
       if (!extraOption) {
         return treeDataSortByGroup?.length ? (

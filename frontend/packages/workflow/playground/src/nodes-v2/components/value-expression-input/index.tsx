@@ -198,7 +198,7 @@ export const ValueExpressionInput = (props: ValueExpressionInputProps) => {
       inputPlaceholder={inputPlaceholder}
       refTagColor={refTagColor}
       hideDeleteIcon={hideDeleteIcon}
-      hideSettingIcon={true} //{hideSettingIcon}
+      hideSettingIcon={hideSettingIcon}
       forbidTypeCast={forbidTypeCast}
       defaultInputType={defaultInputType}
       literalConfig={literalConfig}
