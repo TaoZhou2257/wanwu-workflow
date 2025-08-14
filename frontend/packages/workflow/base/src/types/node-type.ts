@@ -24,6 +24,7 @@ export enum StandardNodeType {
   Api = '4',
   Code = '5',
   Dataset = '6',
+  DatasetWanwu = '61',
   If = '8',
   SubWorkflow = '9',
   Variable = '11',

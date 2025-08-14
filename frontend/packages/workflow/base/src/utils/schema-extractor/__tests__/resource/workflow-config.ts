@@ -155,6 +155,25 @@ export const workflowExtractorConfig: SchemaExtractorConfig = {
       parser: SchemaExtractorParserName.DATASET_PARAM,
     },
   ],
+  [StandardNodeType.DatasetWanwu]: [
+    {
+      // Node custom name
+      name: 'title',
+      path: 'nodeMeta.title',
+    },
+    {
+      // Corresponding input name
+      name: 'inputs',
+      path: 'inputs.inputParameters',
+      parser: SchemaExtractorParserName.INPUT_PARAMETERS,
+    },
+    {
+      // Corresponding knowledge base name
+      name: 'datasetParam',
+      path: 'inputs.datasetParam',
+      parser: SchemaExtractorParserName.DATASET_PARAM,
+    },
+  ],
   // If the decision node 8
   [StandardNodeType.If]: [
     {

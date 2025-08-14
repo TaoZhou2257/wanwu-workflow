@@ -30,6 +30,7 @@ export const getEnabledNodeTypes = (_params: {
     [StandardNodeType.Api]: true,
     [StandardNodeType.Code]: true,
     [StandardNodeType.Dataset]: true,
+    [StandardNodeType.DatasetWanwu]: true,
     [StandardNodeType.If]: true,
     [StandardNodeType.SubWorkflow]: true,
     [StandardNodeType.Database]: true,
