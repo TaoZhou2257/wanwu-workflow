@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-import { InputParameters, Outputs, Model } from '../../fields';
-import { Skill } from './skill';
+import type { TypeOf } from 'io-ts';
 
-export function LLMContent() {
-  return (
-    <>
-      <InputParameters />
-      <Outputs />
-      <Model />
-      {/*<Skill />*/}
-    </>
-  );
-}
+import {
+  type datasetNodeActualDataRuntimeType,
+  type datasetNodeFormDataRuntimeType,
+} from './runtime-type';
+
+export type DatasetNodeActualData = TypeOf<
+  typeof datasetNodeActualDataRuntimeType
+>;
+export type DatasetNodeFormData = TypeOf<typeof datasetNodeFormDataRuntimeType>;

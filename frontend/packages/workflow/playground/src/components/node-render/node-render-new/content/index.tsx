@@ -91,6 +91,7 @@ const ContentMap = {
   [StandardNodeType.Api]: PluginContent,
   [StandardNodeType.Variable]: VariableContent,
   [StandardNodeType.JsonStringify]: JsonStringifyContent,
+  [StandardNodeType.RagKnowledge]: DatasetContent
   // The cli script inserts the identifier (registry), do not modify/delete this line comment
 };
 
