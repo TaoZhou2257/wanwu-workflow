@@ -9,11 +9,11 @@ import (
 	"os"
 	"strings"
 
-	crossuserImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/crossuser"
+	crossuserImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/user"
 	"github.com/UnicomAI/wanwu/pkg/log"
 	coze_app_user "github.com/coze-dev/coze-studio/backend/application/user"
 	coze_app_workflow "github.com/coze-dev/coze-studio/backend/application/workflow"
-	coze_crossuser "github.com/coze-dev/coze-studio/backend/crossdomain/contract/crossuser"
+	coze_crossuser "github.com/coze-dev/coze-studio/backend/crossdomain/contract/user"
 	coze_workflow "github.com/coze-dev/coze-studio/backend/domain/workflow"
 	coze_workflow_service "github.com/coze-dev/coze-studio/backend/domain/workflow/service"
 	coze_cache "github.com/coze-dev/coze-studio/backend/infra/contract/cache"
@@ -41,6 +41,11 @@ func Init(ctx context.Context, infra Infra) error {
 		return errors.New("already init")
 	}
 
+	// init repo data
+	if err := initRepo(infra.DB); err != nil {
+		return fmt.Errorf("init repo err: %v", err)
+	}
+
 	// id generator
 	idGen, _ := coze_idgen.New(infra.Cache)
 	// check point store
@@ -48,11 +53,6 @@ func Init(ctx context.Context, infra Infra) error {
 	// workflow repo
 	workflowRepo := coze_workflow_service.NewWorkflowRepository(idGen, infra.DB, infra.Cache, infra.Storage, cps, nil)
 	coze_workflow.SetRepository(workflowRepo)
-
-	// init repo data
-	if err := initRepo(infra.DB); err != nil {
-		return fmt.Errorf("init repo err: %v", err)
-	}
 
 	// domain workflow service
 	_workflowService = coze_workflow_service.NewWorkflowService(workflowRepo)

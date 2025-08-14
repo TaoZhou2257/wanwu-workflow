@@ -1,4 +1,4 @@
-package crossuser
+package user
 
 import (
 	"context"
