@@ -417,6 +417,16 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
             "color": "#3071F2"
           },
           {
+            "id": "62",
+            "type": 62,
+            "name": "MCP",
+            "desc": "MCP 描述",
+            "icon_url": "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-to_json.png",
+            "support_batch": 1,
+            "node_type": "62",
+            "color": "F2B600"
+          },
+          {
             "id": "58",
             "type": 58,
             "name": "JSON 序列化",
@@ -444,7 +454,8 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
               "3",
               "4",
               "9",
-              "61"
+              "61",
+              "62"
             ]
           },
           {
