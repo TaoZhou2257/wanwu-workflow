@@ -9,8 +9,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/pkg/ctxcache"
 )
 
-type Impl struct {
-}
+type Impl struct{}
 
 func (u *Impl) GetUserSpaceList(ctx context.Context, userID int64) (spaces []*entity.Space, err error) {
 	orgID, ok := ctxcache.Get[string](ctx, config.X_ORG_ID)
