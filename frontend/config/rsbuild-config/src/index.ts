@@ -52,7 +52,7 @@ const generateCdnPrefix = () => {
       process.env.CDN_PATH_PREFIX ? `${process.env.CDN_PATH_PREFIX}/` : ''
     }`;
   }
-  return '/';
+  return '/workflow/';
 };
 
 export const defineConfig = (options: Partial<RsbuildConfig>) => {
