@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	crosssearchImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/search"
 	crossuserImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/user"
 	"github.com/UnicomAI/wanwu/pkg/log"
 	coze_app_user "github.com/coze-dev/coze-studio/backend/application/user"
@@ -63,6 +64,7 @@ func Init(ctx context.Context, infra Infra) error {
 	coze_app_workflow.SVC.DomainSVC = _workflowService
 	coze_app_workflow.SVC.TosClient = infra.Storage
 	coze_app_workflow.SVC.IDGenerator = idGen
+	coze_app_workflow.SetEventBus(&crosssearchImpl.ResourceEventBusImpl{})
 
 	// cross domain user
 	coze_crossuser.SetDefaultSVC(&crossuserImpl.Impl{})
