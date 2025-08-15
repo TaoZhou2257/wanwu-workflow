@@ -5,6 +5,10 @@ import (
 	"github.com/coze-dev/coze-studio/backend/api/handler/coze"
 )
 
+// ！！！同步于：backend/api/router/coze/api.go
+// ！！！同步于：backend/api/router/coze/api.go
+// ！！！同步于：backend/api/router/coze/api.go
+
 func Register(r *hertz_server.Hertz) {
 	// TODO auto generated
 

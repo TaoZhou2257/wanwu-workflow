@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/config"
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/pkg/httputil"
-	gin_util "github.com/UnicomAI/wanwu/pkg/gin-util"
 	jwt_util "github.com/UnicomAI/wanwu/pkg/jwt-util"
 	"github.com/UnicomAI/wanwu/pkg/util"
 	"github.com/cloudwego/hertz/pkg/app"
@@ -15,6 +15,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/user/entity"
 	"github.com/coze-dev/coze-studio/backend/pkg/ctxcache"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
+	"github.com/coze-dev/coze-studio/backend/pkg/i18n"
 	"github.com/coze-dev/coze-studio/backend/types/consts"
 	"github.com/coze-dev/coze-studio/backend/types/errno"
 )
@@ -42,12 +43,12 @@ func JwtUser(ctx context.Context, appCtx *app.RequestContext) {
 		return
 	}
 
-	orgID := appCtx.Request.Header.Get(gin_util.X_ORG_ID)
-	ctxcache.Store(ctx, gin_util.X_ORG_ID, orgID)
+	orgID := appCtx.Request.Header.Get(config.X_ORG_ID)
+	ctxcache.Store(ctx, config.X_ORG_ID, orgID)
 
 	ctxcache.Store(ctx, consts.SessionDataKeyInCtx, &entity.Session{
 		UserID:    util.MustI64(claims.UserID),
-		Locale:    appCtx.Request.Header.Get(gin_util.X_LANGUAGE),
+		Locale:    string(i18n.GetLocale(ctx)),
 		CreatedAt: time.Unix(claims.NotBefore, 0),
 		ExpiresAt: time.Unix(claims.ExpiresAt, 0),
 	})
