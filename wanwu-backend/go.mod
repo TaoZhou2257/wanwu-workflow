@@ -2,8 +2,6 @@ module github.com/UnicomAI/wanwu-workflow/wanwu-backend
 
 go 1.24.0
 
-replace github.com/UnicomAI/wanwu => ../../wanwu
-
 // backend引用本地，用于主动控制wanwu-workflow同步coze-studio
 replace github.com/coze-dev/coze-studio/backend => ../backend
 
@@ -15,7 +13,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.68.0
 replace github.com/getkin/kin-openapi => github.com/getkin/kin-openapi v0.118.0
 
 require (
-	github.com/UnicomAI/wanwu v0.0.0-00010101000000-000000000000
+	github.com/UnicomAI/wanwu v0.1.7
 	github.com/cloudwego/hertz v0.10.0
 	github.com/coze-dev/coze-studio/backend v0.0.0-00010101000000-000000000000
 	github.com/hertz-contrib/cors v0.1.0
