@@ -1,6 +1,7 @@
 package router
 
 import (
+	wanwu_mock "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/server/http/handler/wanwu-mock"
 	hertz_server "github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/coze-dev/coze-studio/backend/api/handler/coze"
 )
@@ -15,6 +16,13 @@ func Register(r *hertz_server.Hertz) {
 	root := r.Group("/", rootMw()...)
 	{
 		_api := root.Group("/api", _apiMw()...)
+		{
+			_playground_api := _api.Group("/playground_api", _playground_apiMw()...)
+			{
+				_space := _playground_api.Group("/space", _spaceMw()...)
+				_space.POST("/list", append(_getspacelistv2Mw(), wanwu_mock.GetSpaceListV2)...)
+			}
+		}
 		{
 			_workflow_api := _api.Group("/workflow_api", _workflow_apiMw()...)
 			_workflow_api.GET("/apiDetail", append(_getapidetailMw(), coze.GetApiDetail)...)
