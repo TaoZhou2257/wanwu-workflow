@@ -46,8 +46,16 @@ export const McpParamsField = withFieldArray(({
   disabledTypes,
 }: McpParamsFieldProps) => {
   const { value } = useFieldArray<InputValueVO>();
+  console.log(value, '---------------------------456')
   return (
-    <Section title={I18n.t('workflow_detail_node_input')} tooltip={tooltip}>
+    <Section
+      title={I18n.t('workflow_detail_node_input')}
+      tooltip={I18n.t(
+        'node_http_request_params_desc',
+        {},
+        '输入参数值',
+      )}
+    >
       <ColumnsTitle
         columns={[
           {

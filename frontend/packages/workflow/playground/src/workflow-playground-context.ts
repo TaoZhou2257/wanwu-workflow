@@ -472,8 +472,6 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
             "name": "",
             "node_type_list": [
               "3",
-              "4",
-              "9",
               "61",
               "62",
             ]

@@ -49,9 +49,9 @@ const Render = () => (
         '选择需要匹配的知识范围，仅从选定的知识中召回信息',
       )}
     >
-      {/*<div className="w-full mb-[16px]">
+      <div className="w-full mb-[16px]">
         <DatasetSelectField name="inputs.datasetParameters.datasetParam" />
-      </div>*/}
+      </div>
       <DatasetSettingFieldWanwu name="inputs.datasetParameters.datasetSetting" />
     </Section>
     <OutputsField

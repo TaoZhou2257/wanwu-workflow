@@ -39,10 +39,10 @@ export const workflowRouter: ReturnType<typeof createBrowserRouter> =
   createBrowserRouter([
     {
       path: '/',
-      Component: Layout,
+      // Component: Layout,
       // errorElement: <GlobalError />,
       children: [
-        {
+        /*{
           path: 'sign',
           Component: LoginPage,
           // errorElement: <GlobalError />,
@@ -50,13 +50,13 @@ export const workflowRouter: ReturnType<typeof createBrowserRouter> =
             hasSider: false,
             requireAuth: false,
           }),
-        },
+        },*/
         {
-          path: 'work_flow',
+          path: 'workflow',
           Component: WorkflowPage,
           loader: () => ({
             hasSider: false,
-            requireAuth: true,
+            requireAuth: false,
           }),
         },
       ],
