@@ -12,6 +12,16 @@ func _apiMw() []app.HandlerFunc {
 	return nil
 }
 
+func _botMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _gettypelistMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _playground_apiMw() []app.HandlerFunc {
 	// your code...
 	return nil

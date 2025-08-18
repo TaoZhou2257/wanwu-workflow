@@ -9,9 +9,11 @@ import (
 	"os"
 	"strings"
 
+	crossmodelmgrImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/modelmgr"
 	crosssearchImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/search"
 	crossuserImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/user"
 	"github.com/UnicomAI/wanwu/pkg/log"
+	coze_app_modelmgr "github.com/coze-dev/coze-studio/backend/application/modelmgr"
 	coze_app_user "github.com/coze-dev/coze-studio/backend/application/user"
 	coze_app_workflow "github.com/coze-dev/coze-studio/backend/application/workflow"
 	coze_crossuser "github.com/coze-dev/coze-studio/backend/crossdomain/contract/user"
@@ -63,6 +65,8 @@ func Init(ctx context.Context, infra Infra) error {
 	// domain workflow service
 	_workflowService = coze_workflow_service.NewWorkflowService(workflowRepo)
 
+	// init application modelmgr
+	_ = coze_app_modelmgr.InitService(crossmodelmgrImpl.DefaultMock(), nil)
 	// init application user
 	_ = coze_app_user.InitService(ctx, infra.DB, infra.Storage, idGen)
 	// init application workflow
@@ -77,9 +81,9 @@ func Init(ctx context.Context, infra Infra) error {
 	return nil
 }
 
-func Service() coze_workflow.Service {
-	return _workflowService
-}
+// func Service() coze_workflow.Service {
+// 	return _workflowService
+// }
 
 func initRepo(db *gorm.DB) error {
 	// 读取sql文件

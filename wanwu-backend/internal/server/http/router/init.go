@@ -17,6 +17,10 @@ func Register(r *hertz_server.Hertz) {
 	{
 		_api := root.Group("/api", _apiMw()...)
 		{
+			_bot := _api.Group("/bot", _botMw()...)
+			_bot.POST("/get_type_list", append(_gettypelistMw(), coze.GetTypeList)...)
+		}
+		{
 			_playground_api := _api.Group("/playground_api", _playground_apiMw()...)
 			{
 				_space := _playground_api.Group("/space", _spaceMw()...)
