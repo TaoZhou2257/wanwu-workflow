@@ -437,6 +437,16 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
             "color": "F2B600"
           },
           {
+            "id": "64",
+            "type": 64,
+            "name": "文档生成",
+            "desc": "文档生成描述",
+            "icon_url": "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-to_json.png",
+            "support_batch": 1,
+            "node_type": "64",
+            "color": "F2B600"
+          },
+          {
             "id": "58",
             "type": 58,
             "name": "JSON 序列化",
@@ -517,7 +527,8 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
               "45",
               "58",
               "59",
-              "63"
+              "63",
+              "64"
             ]
           }
         ],

@@ -50,5 +50,6 @@ export { SUB_WORKFLOW_NODE_REGISTRY } from './sub-workflow';
 export { VARIABLE_NODE_REGISTRY } from './variable';
 export { MCP_WANWU_NODE_REGISTRY } from './mcp-wanwu';
 export { FILE_PARSE_WANWU_NODE_REGISTRY } from './file-parse-wanwu';
+export { FILE_GENERATE_WANWU_NODE_REGISTRY } from './file-generate-wanwu';
 export { JSON_STRINGIFY_NODE_REGISTRY } from './json-stringify';
 // The cli script inserts the identifier (registry), do not modify/delete this line comment
