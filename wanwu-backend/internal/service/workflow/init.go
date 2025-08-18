@@ -64,10 +64,10 @@ func Init(ctx context.Context, infra Infra) error {
 	coze_app_workflow.SVC.DomainSVC = _workflowService
 	coze_app_workflow.SVC.TosClient = infra.Storage
 	coze_app_workflow.SVC.IDGenerator = idGen
-	coze_app_workflow.SetEventBus(&crosssearchImpl.ResourceEventBusImpl{})
+	coze_app_workflow.SetEventBus(crosssearchImpl.DefaultResourceEventBusMock())
 
 	// cross domain user
-	coze_crossuser.SetDefaultSVC(&crossuserImpl.Impl{})
+	coze_crossuser.SetDefaultSVC(crossuserImpl.DefaultMock())
 
 	return nil
 }

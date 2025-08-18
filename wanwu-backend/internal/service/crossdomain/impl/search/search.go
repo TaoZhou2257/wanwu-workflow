@@ -6,8 +6,14 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/search/entity"
 )
 
-type ResourceEventBusImpl struct{}
+var defaultResourceEventBusMock *resourceEventBusMock = &resourceEventBusMock{}
 
-func (r *ResourceEventBusImpl) PublishResources(ctx context.Context, event *entity.ResourceDomainEvent) error {
+func DefaultResourceEventBusMock() *resourceEventBusMock {
+	return defaultResourceEventBusMock
+}
+
+type resourceEventBusMock struct{}
+
+func (r *resourceEventBusMock) PublishResources(ctx context.Context, event *entity.ResourceDomainEvent) error {
 	return nil
 }

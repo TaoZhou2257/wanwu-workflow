@@ -12,6 +12,21 @@ func _apiMw() []app.HandlerFunc {
 	return nil
 }
 
+func _playground_apiMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _spaceMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _getspacelistv2Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _workflow_apiMw() []app.HandlerFunc {
 	// your code...
 	return nil
