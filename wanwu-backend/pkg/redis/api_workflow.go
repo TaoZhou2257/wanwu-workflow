@@ -3,6 +3,8 @@ package redis
 import (
 	"context"
 	"fmt"
+
+	"github.com/redis/go-redis/v9"
 )
 
 const (
@@ -10,7 +12,7 @@ const (
 )
 
 var (
-	_redisWorkflow *redisImpl
+	_redisWorkflow *redis.Client
 )
 
 func InitWorkflow(ctx context.Context, cfg Config) error {
@@ -25,6 +27,6 @@ func InitWorkflow(ctx context.Context, cfg Config) error {
 	return nil
 }
 
-func Workflow() *redisImpl {
+func Workflow() *redis.Client {
 	return _redisWorkflow
 }

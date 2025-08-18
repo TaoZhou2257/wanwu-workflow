@@ -17,11 +17,11 @@ import (
 	coze_crossuser "github.com/coze-dev/coze-studio/backend/crossdomain/contract/user"
 	coze_workflow "github.com/coze-dev/coze-studio/backend/domain/workflow"
 	coze_workflow_service "github.com/coze-dev/coze-studio/backend/domain/workflow/service"
-	coze_cache "github.com/coze-dev/coze-studio/backend/infra/contract/cache"
 	coze_storage "github.com/coze-dev/coze-studio/backend/infra/contract/storage"
+	coze_cache "github.com/coze-dev/coze-studio/backend/infra/impl/cache/redis"
 	coze_checkpoint "github.com/coze-dev/coze-studio/backend/infra/impl/checkpoint"
 	coze_idgen "github.com/coze-dev/coze-studio/backend/infra/impl/idgen"
-
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -33,7 +33,7 @@ var _workflowService coze_workflow.Service
 
 type Infra struct {
 	DB      *gorm.DB
-	Cache   coze_cache.Cmdable
+	Cache   *redis.Client
 	Storage coze_storage.Storage
 }
 
@@ -47,29 +47,31 @@ func Init(ctx context.Context, infra Infra) error {
 		return fmt.Errorf("init repo err: %v", err)
 	}
 
-	// all node adaptors
+	// register all node adaptors
 	coze_workflow_service.RegisterAllNodeAdaptors()
 
+	// infra cache
+	cache := coze_cache.NewWithRedisCli(infra.Cache)
 	// id generator
-	idGen, _ := coze_idgen.New(infra.Cache)
+	idGen, _ := coze_idgen.New(cache)
 	// check point store
-	cps := coze_checkpoint.NewRedisStore(infra.Cache)
+	cps := coze_checkpoint.NewRedisStore(cache)
 	// workflow repo
-	workflowRepo := coze_workflow_service.NewWorkflowRepository(idGen, infra.DB, infra.Cache, infra.Storage, cps, nil)
+	workflowRepo := coze_workflow_service.NewWorkflowRepository(idGen, infra.DB, cache, infra.Storage, cps, nil)
 	coze_workflow.SetRepository(workflowRepo)
 
 	// domain workflow service
 	_workflowService = coze_workflow_service.NewWorkflowService(workflowRepo)
 
-	// application user
+	// init application user
 	_ = coze_app_user.InitService(ctx, infra.DB, infra.Storage, idGen)
-	// application workflow
+	// init application workflow
 	coze_app_workflow.SVC.DomainSVC = _workflowService
 	coze_app_workflow.SVC.TosClient = infra.Storage
 	coze_app_workflow.SVC.IDGenerator = idGen
 	coze_app_workflow.SetEventBus(crosssearchImpl.DefaultResourceEventBusMock())
 
-	// cross domain user
+	// init cross domain user
 	coze_crossuser.SetDefaultSVC(crossuserImpl.DefaultMock())
 
 	return nil
