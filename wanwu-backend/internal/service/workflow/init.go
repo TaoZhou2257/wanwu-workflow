@@ -47,6 +47,9 @@ func Init(ctx context.Context, infra Infra) error {
 		return fmt.Errorf("init repo err: %v", err)
 	}
 
+	// all node adaptors
+	coze_workflow_service.RegisterAllNodeAdaptors()
+
 	// id generator
 	idGen, _ := coze_idgen.New(infra.Cache)
 	// check point store
