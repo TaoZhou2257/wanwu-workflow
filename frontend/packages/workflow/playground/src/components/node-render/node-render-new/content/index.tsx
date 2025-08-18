@@ -29,6 +29,7 @@ import { LtmContent } from '@/node-registries/ltm';
 import { LoopContent } from '@/node-registries/loop';
 import { JsonStringifyContent } from '@/node-registries/json-stringify';
 import { McpWanwuContent } from '@/node-registries/mcp-wanwu';
+import { FileParseWanwuContent } from '@/node-registries/file-parse-wanwu';
 import { IntentContent } from '@/node-registries/intent';
 import { InputContent } from '@/node-registries/input';
 import { ImageCanvasContent } from '@/node-registries/image-canvas';
@@ -93,6 +94,7 @@ const ContentMap = {
   [StandardNodeType.Api]: PluginContent,
   [StandardNodeType.Variable]: VariableContent,
   [StandardNodeType.McpWanwu]: McpWanwuContent,
+  [StandardNodeType.FileParseWanwu]: FileParseWanwuContent,
   [StandardNodeType.JsonStringify]: JsonStringifyContent,
   // The cli script inserts the identifier (registry), do not modify/delete this line comment
 };

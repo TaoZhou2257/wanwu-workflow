@@ -107,6 +107,7 @@ export enum StandardNodeType {
   JsonParser = '59',
 
   McpWanwu = '62',
+  FileParseWanwu = '63'
 }
 
 /**
