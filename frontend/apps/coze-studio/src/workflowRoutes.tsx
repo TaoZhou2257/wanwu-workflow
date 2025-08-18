@@ -18,7 +18,7 @@
  * 只包含 workflow 的路由
  */
 
-import { createBrowserRouter } from 'react-router-dom';
+import {createBrowserRouter, Navigate} from 'react-router-dom';
 import { lazy } from 'react';
 import { Layout } from './layout';
 import { GlobalError } from '@coze-foundation/layout';
@@ -51,6 +51,10 @@ export const workflowRouter: ReturnType<typeof createBrowserRouter> =
             requireAuth: false,
           }),
         },*/
+        {
+          index: true,
+          element: <Navigate to="/workflow" replace />,
+        },
         {
           path: 'workflow',
           Component: WorkflowPage,
