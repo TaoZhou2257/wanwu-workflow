@@ -2,6 +2,7 @@ package router
 
 import (
 	wanwu_mock "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/server/http/handler/wanwu-mock"
+	"github.com/cloudwego/hertz/pkg/app"
 	hertz_server "github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/coze-dev/coze-studio/backend/api/handler/coze"
 )
@@ -80,6 +81,9 @@ func Register(r *hertz_server.Hertz) {
 				_upload1 := _workflow_api.Group("/upload", _upload1Mw()...)
 				_upload1.POST("/auth_token", append(_getworkflowuploadauthtokenMw(), coze.GetWorkflowUploadAuthToken)...)
 			}
+
+			// --- wanwu adapt ---
+			_workflow_api.POST("/workflow_list_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowListByWanwu}...)
 		}
 	}
 }
