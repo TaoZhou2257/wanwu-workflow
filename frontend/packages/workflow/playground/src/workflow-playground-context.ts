@@ -297,13 +297,13 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
             "color": "#00B2B2"
           },
           {
-            "id": "61",
-            "type": 61,
+            "id": "1006",
+            "type": 1006,
             "name": "知识库",
             "desc": "在选定的知识中,根据输入变量召回最匹配的信息,并以列表形式返回",
             "icon_url": "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
             "support_batch": 1,
-            "node_type": "61",
+            "node_type": "1006",
             "color": "#FF811A"
           },
           {
@@ -427,23 +427,23 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
             "color": "F2B600"
           },
           {
-            "id": "63",
-            "type": 63,
+            "id": "1008",
+            "type": 1008,
             "name": "文档解析",
             "desc": "文档解析描述",
             "icon_url": "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-to_json.png",
             "support_batch": 1,
-            "node_type": "63",
+            "node_type": "1008",
             "color": "F2B600"
           },
           {
-            "id": "64",
-            "type": 64,
+            "id": "1007",
+            "type": 1007,
             "name": "文档生成",
             "desc": "文档生成描述",
             "icon_url": "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-to_json.png",
             "support_batch": 1,
-            "node_type": "64",
+            "node_type": "1007",
             "color": "F2B600"
           },
           {
@@ -472,7 +472,7 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
             "name": "",
             "node_type_list": [
               "3",
-              "61",
+              "1006",
               "62",
             ]
           },
@@ -525,8 +525,8 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
               "45",
               "58",
               "59",
-              "63",
-              "64"
+              "1008",
+              "1007"
             ]
           }
         ],

@@ -20,12 +20,26 @@ export enum Strategy {
   FullText = 20,
 }
 
+export enum MatchType {
+  Semantic = 'vector',
+  Hybird = 'mix_rerank',
+  HybirdPriority = 'mix_priority',
+  FullText = 'text',
+}
+
 export interface DataSetInfo {
-  top_k: number;
+  top_k?: number;
   min_score?: number;
   strategy?: Strategy;
   use_nl2sql?: boolean;
   use_rerank?: boolean;
   use_rewrite?: boolean;
   is_personal_only?: boolean;
+  topK?: number;
+  matchType?: MatchType;
+  threshold?: number;
+  maxHistory?: number;
+  rewrite?: boolean;
+  semanticsPriority?: number,
+  rerankModelId?: string
 }

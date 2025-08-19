@@ -128,13 +128,13 @@ const Render = ({ form }: FormRenderProps<FormData>) => {
           )}
         </Field>
         <Batch batchModeName={'batchMode'} name={'batch'} />
-        {/*{!isBindDouyin ? (
+        {!isBindDouyin ? (
           <Field name="fcParam">
             {({ field }: FieldRenderProps<BoundSkills | undefined>) => (
               <Skills {...field} />
             )}
           </Field>
-        ) : null}*/}
+        ) : null}
         <FieldArray
           name={'$$input_decorator$$.inputParameters'}
           defaultValue={[
@@ -273,7 +273,7 @@ const Render = ({ form }: FormRenderProps<FormData>) => {
             </FormCard>
           )}
         </FieldArray>
-        {/*{!isBindDouyin ? <Vision /> : null}*/}
+        {!isBindDouyin ? <Vision /> : null}
         <Field
           name="$$prompt_decorator$$.systemPrompt"
           deps={['$$input_decorator$$.inputParameters']}

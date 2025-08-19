@@ -40,8 +40,18 @@ export function transformOnInit(value) {
           children: [
             {
               key: nanoid(),
-              name: 'output',
+              name: 'prompt',
               type: ViewVariableType.String,
+            },
+            {
+              key: nanoid(),
+              name: 'score',
+              type: ViewVariableType.Number,
+            },
+            {
+              key: nanoid(),
+              name: 'searchList',
+              type: ViewVariableType.ArrayString,
             },
           ],
         },
@@ -66,25 +76,28 @@ export function transformOnInit(value) {
   );
   formData.inputs.datasetParameters.datasetParam = datasetParam[0]?.input.value
     .content as string[];
-  // In the case of initial creation/stock data, the top_k and min_score are empty, and the initial default value is processed in the dataset-settings component
+  // In the case of initial creation/stock data, the topK and threshold are empty, and the initial default value is processed in the dataset-settings component
   formData.inputs.datasetParameters.datasetSetting = {
-    top_k: datasetParam.find(item => item.name === 'topK')?.input.value
+    topK: datasetParam.find(item => item.name === 'topK')?.input.value
       .content as number,
 
-    min_score: datasetParam.find(item => item.name === 'minScore')?.input.value
+    threshold: datasetParam.find(item => item.name === 'threshold')?.input.value
       .content as number,
 
-    strategy: datasetParam.find(item => item.name === 'strategy')?.input.value
+    semanticsPriority: datasetParam.find(item => item.name === 'semanticsPriority')?.input.value
       .content as number,
 
-    use_nl2sql: datasetParam.find(item => item.name === 'useNl2sql')?.input
+    maxHistory: datasetParam.find(item => item.name === 'maxHistory')?.input.value
+      .content as number,
+
+    matchType: datasetParam.find(item => item.name === 'matchType')?.input.value
+      .content as string,
+
+    rerankModelId: datasetParam.find(item => item.name === 'rerankModelId')?.input.value
+      .content as string,
+
+    rewrite: datasetParam.find(item => item.name === 'rewrite')?.input
       .value.content as boolean,
-    use_rerank: datasetParam.find(item => item.name === 'useRerank')?.input
-      .value.content as boolean,
-    use_rewrite: datasetParam.find(item => item.name === 'useRewrite')?.input
-      .value.content as boolean,
-    is_personal_only: datasetParam.find(item => item.name === 'isPersonalOnly')
-      ?.input.value.content as boolean,
   };
 
   return formData;
@@ -114,7 +127,7 @@ export function transformOnSubmit(value) {
 
   set(actualData.inputs, 'datasetParam', [
     {
-      name: 'datasetList',
+      name: 'knowledgeList',
       input: {
         type: 'list',
         schema: {
@@ -132,34 +145,47 @@ export function transformOnSubmit(value) {
         type: 'integer',
         value: {
           type: 'literal',
-          content: datasetSetting?.top_k,
+          content: datasetSetting?.topK,
         },
       },
     },
-    BlockInput.createBoolean('useRerank', datasetSetting?.use_rerank),
-    BlockInput.createBoolean('useRewrite', datasetSetting?.use_rewrite),
-    BlockInput.createBoolean(
-      'isPersonalOnly',
-      datasetSetting?.is_personal_only,
-    ),
+    BlockInput.createBoolean('rewrite', datasetSetting?.rewrite),
   ]);
 
-  // No fields are passed without a table knowledge base use_nl2sql
-  if (!isNil(datasetSetting?.use_nl2sql)) {
-    actualData.inputs.datasetParam.push(
-      BlockInput.createBoolean('useNl2sql', datasetSetting?.use_nl2sql),
-    );
-  }
-
-  // Strategy may be fulltext
-  if (datasetSetting?.min_score) {
+  if (datasetSetting?.threshold !== undefined) {
     actualData.inputs.datasetParam.push({
-      name: 'minScore',
+      name: 'threshold',
       input: {
         type: 'float',
         value: {
           type: 'literal',
-          content: datasetSetting?.min_score,
+          content: datasetSetting?.threshold,
+        },
+      },
+    });
+  }
+
+  if (datasetSetting?.semanticsPriority !== undefined) {
+    actualData.inputs.datasetParam.push({
+      name: 'semanticsPriority',
+      input: {
+        type: 'float',
+        value: {
+          type: 'literal',
+          content: datasetSetting?.semanticsPriority,
+        },
+      },
+    });
+  }
+
+  if (datasetSetting?.maxHistory !== undefined) {
+    actualData.inputs.datasetParam.push({
+      name: 'maxHistory',
+      input: {
+        type: 'integer',
+        value: {
+          type: 'literal',
+          content: datasetSetting?.maxHistory,
         },
       },
     });
@@ -167,14 +193,27 @@ export function transformOnSubmit(value) {
 
   // Added search policy configuration, there may be no strategy data not in grey release
   // Strategy may be 0
-  if (!isNil(datasetSetting?.strategy)) {
+  if (!isNil(datasetSetting?.matchType)) {
     actualData.inputs.datasetParam.push({
-      name: 'strategy',
+      name: 'matchType',
       input: {
-        type: 'integer',
+        type: 'string',
         value: {
           type: 'literal',
-          content: datasetSetting?.strategy,
+          content: datasetSetting?.matchType,
+        },
+      },
+    });
+  }
+
+  if (!isNil(datasetSetting?.rerankModelId)) {
+    actualData.inputs.datasetParam.push({
+      name: 'rerankModelId',
+      input: {
+        type: 'string',
+        value: {
+          type: 'literal',
+          content: datasetSetting?.rerankModelId,
         },
       },
     });

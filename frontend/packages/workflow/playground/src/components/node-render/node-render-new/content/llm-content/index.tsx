@@ -23,7 +23,7 @@ export function LLMContent() {
       <InputParameters />
       <Outputs />
       <Model />
-      {/*<Skill />*/}
+      <Skill />
     </>
   );
 }

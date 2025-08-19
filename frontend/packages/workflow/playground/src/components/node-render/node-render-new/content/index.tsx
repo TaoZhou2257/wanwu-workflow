@@ -46,7 +46,9 @@ import { VariableMergeContent } from './variable-merge-content';
 import { VariableAssignContent } from './variable-assign-content';
 import { QuestionContent } from './question-content';
 import { LLMContent } from './llm-content';
+import { LLMWanwuContent } from './llm-wanwu-content';
 import { DatasetContent } from './knowledge-content';
+import { DatasetWanwuContent } from './knowledge-wanwu-content';
 import { ImageGenerateContent } from './image-generate-content';
 import { HttpContent } from './http-content';
 import { DatabaseUpdateContent } from './database-update-content';
@@ -66,11 +68,11 @@ const ContentMap = {
   [StandardNodeType.Intent]: IntentContent,
   [StandardNodeType.SubWorkflow]: SubWorkflowContentV2,
   [StandardNodeType.Dataset]: DatasetContent,
-  [StandardNodeType.DatasetWanwu]: DatasetContent,
+  [StandardNodeType.DatasetWanwu]: DatasetWanwuContent,
   [StandardNodeType.DatasetWrite]: DatasetContent,
   [StandardNodeType.Question]: QuestionContent,
   [StandardNodeType.Output]: OutputContent,
-  [StandardNodeType.LLM]: LLMContent,
+  [StandardNodeType.LLM]: LLMWanwuContent,
   [StandardNodeType.Loop]: LoopContent,
   [StandardNodeType.Break]: BreakContent,
   [StandardNodeType.Continue]: ContinueContent,

@@ -69,13 +69,13 @@ export const datasetNodeFormDataRuntimeType = t.type({
     datasetParameters: t.type({
       datasetParam: t.array(t.string),
       datasetSetting: t.type({
-        top_k: t.number,
-        min_score: t.union([t.number, t.undefined]),
-        strategy: t.union([t.number, t.undefined]),
-        use_nl2sql: t.union([t.boolean, t.undefined]),
-        use_rerank: t.boolean,
-        use_rewrite: t.boolean,
-        is_personal_only: t.boolean,
+        topK: t.number,
+        threshold: t.union([t.number, t.undefined]),
+        semanticsPriority: t.union([t.number, t.undefined]),
+        maxHistory: t.union([t.number, t.undefined]),
+        matchType: t.string,
+        rerankModelId: t.string,
+        rewrite: t.boolean,
       }),
     }),
     inputParameters: t.type({
@@ -91,7 +91,7 @@ export const datasetNodeActualDataRuntimeType = t.type({
     datasetParam: t.array(
       t.union([
         t.type({
-          name: t.literal('datasetList'),
+          name: t.literal('knowledgeList'),
           input: t.type({
             type: t.literal('list'),
             schema: t.type({
@@ -114,7 +114,7 @@ export const datasetNodeActualDataRuntimeType = t.type({
           }),
         }),
         t.type({
-          name: t.literal('minScore'),
+          name: t.literal('threshold'),
           input: t.type({
             type: t.literal('number'),
             value: t.type({
@@ -124,7 +124,7 @@ export const datasetNodeActualDataRuntimeType = t.type({
           }),
         }),
         t.type({
-          name: t.literal('strategy'),
+          name: t.literal('semanticsPriority'),
           input: t.type({
             type: t.literal('number'),
             value: t.type({
@@ -134,37 +134,37 @@ export const datasetNodeActualDataRuntimeType = t.type({
           }),
         }),
         t.type({
-          name: t.literal('useNl2sql'),
+          name: t.literal('maxHistory'),
           input: t.type({
-            type: t.literal('boolean'),
+            type: t.literal('integer'),
             value: t.type({
               type: t.literal('literal'),
-              content: t.boolean,
+              content: t.number,
             }),
           }),
         }),
         t.type({
-          name: t.literal('useRerank'),
+          name: t.literal('matchType'),
           input: t.type({
-            type: t.literal('boolean'),
+            type: t.literal('string'),
             value: t.type({
               type: t.literal('literal'),
-              content: t.boolean,
+              content: t.number,
             }),
           }),
         }),
         t.type({
-          name: t.literal('useRewrite'),
+          name: t.literal('rerankModelId'),
           input: t.type({
-            type: t.literal('boolean'),
+            type: t.literal('string'),
             value: t.type({
               type: t.literal('literal'),
-              content: t.boolean,
+              content: t.number,
             }),
           }),
         }),
         t.type({
-          name: t.literal('isPersonalOnly'),
+          name: t.literal('rewrite'),
           input: t.type({
             type: t.literal('boolean'),
             value: t.type({
@@ -176,8 +176,10 @@ export const datasetNodeActualDataRuntimeType = t.type({
       ]),
     ),
     datasetSetting: t.type({
-      top_k: t.number,
-      min_score: t.number,
+      topK: t.number,
+      threshold: t.number,
+      semanticsPriority: t.number,
+      maxHistory: t.number
     }),
     inputParameters: t.array(
       t.type({

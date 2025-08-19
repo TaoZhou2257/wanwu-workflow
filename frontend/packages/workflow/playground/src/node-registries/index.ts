@@ -22,7 +22,7 @@ export { DATABASE_DELETE_NODE_REGISTRY } from './database/database-delete';
 export { DATABASE_QUERY_NODE_REGISTRY } from './database/database-query';
 export { DATABASE_UPDATE_NODE_REGISTRY } from './database/database-update';
 export { DATASET_NODE_REGISTRY } from './dataset/dataset-search';
-export { DATASET_NODE_REGISTRY_WANWU } from './dataset/dataset-wanwu';
+export { DATASET_WANWU_NODE_REGISTRY } from './dataset/dataset-wanwu';
 export { DATASET_WRITE_NODE_REGISTRY } from './dataset/dataset-write';
 export { END_NODE_REGISTRY } from './end';
 export { HTTP_NODE_REGISTRY } from './http';

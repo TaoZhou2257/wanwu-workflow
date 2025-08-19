@@ -41,7 +41,7 @@ export function Knowledge() {
           // The operation and maintenance platform can directly display the ID, because the operation and maintenance platform cannot pull the actual knowledge base information.
           label: IS_BOT_OP ? d.dataset_id : d.name,
           icon: (
-            <img className="w-[16px] h-[16px] rounded-mini" src={d.icon_url} />
+            d.icon_url ? <img className="w-[16px] h-[16px] rounded-mini" src={d.icon_url} /> : null
           ),
         }))}
       />

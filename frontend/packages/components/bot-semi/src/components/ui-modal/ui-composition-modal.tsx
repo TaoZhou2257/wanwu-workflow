@@ -133,10 +133,10 @@ export const UICompositionModal = ({
     className={classNames(s['ui-composition-modal'], props.className)}
   >
     <div className={s['composition-modal-layout']}>
-      <div className={classNames(s.aside, props.siderWrapperClassName)}>
+      {sider && <div className={classNames(s.aside, props.siderWrapperClassName)}>
         <div className={s.title}>{header}</div>
         {sider}
-      </div>
+      </div>}
       <div className={s.content}>
         <div
           className={classNames({

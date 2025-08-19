@@ -57,7 +57,6 @@ export function WorkflowPage(): React.ReactNode {
 
   return (
     <>
-      <div>123</div>
       <WorkflowPlayground
         ref={workflowPlaygroundRef}
         sidebar={EmptySidebar}

@@ -26,15 +26,18 @@ import { IconWarningInfo } from '@coze-arch/bot-icons';
 import { Popover } from '@coze-arch/coze-design';
 
 import { CheckboxWithLabel } from '../checkbox-with-label';
-import { Strategy, type DataSetInfo } from './type';
-import { TitleArea, SliderArea, SearchStrategy } from './components';
+import { MatchType, type DataSetInfo } from './type';
+import { TitleArea, SliderArea, SearchStrategyWanwu, RerankModelWanwu } from './components';
 
 import s from './index.module.less';
 
 /** Prompt beyond this value */
 const SUGGEST_TOP_K = 5;
 /** default minimum match */
-const DEFAULT_MIN_SCORE = 0.5;
+const DEFAULT_MIN_SCORE = 0.4;
+
+const DEFAULT_SEMANTICS_PRIORITY = 0.2;
+const DEFAULT_MAX_HISTORY = 0;
 /** default maximum recall  */
 const DEFAULT_TOP_K = 5;
 
@@ -58,13 +61,13 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
   dataSets,
 }) => {
   const {
-    min_score: minScore,
-    top_k: topK,
-    strategy,
-    use_nl2sql: useNl2sql,
-    use_rerank: useRerank,
-    use_rewrite: useRewrite,
-    is_personal_only: isPersonalOnly,
+    threshold,
+    maxHistory,
+    topK,
+    matchType,
+    rerankModelId,
+    semanticsPriority,
+    rewrite,
   } = dataSetInfo || {};
 
   const isDatasetWriteActive = true;
@@ -85,23 +88,25 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
     }
 
     if (
-      isNil(minScore) &&
+      isNil(threshold) &&
+      isNil(maxHistory) &&
+      isNil(semanticsPriority) &&
       isNil(topK) &&
-      isNil(strategy) &&
-      isNil(useRerank) &&
-      isNil(useRewrite) &&
-      isNil(isPersonalOnly)
+      isNil(matchType) &&
+      isNil(rerankModelId) &&
+      isNil(rewrite)
     ) {
       const initDataSetInfo = {
-        min_score: DEFAULT_MIN_SCORE,
-        top_k: DEFAULT_TOP_K,
-        strategy: Strategy.Hybird,
+        threshold: DEFAULT_MIN_SCORE,
+        topK: DEFAULT_TOP_K,
+        matchType: MatchType.Semantic,
+        rerankModelId: '',
+        maxHistory: DEFAULT_MAX_HISTORY,
+        semanticsPriority: DEFAULT_SEMANTICS_PRIORITY
       };
 
       if (isDatasetWriteActive) {
-        set(initDataSetInfo, 'use_rerank', true);
-        set(initDataSetInfo, 'use_rewrite', true);
-        set(initDataSetInfo, 'is_personal_only', true);
+        set(initDataSetInfo, 'rewrite', true);
       }
 
       // The search policy for new nodes defaults to Hybird
@@ -109,49 +114,23 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
         ...dataSetInfo,
         ...initDataSetInfo,
       });
-    } else if (isNil(strategy)) {
+    } else if (isNil(matchType)) {
       // The search policy for existing processes defaults to Hybird
       onDataSetInfoChange?.({
         ...dataSetInfo,
-        strategy: Strategy.Hybird,
+        matchType: MatchType.Semantic,
       });
     } else if (
       // stock process supplement default value
-      isNil(useRerank) &&
-      isNil(useRewrite) &&
-      isNil(isPersonalOnly) &&
+      isNil(rewrite) &&
       isDatasetWriteActive
     ) {
       onDataSetInfoChange?.({
         ...dataSetInfo,
-        use_rerank: true,
-        use_rewrite: true,
-        is_personal_only: true,
+        rewrite: true,
       });
     }
   }, [dataSetInfo, isDatasetWriteActive, isContainSqlDataSet, isDatasetEmpty]);
-
-  useEffect(() => {
-    // Avoid situations where unrequested Knowledge Base List data results in an isContainSqlDataSet status error
-    if (!isReady) {
-      return;
-    }
-    if (isNil(useNl2sql)) {
-      if (isContainSqlDataSet) {
-        const nextDataSetInfo = {
-          ...dataSetInfo,
-          use_nl2sql: true,
-        };
-        onDataSetInfoChange(nextDataSetInfo as DataSetInfo);
-      }
-    } else {
-      // No table database Clear this field
-      if (!isContainSqlDataSet) {
-        const nextDataSetInfo = omit(dataSetInfo, ['use_nl2sql']);
-        onDataSetInfoChange(nextDataSetInfo as DataSetInfo);
-      }
-    }
-  }, [isContainSqlDataSet, useNl2sql, isReady]);
 
   useEffect(() => {
     if (!isReady) {
@@ -164,23 +143,6 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
       onDataSetInfoChange(nextDataSetInfo as DataSetInfo);
     }
   }, [dataSets, isReady, setDatasetEmpty]);
-
-  const [minScoreVisible, setMinScoreVisible] = useState(true);
-
-  useEffect(() => {
-    setMinScoreVisible(!!useRerank);
-    let nextDataSetInfo: DataSetInfo;
-    if (!useRerank) {
-      nextDataSetInfo = omit(dataSetInfo, ['min_score']);
-      onDataSetInfoChange?.(nextDataSetInfo);
-    } else if (useRerank && isNil(minScore)) {
-      nextDataSetInfo = {
-        ...dataSetInfo,
-        min_score: DEFAULT_MIN_SCORE,
-      };
-      onDataSetInfoChange?.(nextDataSetInfo);
-    }
-  }, [useRerank, setMinScoreVisible]);
 
   const [topKSuggestVisible, setTopKSuggestVisible] = useState(false);
 
@@ -204,37 +166,92 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
 
   return (
     // Set the positioning to prevent the slider from overshifting
-    <div className={s.setting} style={{ ...style, position: 'relative' }}>
+    <div className={s.setting} style={{...style, position: 'relative'}}>
       <div className={s['setting-item']}>
         <TitleArea
           title={I18n.t('knowledge_search_strategy_title')}
           tip={I18n.t('knowledge_search_strategy_tooltip')}
         />
-        <SearchStrategy
+        <SearchStrategyWanwu
           readonly={readonly}
-          value={strategy as Strategy}
+          value={matchType as MatchType}
           onChange={v => {
             onDataSetInfoChange(
-              v === Strategy.FullText
+              /*v === MatchType.FullText
                 ? {
-                    top_k: dataSetInfo?.top_k,
-                    strategy: v,
-                  }
-                : {
-                    ...dataSetInfo,
-                    // From fulltext - > rest policies, you need to add min_score by default
-                    min_score: dataSetInfo?.min_score || DEFAULT_MIN_SCORE,
-                    strategy: v,
-                  },
+                  topK: dataSetInfo?.topK,
+                  matchType: v,
+                }
+                : */
+              {
+                ...dataSetInfo,
+                matchType: v,
+              },
             );
           }}
         />
       </div>
 
+      {matchType !== MatchType.HybirdPriority && (<div className={s['setting-item']}>
+        <TitleArea
+          title={I18n.t('knowledge_rerank')}
+        />
+        <RerankModelWanwu
+          readonly={readonly}
+          value={rerankModelId as string}
+          onChange={v => {
+            onDataSetInfoChange(
+              {
+                ...dataSetInfo,
+                rerankModelId: v,
+              },
+            );
+          }}
+        />
+      </div>)}
+
+      {matchType === MatchType.HybirdPriority && (<div className={s['setting-item']}>
+        <TitleArea
+          title={`${I18n.t('dataset_lang')}${semanticsPriority} / ${I18n.t('dataset_keywords')}${1 - semanticsPriority}`}
+        />
+        <div style={{position: 'relative'}}>
+          <SliderArea
+            min={0}
+            max={1}
+            step={0.01}
+            customStyles={{
+              sliderAreaStyle: {
+                width: '160px',
+              },
+              boundaryStyle: {
+                width: '158px',
+                margin: 0,
+              },
+            }}
+            isDataSet
+            value={semanticsPriority as number}
+            marks={{markKey: DEFAULT_SEMANTICS_PRIORITY, markText: 'Default'}}
+            disabled={readonly || disabled}
+            onChange={v => {
+              onDataSetInfoChange({
+                ...dataSetInfo,
+                semanticsPriority: v,
+              });
+            }}
+            onClickDefault={() => {
+              onDataSetInfoChange({
+                ...dataSetInfo,
+                semanticsPriority: DEFAULT_SEMANTICS_PRIORITY,
+              });
+            }}
+          />
+        </div>
+      </div>)}
+
       <div className={s['setting-item']}>
         <TitleArea
-          title={I18n.t('dataset_max_recall')}
-          tip={I18n.t('bot_edit_datasetsSettings_MaxTip')}
+          title={'TopK'}
+          tip={I18n.t('bot_edit_datasetsSettings_topK')}
         />
         <Popover
           showArrow={false}
@@ -248,9 +265,9 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
           className={s['dataset-top-k-popover']}
           getPopupContainer={() => document.body}
         >
-          <div style={{ position: 'relative' }}>
+          <div style={{position: 'relative'}}>
             <SliderArea
-              min={1}
+              min={0}
               max={20}
               step={1}
               value={topK}
@@ -272,7 +289,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
               onChange={v => {
                 onDataSetInfoChange({
                   ...dataSetInfo,
-                  top_k: v,
+                  topK: v,
                 });
                 if (v > SUGGEST_TOP_K) {
                   setTopKSuggestVisible(true);
@@ -283,7 +300,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
               onClickDefault={() => {
                 onDataSetInfoChange({
                   ...dataSetInfo,
-                  top_k: DEFAULT_TOP_K,
+                  topK: DEFAULT_TOP_K,
                 });
               }}
               // Semi version is not high enough
@@ -301,113 +318,99 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
         </Popover>
       </div>
 
-      {minScoreVisible && strategy !== Strategy.FullText ? (
-        <div className={s['setting-item']}>
-          <TitleArea
-            title={I18n.t('dataset_min_degree')}
-            tip={I18n.t('bot_edit_datasetsSettings_MinTip')}
-          />
-          <div style={{ position: 'relative' }}>
-            <SliderArea
-              min={0.01}
-              max={0.99}
-              step={0.01}
-              customStyles={{
-                sliderAreaStyle: {
-                  width: '160px',
-                },
-                boundaryStyle: {
-                  width: '158px',
-                  margin: 0,
-                },
-              }}
-              isDataSet
-              value={minScore as number}
-              marks={{ markKey: 0.5, markText: 'Default' }}
-              disabled={readonly || disabled}
-              onChange={v => {
-                onDataSetInfoChange({
-                  ...dataSetInfo,
-                  min_score: v,
-                });
-              }}
-              onClickDefault={() => {
-                onDataSetInfoChange({
-                  ...dataSetInfo,
-                  min_score: DEFAULT_MIN_SCORE,
-                });
-              }}
-            />
-          </div>
-        </div>
-      ) : (
-        <></>
-      )}
-      {isDatasetWriteActive && isContainSqlDataSet ? (
-        <div className={s['setting-item']}>
-          <CheckboxWithLabel
-            checked={useNl2sql}
-            onChange={checked => {
+      {matchType !== MatchType.HybirdPriority && (<div className={s['setting-item']}>
+        <TitleArea
+          title={I18n.t('dataset_content_length')}
+          tip={I18n.t('bot_edit_datasetsSettings_content_length')}
+        />
+        <div style={{position: 'relative'}}>
+          <SliderArea
+            min={0}
+            max={100}
+            step={1}
+            customStyles={{
+              sliderAreaStyle: {
+                width: '160px',
+              },
+              boundaryStyle: {
+                width: '158px',
+                margin: 0,
+              },
+            }}
+            isDataSet
+            value={maxHistory as number}
+            marks={{markKey: DEFAULT_MAX_HISTORY, markText: ''}}
+            disabled={readonly || disabled}
+            onChange={v => {
               onDataSetInfoChange({
                 ...dataSetInfo,
-                use_nl2sql: checked,
+                maxHistory: v,
               });
             }}
-            readonly={readonly}
-            label={I18n.t('kl_write_022')}
-            description={I18n.t('kl_write_023')}
-            dataTestId={getNodeSetterId('dataset_use_nl2sql')}
+            onClickDefault={() => {
+              onDataSetInfoChange({
+                ...dataSetInfo,
+                maxHistory: DEFAULT_MAX_HISTORY,
+              });
+            }}
           />
         </div>
-      ) : null}
+      </div>)}
 
-      {isDatasetWriteActive ? (
-        <>
-          <CheckboxWithLabel
-            checked={useRewrite}
-            onChange={checked => {
+      <div className={s['setting-item']}>
+        <TitleArea
+          title={I18n.t('dataset_score')}
+          tip={I18n.t('bot_edit_datasetsSettings_score')}
+        />
+        <div style={{position: 'relative'}}>
+          <SliderArea
+            min={0}
+            max={1}
+            step={0.01}
+            customStyles={{
+              sliderAreaStyle: {
+                width: '160px',
+              },
+              boundaryStyle: {
+                width: '158px',
+                margin: 0,
+              },
+            }}
+            isDataSet
+            value={threshold as number}
+            marks={{markKey: DEFAULT_MIN_SCORE, markText: 'Default'}}
+            disabled={readonly || disabled}
+            onChange={v => {
               onDataSetInfoChange({
                 ...dataSetInfo,
-                use_rewrite: checked,
+                threshold: v,
               });
             }}
-            readonly={readonly}
-            label={I18n.t('kl_write_024')}
-            description={I18n.t('kl_write_025')}
-            dataTestId={getNodeSetterId('dataset_use_rewrite')}
-            tooltip={<RewriteTips />}
-            tipWrapperClassName={s['tips-container']}
-          />
-          <CheckboxWithLabel
-            checked={useRerank}
-            onChange={checked => {
+            onClickDefault={() => {
               onDataSetInfoChange({
                 ...dataSetInfo,
-                use_rerank: checked,
+                threshold: DEFAULT_MIN_SCORE,
               });
             }}
-            readonly={readonly}
-            label={I18n.t('kl_write_026')}
-            description={I18n.t('kl_write_027')}
-            dataTestId={getNodeSetterId('dataset_use_rerank')}
-            tooltip={<RerankTips />}
-            tipWrapperClassName={s['tips-container']}
           />
-          <CheckboxWithLabel
-            checked={isPersonalOnly}
-            onChange={checked => {
-              onDataSetInfoChange({
-                ...dataSetInfo,
-                is_personal_only: checked,
-              });
-            }}
-            readonly={readonly}
-            label={I18n.t('kl_write_028')}
-            description={I18n.t('kl_write_029')}
-            dataTestId={getNodeSetterId('dataset_is_only_personal')}
-          />
-        </>
-      ) : null}
+        </div>
+      </div>
+
+      <div className={s['setting-item']}>
+        <CheckboxWithLabel
+          checked={rewrite}
+          onChange={checked => {
+            onDataSetInfoChange({
+              ...dataSetInfo,
+              rewrite: checked,
+            });
+          }}
+          readonly={readonly}
+          label={I18n.t('dataset_keywords_search')}
+          description={I18n.t('bot_edit_datasetsSettings_keywords')}
+          dataTestId={getNodeSetterId('dataset_use_rewrite')}
+        />
+      </div>
     </div>
   );
 };
