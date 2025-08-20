@@ -241,7 +241,7 @@ export default function CustomTreeNode(props: CustomTreeNodeProps) {
       })}
     >
       <ParamName
-        disabled={disabled || isPreset}
+        disabled={disabled || isPreset} // output name
         data={value}
         onChange={onNameChange}
         style={columnsStyle.name}

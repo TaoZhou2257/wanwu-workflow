@@ -2,16 +2,11 @@ import React, {useEffect, useState} from "react";
 import { I18n } from '@coze-arch/i18n';
 
 import { NodeConfigForm } from '@/node-registries/common/components';
-
 import { OutputsField, InputsParametersField } from '../common/fields';
-
 import { McpParamsField } from "./componets/mcp-params-field";
 
 export const FormRender = () => {
-  const [params, setParams] = useState<any>([{name: 'key1', input: { type: 'ref' } }, {name: 'key2', input: { type: 'ref' } }])
-  useEffect(() => {
-    setParams([{name: 'key1', input: { type: 'ref' } }, {name: 'key2', input: { type: 'ref' } }])
-  }, []);
+  const [params, setParams] = useState<any>([])
 
   return (
     <NodeConfigForm>

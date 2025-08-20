@@ -89,6 +89,8 @@ export function PopoverModelListView({
     />
   );
 
+  console.log(modelList, modelGroups, '---------------------------------modelList')
+
   return (
     <div
       className={cls(
@@ -121,7 +123,8 @@ export function PopoverModelListView({
       ) : null}
 
       {modelGroups.map((group, idx) => {
-        if (IS_OPEN_SOURCE) {
+        const isRenderModelOption = true; //IS_OPEN_SOURCE
+        if (isRenderModelOption) {
           return group.map(renderModelOption);
         }
         return (

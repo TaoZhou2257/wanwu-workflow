@@ -22,12 +22,12 @@ import { type Model } from '@coze-arch/bot-api/developer_api';
 export function ModelOptionThumb({ model }: { model: Model }) {
   return (
     <div className="px-[4px] flex items-center gap-[4px]">
-      <Avatar
+      {/*<Avatar
         shape="square"
         size="extra-extra-small"
         src={model.model_icon}
         className="rounded-[4px] border border-solid coz-stroke-primary"
-      />
+      />*/}
       <span className="pl-[3px] text-[14px] leading-[20px] coz-fg-primary">
         {model.name}
       </span>

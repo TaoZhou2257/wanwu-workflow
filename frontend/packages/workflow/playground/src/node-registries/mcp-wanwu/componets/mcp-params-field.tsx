@@ -16,9 +16,10 @@
 
 import React from 'react';
 import {
-  ViewVariableType,
+  // ViewVariableType,
+  ValueExpressionType,
   type RefExpression,
-  type ViewVariableType,
+  ViewVariableType,
   type LiteralExpression,
   type InputValueVO,
 } from '@coze-workflow/base';
@@ -33,19 +34,18 @@ import {
   withFieldArray,
 } from '@/form';
 
-
 interface McpParamsFieldProps {
-  tooltip?: React.ReactNode;
   disabledTypes?: ViewVariableType[];
-  defaultValue?: RefExpression | LiteralExpression;
+  defaultValue?: RefExpression;
   name?: string;
+  params?: any
 }
 
 export const McpParamsField = withFieldArray(({
-  tooltip,
+  params,
   disabledTypes,
 }: McpParamsFieldProps) => {
-  const { value } = useFieldArray<InputValueVO>();
+  const { value, remove, append } = useFieldArray<InputValueVO>();
   console.log(value, '---------------------------456')
   return (
     <Section
@@ -56,6 +56,13 @@ export const McpParamsField = withFieldArray(({
         '输入参数值',
       )}
     >
+       <div onClick={() => remove(0)}>remove</div>
+      <div onClick={() => {
+        append({
+          name: `test` + new Date().getTime().toString(),
+          input: { type: ValueExpressionType.REF },
+        });
+      }}>add</div>
       <ColumnsTitle
         columns={[
           {

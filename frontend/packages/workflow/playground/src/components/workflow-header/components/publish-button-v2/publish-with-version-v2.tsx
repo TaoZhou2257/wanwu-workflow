@@ -125,14 +125,14 @@ const VersionForm: React.FC<{
           >
             {I18n.t('workflow_detail_title_testrun')}
           </Button>
-          {/*<Button
+          <Button
             color="primary"
             onClick={handleForcePublish}
             className={'mr-[8px]'}
             data-testid="workflow-force-publish-button"
           >
             {I18n.t('workflow_publish_not_testrun_ insist')}
-          </Button>*/}
+          </Button>
           <Button
             color="primary"
             onClick={onForceCancel}
