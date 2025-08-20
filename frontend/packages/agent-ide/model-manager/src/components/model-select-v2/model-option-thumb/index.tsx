@@ -28,7 +28,7 @@ export function ModelOptionThumb({ model }: { model: Model }) {
         src={model.model_icon}
         className="rounded-[4px] border border-solid coz-stroke-primary"
       />
-      <span className="pl-[3px] text-[14px] leading-[20px] coz-fg-primary">
+      <span className="text-[14px] leading-[20px] coz-fg-primary">
         {model.name}
       </span>
       {model.model_status_details?.is_upcoming_deprecated ? (

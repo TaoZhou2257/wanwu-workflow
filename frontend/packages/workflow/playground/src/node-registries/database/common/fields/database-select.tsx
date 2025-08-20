@@ -50,7 +50,7 @@ export const DatabaseSelectField = ({
   }, [currentDatabase?.id]);
 
   return (
-    <Section title={ '数据表1' || I18n.t('workflow_database_node_database_table_title')}>
+    <Section title={I18n.t('workflow_database_node_database_table_title')}>
       <Field<DatabaseSelectValue> name={name} {...rest}>
         {({ value, onChange, readonly }) => (
           <DatabaseSelect
