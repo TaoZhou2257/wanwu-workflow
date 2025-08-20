@@ -151,54 +151,10 @@ export const getLLMModels = async ({
           getTypeListParams.model_scene = ModelScene.Douyin;
         }
 
-        const resp = await developerApi.GetTypeList(getTypeListParams);
-        const _modelList: Model[] = [
-          {
-            "modelId": "2",
-            "provider": "YuanJing",
-            "model": "deepseek-r1",
-            "modelType": "llm",
-            "displayName": "DeepSeek-R1-671B_yuanjing",
-            "avatar": {
-              "key": "custom-upload/avatar/49/49e20387-83cf-4fa1-b6f2-4bd1101f7925.png",
-              "path": "/v1/cache/avatar/49/49e20387-83cf-4fa1-b6f2-4bd1101f7925.png"
-            },
-            "publishDate": "",
-            "isActive": true,
-            "userId": "1",
-            "orgId": "1",
-            "createdAt": "",
-            "updatedAt": ""
-          },
-          {
-            "modelId": "61",
-            "provider": "YuanJing",
-            "model": "yuanjing-70b-chat",
-            "modelType": "llm",
-            "displayName": "yuanjing-70b-chat",
-            "avatar": {
-              "key": "custom-upload/avatar/e8/e8333221-8db8-4806-bfb0-0bd1d279aa32.png",
-              "path": "/v1/cache/avatar/e8/e8333221-8db8-4806-bfb0-0bd1d279aa32.png"
-            },
-            "publishDate": "",
-            "isActive": true,
-            "userId": "1",
-            "orgId": "1",
-            "createdAt": "",
-            "updatedAt": ""
-          },
-          /*{
-            "name": "qwen3-235b-a22b",
-            "model_type": 65536,
-            "model": "",
-          },
-          {
-            "name": "deepseek-r1",
-            "model_type": 2004,
-            "model": "",
-          }*/
-        ].map(item => ({...item, name: item.displayName || item.model, model_type: Number(item.modelId)})) //resp?.data?.model_list ?? [];
-
+        const resp = await developerApi.GetLLMList();
+        const list = resp?.data?.list ?? [];
+        const _modelList: Model[] = list.map(item => ({...item, name: item.displayName || item.model, model_type: Number(item.modelId)}))
+        console.log(_modelList, '-----------------------------------llm_model_list')
 
         // From here to return modelList is all about wiping the butt of the backend
         // There is hard code here, you need to set the default value of the output format to JSON

@@ -74,7 +74,7 @@ export const PublishWithDiff: React.FC<PublishWithDiffProps> = ({
 
   return (
     <>
-      {useNewGlobalVariableCache ? (
+      {useNewGlobalVariableCache || true ? (
         <PublishWithVersionV2 onPublish={handlePublish} {...props} />
       ) : (
         <PublishWithVersion onPublish={handlePublish} {...props} />

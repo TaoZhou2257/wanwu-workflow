@@ -14,100 +14,13 @@
  * limitations under the License.
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { useNodeTestId } from '@coze-workflow/base';
 import { Select } from '@coze-arch/coze-design';
+import { KnowledgeApi } from '@coze-arch/bot-api';
 
 import s from './index.module.less';
-
-const optionList = [
-  {
-    "modelId": "31",
-    "provider": "YuanJing",
-    "model": "bge1",
-    "modelType": "rerank",
-    "displayName": "bge1",
-    "avatar": {
-      "key": "",
-      "path": ""
-    },
-    "publishDate": "",
-    "isActive": true,
-    "userId": "1",
-    "orgId": "1",
-    "createdAt": "",
-    "updatedAt": ""
-  },
-  {
-    "modelId": "69",
-    "provider": "YuanJing",
-    "model": "yuanjingrerank",
-    "modelType": "rerank",
-    "displayName": "yuanjingrerank",
-    "avatar": {
-      "key": "",
-      "path": ""
-    },
-    "publishDate": "",
-    "isActive": true,
-    "userId": "1",
-    "orgId": "1",
-    "createdAt": "",
-    "updatedAt": ""
-  },
-  {
-    "modelId": "67",
-    "provider": "Qwen",
-    "model": "gte-rerank",
-    "modelType": "rerank",
-    "displayName": "gte-rerank",
-    "avatar": {
-      "key": "",
-      "path": ""
-    },
-    "publishDate": "",
-    "isActive": true,
-    "userId": "1",
-    "orgId": "1",
-    "createdAt": "",
-    "updatedAt": ""
-  },
-  {
-    "modelId": "10",
-    "provider": "OpenAI-API-compatible",
-    "model": "jina-reranker-m0",
-    "modelType": "rerank",
-    "displayName": "jina-reranker-m0",
-    "avatar": {
-      "key": "custom-upload/avatar/42/425d6355-ec08-4f8e-84ef-c921febbb1b7.png",
-      "path": "/v1/cache/avatar/42/425d6355-ec08-4f8e-84ef-c921febbb1b7.png"
-    },
-    "publishDate": "2025-06-25",
-    "isActive": true,
-    "userId": "1",
-    "orgId": "1",
-    "createdAt": "",
-    "updatedAt": ""
-  },
-  {
-    "modelId": "11",
-    "provider": "OpenAI-API-compatible",
-    "model": "BAAI/bge-reranker-v2-m3",
-    "modelType": "rerank",
-    "displayName": "bge-reranker-v2-m3",
-    "avatar": {
-      "key": "custom-upload/avatar/d0/d04d8ea3-4133-4b4c-842a-f01ff957f36d.png",
-      "path": "/v1/cache/avatar/d0/d04d8ea3-4133-4b4c-842a-f01ff957f36d.png"
-    },
-    "publishDate": "",
-    "isActive": true,
-    "userId": "1",
-    "orgId": "1",
-    "createdAt": "",
-    "updatedAt": ""
-  }
-];
 
 interface RerankModelProps {
   value: string;
@@ -120,8 +33,20 @@ export const RerankModelWanwu: React.FC<RerankModelProps> = props => {
   const { value, onChange, style, readonly } = props;
 
   const { getNodeSetterId } = useNodeTestId();
+  const [rerankList, setRerankList] = useState<any>([])
+
+  useEffect(() => {
+    getRerankModel()
+  }, []);
+
+  const getRerankModel = async () => {
+    const { data = {} } = await KnowledgeApi.getRerankModel()
+    console.log(data, '-----------------------------------rerank_model_list')
+    setRerankList(data?.list || [])
+  }
 
   return (
+    <div>
     <Select
       className={s['strategy-area']}
       dropdownClassName={s['strategy-area-dropdown']}
@@ -134,7 +59,7 @@ export const RerankModelWanwu: React.FC<RerankModelProps> = props => {
       onChange={onChange as (v: unknown) => void}
       data-testid={getNodeSetterId('dataset-rerank-model')}
     >
-      {optionList.map(v => (
+      {rerankList.map(v => (
         <Select.Option
           value={v.modelId}
           key={v.modelId}
@@ -144,5 +69,6 @@ export const RerankModelWanwu: React.FC<RerankModelProps> = props => {
         </Select.Option>
       ))}
     </Select>
+    </div>
   );
 };

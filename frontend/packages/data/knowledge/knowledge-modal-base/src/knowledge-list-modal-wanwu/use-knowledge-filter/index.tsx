@@ -81,25 +81,15 @@ const getDatasetList = async (
   },
   pageIndex = 1,
 ) => {
-  const { query, search_type, space_id, scope_type, format_type, projectID } =
-    props;
-  const resp = await KnowledgeApi.ListDataset({
-    space_id,
-    page: pageIndex,
-    size: DEFAULT_PAGE_SIZE,
-    filter: {
-      name: query,
-      scope_type,
-      format_type,
-    },
-    order_field: search_type,
-    project_id: projectID,
-  });
+  const { data = {} } = await KnowledgeApi.ListSelectDataset();
+  console.log(data, '------------------------------------------------------dataset_list')
+  const knowledgeList = data?.knowledgeList || []
+  const dataset_list = knowledgeList.map(((item: any) => ({...item, dataset_id: item.name})))
 
   return {
-    list: resp?.dataset_list || [],
+    list: dataset_list || [],
     nextPageIndex: pageIndex + 1,
-    total: Number(resp?.total),
+    total: dataset_list?.length || 0,
   };
 };
 
@@ -123,6 +113,7 @@ const EmptyToCreate: FC<{
       return;
     }
     createKnowledgeModal?.open();*/
+    console.log(window.location)
     window.location.href = window.location.origin + '/aibase/knowledge'
   };
   return (

@@ -39,7 +39,7 @@ export const PublishButton = () => {
   const [step, setStep] = useState('none');
 
   const handlePublish = async (obj?: Partial<PublishWorkflowRequest>) => {
-    const published = await operation.publish(obj);
+    const published = await operation.publishWorkflow(obj);
     if (!published) {
       return published;
     }

@@ -357,6 +357,12 @@ export interface ListDatasetRequest {
   Base?: base.Base;
 }
 
+export interface ListSelectDatasetRequest {
+  code?: number;
+  data?: any;
+  msg?: string;
+}
+
 export interface ListDatasetResponse {
   dataset_list?: Array<Dataset>;
   total?: number;

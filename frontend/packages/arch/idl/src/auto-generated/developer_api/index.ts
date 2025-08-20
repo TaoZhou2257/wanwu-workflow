@@ -601,6 +601,17 @@ export default class DeveloperApiService<T> {
     return this.request({ url, method, data }, options);
   }
 
+  /** GET /user/api/v1/model/select/llm */
+  GetLLMList(
+    req?: developer_api.GetTypeListRequest,
+    options?: T,
+  ): Promise<developer_api.GetTypeListResponse> {
+    const url = this.genBaseURL('/user/api/v1/model/select/llm');
+    const method = 'GET';
+    const params = {}
+    return this.request({ url, method, params }, options);
+  }
+
   /** POST /api/card/get_card_bind */
   GetCardBind(
     req?: developer_api.GetCardBindRequest,

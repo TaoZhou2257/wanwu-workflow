@@ -473,7 +473,7 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
             "node_type_list": [
               "3",
               "1006",
-              "62",
+              // "62",
             ]
           },
           {
@@ -507,14 +507,6 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
               "43",
               "44",
               "46"
-            ]
-          },
-          {
-            "name": "知识库\u0026数据",
-            "node_type_list": [
-              "6",
-              "27",
-              "40"
             ]
           },
           {
