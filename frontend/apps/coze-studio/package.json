@@ -9,7 +9,7 @@
   "maintainers": [],
   "sideEffects": false,
   "scripts": {
-    "build": "rsbuild build",
+    "build": "IS_OPEN_SOURCE=true rsbuild build",
     "dev": "rsbuild dev",
     "lint": "eslint ./ --cache --quiet",
     "preview": "rsbuild preview",
