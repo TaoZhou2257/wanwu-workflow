@@ -51,7 +51,7 @@ export function transformOnInit(value) {
             {
               key: nanoid(),
               name: 'searchList',
-              type: ViewVariableType.ArrayString,
+              type: ViewVariableType.ArrayObject,
             },
           ],
         },
