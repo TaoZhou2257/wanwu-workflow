@@ -318,7 +318,8 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
         </Popover>
       </div>
 
-      {matchType !== MatchType.HybirdPriority && (<div className={s['setting-item']}>
+      {/*暂时不展示*/}
+      {/*{matchType !== MatchType.HybirdPriority && (<div className={s['setting-item']}>
         <TitleArea
           title={I18n.t('dataset_content_length')}
           tip={I18n.t('bot_edit_datasetsSettings_content_length')}
@@ -355,7 +356,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
             }}
           />
         </div>
-      </div>)}
+      </div>)}*/}
 
       <div className={s['setting-item']}>
         <TitleArea

@@ -35,8 +35,8 @@ export function transformOnInit(value) {
       outputs: [
         {
           key: nanoid(),
-          name: 'outputList',
-          type: ViewVariableType.ArrayObject,
+          name: 'output',
+          type: ViewVariableType.Object,
           children: [
             {
               key: nanoid(),
