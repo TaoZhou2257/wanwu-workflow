@@ -51,6 +51,7 @@ func Init(ctx context.Context, infra Infra) error {
 
 	// register all node adaptors
 	coze_workflow_service.RegisterAllNodeAdaptors()
+	coze_workflow_service.RegisterWanwuAllNodeAdaptors()
 
 	// infra cache
 	cache := coze_cache.NewWithRedisCli(infra.Cache)
