@@ -2,23 +2,32 @@ import React, {useEffect, useState} from "react";
 import { I18n } from '@coze-arch/i18n';
 
 import { NodeConfigForm } from '@/node-registries/common/components';
-import { OutputsField, InputsParametersField } from '../common/fields';
-import { McpParamsField } from "./componets/mcp-params-field";
+
+import { OutputsField } from '../common/fields';
+import { McpParamsField, McpSelectField } from "./componets";
 
 export const FormRender = () => {
-  const [params, setParams] = useState<any>([])
+  const [params, setParams] = useState<any>(null)
+  const [paramsRequiredArr, setParamsRequiredArr] = useState<any>([])
+
+  const afterChange = (newValue: any) => {
+    const { properties, required } = newValue?.[0]?.inputSchema || {}
+    console.log(properties ? Object.keys(properties) : [], required, '----------------afterChange==========')
+    setParams(properties ? Object.keys(properties) : [])
+    setParamsRequiredArr(required || [])
+  }
 
   return (
     <NodeConfigForm>
-      {/*<InputsParametersField
-        name={INPUT_PATH}
-        title={I18n.t('node_http_request_params')}
-        tooltip={I18n.t('node_http_request_params_desc')}
-        defaultValue={[]}
-      />*/}
+      <McpSelectField
+        name={'inputs.mcpInfoList'}
+        afterChange={afterChange}
+      />
       <McpParamsField
         name="inputParameters"
-        defaultValue={params}
+        params={params}
+        paramsRequiredArr={paramsRequiredArr}
+        // defaultValue={params}
       />
       <OutputsField
         title={I18n.t('workflow_detail_node_output')}

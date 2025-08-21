@@ -417,9 +417,9 @@ export default class KnowledgeService<T> {
 
   /** POST /user/api/v1/knowledge/select */
   ListSelectDataset(
-    req?: dataset.ListSelectDatasetRequest,
+    req?: dataset.ListSelectRequest,
     options?: T,
-  ): Promise<dataset.ListDatasetResponse> {
+  ): Promise<dataset.ListSelectResponse> {
     const _req = req || {};
     const url = this.genBaseURL('/user/api/v1/knowledge/select');
     const method = 'POST';
@@ -432,9 +432,9 @@ export default class KnowledgeService<T> {
 
   /** GET /user/api/v1/model/select/rerank */
   getRerankModel(
-    req?: dataset.ListSelectDatasetRequest,
+    req?: dataset.ListSelectRequest,
     options?: T,
-  ): Promise<dataset.ListDatasetResponse> {
+  ): Promise<dataset.ListSelectResponse> {
     const url = this.genBaseURL('/user/api/v1/model/select/rerank');
     const method = 'GET';
     const params = {};

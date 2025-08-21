@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   // ViewVariableType,
   ValueExpressionType,
   type RefExpression,
   ViewVariableType,
-  type LiteralExpression,
   type InputValueVO,
+  useWorkflowNode,
 } from '@coze-workflow/base';
 import { I18n } from '@coze-arch/i18n';
 
@@ -38,16 +38,45 @@ interface McpParamsFieldProps {
   disabledTypes?: ViewVariableType[];
   defaultValue?: RefExpression;
   name?: string;
-  params?: any
+  params?: any;
+  paramsRequiredArr?: any;
 }
 
 export const McpParamsField = withFieldArray(({
+  paramsRequiredArr,
   params,
   disabledTypes,
 }: McpParamsFieldProps) => {
   const { value, remove, append } = useFieldArray<InputValueVO>();
-  console.log(value, '---------------------------456')
-  return (
+  const { data } = useWorkflowNode();
+  const mcpList = data?.inputs?.mcpInfoList || []
+
+  const removeAll = () => {
+    const valueArr = JSON.parse(JSON.stringify(value || []))
+    valueArr.forEach(() => {
+      remove(0)
+    })
+  }
+
+  const appendAll = () => {
+    params.forEach((item: any) => {
+      append({
+        name: item,
+        required: paramsRequiredArr.includes(item),
+        input: { type: ValueExpressionType.REF },
+      })
+    })
+  }
+
+  useEffect(() => {
+    // 如果 params 非首次进入，通过手动添加的，清之前的数据，加最新数据
+    if (params !== null && params) {
+      removeAll()
+      appendAll()
+    }
+  }, [params, paramsRequiredArr]);
+
+  return mcpList?.length > 0 ? (
     <Section
       title={I18n.t('workflow_detail_node_input')}
       tooltip={I18n.t(
@@ -56,13 +85,6 @@ export const McpParamsField = withFieldArray(({
         '输入参数值',
       )}
     >
-       <div onClick={() => remove(0)}>remove</div>
-      <div onClick={() => {
-        append({
-          name: `test` + new Date().getTime().toString(),
-          input: { type: ValueExpressionType.REF },
-        });
-      }}>add</div>
       <ColumnsTitle
         columns={[
           {
@@ -77,11 +99,11 @@ export const McpParamsField = withFieldArray(({
         className="mb-[8px]"
       />
       <FieldArrayList>
-        {value?.map(({name}, index) => (
+        {value?.map(({name, required}, index) => (
           <ValueExpressionInputField
-            key={index}
+            key={name + index}
             label={name}
-            required={false}
+            required={required}
             inputType={ViewVariableType.String}
             disabledTypes={disabledTypes}
             name={`inputParameters.${index}.input`}
@@ -89,5 +111,5 @@ export const McpParamsField = withFieldArray(({
         ))}
       </FieldArrayList>
     </Section>
-  )
+  ) : null
 });

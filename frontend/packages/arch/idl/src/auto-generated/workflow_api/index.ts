@@ -514,9 +514,9 @@ export default class WorkflowApiService<T> {
   }
 
   PublishWanwuWorkflow(
-    req: workflow.PublishWorkflowRequest,
+    req: workflow.PublishWanwuWorkflowRequest,
     options?: T,
-  ): Promise<workflow.PublishWorkflowResponse> {
+  ): Promise<workflow.PublishWanwuWorkflowResponse> {
     const _req = req;
     const url = this.genBaseURL('/user/api/v1/appspace/app/publish');
     const method = 'POST';

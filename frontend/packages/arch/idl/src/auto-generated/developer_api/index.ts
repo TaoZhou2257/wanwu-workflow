@@ -603,7 +603,7 @@ export default class DeveloperApiService<T> {
 
   /** GET /user/api/v1/model/select/llm */
   GetLLMList(
-    req?: developer_api.GetTypeListRequest,
+    req?: developer_api.GetListRequest,
     options?: T,
   ): Promise<developer_api.GetTypeListResponse> {
     const url = this.genBaseURL('/user/api/v1/model/select/llm');

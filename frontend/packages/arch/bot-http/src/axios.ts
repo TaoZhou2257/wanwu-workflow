@@ -110,7 +110,7 @@ axiosInstance.interceptors.response.use(
         // 401 Identity Expired & No Identity
         if (typeof error.response.data === 'object') {
           const unauthorizedData = error.response.data as UnauthorizedResponse;
-          const redirectUri = unauthorizedData?.data?.redirect_uri;
+          const redirectUri = unauthorizedData?.data?.redirect_uri || (window.location.origin + '/aibase/login');
           if (redirectUri) {
             redirect(redirectUri);
           }

@@ -3832,6 +3832,11 @@ export interface GetTypeListRequest {
   model_scene?: ModelScene;
 }
 
+export interface GetListRequest {
+  page?: number;
+  pageSize?: number;
+}
+
 export interface GetTypeListResponse {
   code?: Int64;
   msg?: string;

@@ -113,7 +113,7 @@ const EmptyToCreate: FC<{
       return;
     }
     createKnowledgeModal?.open();*/
-    console.log(window.location)
+    console.log(window.location, '----------------------------add_knowledge')
     window.location.href = window.location.origin + '/aibase/knowledge'
   };
   return (

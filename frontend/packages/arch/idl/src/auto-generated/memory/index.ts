@@ -1428,6 +1428,31 @@ export default class MemoryService<T> {
     return this.request({ url, method, data }, options);
   }
 
+  /** GET /use/model/api/v1/mcp/select */
+  GetMcpSelect(
+    req?: table.ListRequest,
+    options?: T,
+  ): Promise<table.ListRecordsResponse> {
+    const url = this.genBaseURL('/use/model/api/v1/mcp/select');
+    const method = 'GET';
+    const params = {};
+    return this.request({ url, method, params }, options);
+  }
+
+  /** GET /use/model/api/v1/mcp/tool/list */
+  GetMcpToolSelect(
+    req?: table.ListMcpToolRequest,
+    options?: T,
+  ): Promise<table.ListRecordsResponse> {
+    const _req = req || {}
+    const url = this.genBaseURL('/use/model/api/v1/mcp/tool/list');
+    const method = 'GET';
+    const params = {
+      serverUrl: _req['serverUrl'],
+    };
+    return this.request({ url, method, params }, options);
+  }
+
   /**
    * POST /api/memory/database/list
    *

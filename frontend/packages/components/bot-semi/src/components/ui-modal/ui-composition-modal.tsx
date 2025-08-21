@@ -144,6 +144,14 @@ export const UICompositionModal = ({
             [s['filter-empty']]: !filter,
           })}
         >
+          {!sider && (
+            <div
+              className={s.title}
+              style={{textAlign: 'left', width: '100%', fontSize: '16px', fontWeight: 'bold'}}
+            >
+              {header}
+            </div>
+          )}
           {filter}
           {extra}
           <UIIconButton

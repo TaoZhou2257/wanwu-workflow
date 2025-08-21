@@ -36,6 +36,14 @@ export interface WorkflowDatabase {
   tableDesc?: string;
 }
 
+export interface WorkflowMcp {
+  id: string;
+  fields?: DatabaseField[];
+  iconUrl?: string;
+  name?: string;
+  description?: string;
+}
+
 /**
  * Database configuration field
  */

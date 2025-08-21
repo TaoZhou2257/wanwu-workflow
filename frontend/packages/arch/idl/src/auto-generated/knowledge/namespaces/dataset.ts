@@ -357,7 +357,12 @@ export interface ListDatasetRequest {
   Base?: base.Base;
 }
 
-export interface ListSelectDatasetRequest {
+export interface ListSelectRequest {
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ListSelectResponse {
   code?: number;
   data?: any;
   msg?: string;
