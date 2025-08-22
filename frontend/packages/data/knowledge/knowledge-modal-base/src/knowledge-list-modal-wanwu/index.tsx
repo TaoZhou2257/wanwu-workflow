@@ -117,7 +117,7 @@ export const useKnowledgeListModal = ({
     node: (
       <UICompositionModal
         type="base-composition"
-        /*header={I18n.t('dataset_set_title')}*/
+        header={I18n.t('dataset_set_title')}
         visible={visible}
         className={classNames(
           styles.modal,

@@ -46,7 +46,7 @@ export function transformOnInit(value) {
             {
               key: nanoid(),
               name: 'score',
-              type: ViewVariableType.Number,
+              type: ViewVariableType.ArrayNumber,
             },
             {
               key: nanoid(),
