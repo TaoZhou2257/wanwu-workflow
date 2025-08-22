@@ -39,17 +39,17 @@ interface McpParamsFieldProps {
   defaultValue?: RefExpression;
   name?: string;
   params?: any;
-  paramsRequiredArr?: any;
 }
 
 export const McpParamsField = withFieldArray(({
-  paramsRequiredArr,
   params,
   disabledTypes,
 }: McpParamsFieldProps) => {
   const { value, remove, append } = useFieldArray<InputValueVO>();
   const { data } = useWorkflowNode();
   const mcpList = data?.inputs?.mcpInfoList || []
+  const { properties = {}, required = [] } = mcpList?.[0]?.inputSchema || {}
+  const mcpParamsList = Object.keys(properties || {}) || []
 
   const removeAll = () => {
     const valueArr = JSON.parse(JSON.stringify(value || []))
@@ -58,23 +58,36 @@ export const McpParamsField = withFieldArray(({
     })
   }
 
-  const appendAll = () => {
-    params.forEach((item: any) => {
+  const appendValue = (needAddList: any) => {
+    needAddList?.forEach((item: any) => {
       append({
         name: item,
-        required: paramsRequiredArr.includes(item),
         input: { type: ValueExpressionType.REF },
       })
     })
+  }
+
+  const initAppend = (params: any) => {
+    // 首次进入，但是有选择 mcp，没有 value 或者 value 不全的情况，添加 value
+    if (params === null && Boolean(mcpParamsList.length)) {
+      if (!value?.length) {
+        appendValue(mcpParamsList)
+      } else if (Boolean(value?.length) && (value?.length < mcpParamsList.length)) {
+        const needAddList = mcpParamsList.filter(item => !value?.map(it => it.name).includes(item))
+        appendValue(needAddList)
+      }
+    }
   }
 
   useEffect(() => {
     // 如果 params 非首次进入，通过手动添加的，清之前的数据，加最新数据
     if (params !== null && params) {
       removeAll()
-      appendAll()
+      appendValue(mcpParamsList)
     }
-  }, [params, paramsRequiredArr]);
+    // 首次进入的情况
+    initAppend(params)
+  }, [params]);
 
   return mcpList?.length > 0 ? (
     <Section
@@ -99,11 +112,11 @@ export const McpParamsField = withFieldArray(({
         className="mb-[8px]"
       />
       <FieldArrayList>
-        {value?.map(({name, required}, index) => (
+        {value?.map(({name}, index) => (
           <ValueExpressionInputField
             key={name + index}
             label={name}
-            required={required}
+            required={required.includes(name)}
             inputType={ViewVariableType.String}
             disabledTypes={disabledTypes}
             name={`inputs.inputParameters.${index}.input`}

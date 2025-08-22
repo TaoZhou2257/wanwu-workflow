@@ -9,13 +9,10 @@ import { McpParamsField, McpSelectField } from "./componets";
 
 export const FormRender = () => {
   const [params, setParams] = useState<any>(null)
-  const [paramsRequiredArr, setParamsRequiredArr] = useState<any>([])
 
   const afterChange = (newValue: any) => {
-    const { properties, required } = newValue?.[0]?.inputSchema || {}
-    console.log(properties ? Object.keys(properties) : [], required, '----------------afterChange==========')
+    const { properties } = newValue?.[0]?.inputSchema || {}
     setParams(properties ? Object.keys(properties) : [])
-    setParamsRequiredArr(required || [])
   }
 
   return (
@@ -27,7 +24,6 @@ export const FormRender = () => {
       <McpParamsField
         name={INPUT_PATH}
         params={params}
-        paramsRequiredArr={paramsRequiredArr}
         // defaultValue={params}
       />
       <OutputsField
