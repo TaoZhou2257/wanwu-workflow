@@ -193,6 +193,8 @@ export interface Dataset {
   update_time?: number;
   icon_url?: string;
   description?: string;
+  createAt?: string;
+  updateAt?: string;
   icon_uri?: string;
   /** 是否可以编辑 */
   can_edit?: boolean;

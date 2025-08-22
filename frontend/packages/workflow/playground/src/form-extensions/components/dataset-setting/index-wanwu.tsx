@@ -177,12 +177,6 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
           value={matchType as MatchType}
           onChange={v => {
             onDataSetInfoChange(
-              /*v === MatchType.FullText
-                ? {
-                  topK: dataSetInfo?.topK,
-                  matchType: v,
-                }
-                : */
               {
                 ...dataSetInfo,
                 matchType: v,
@@ -230,7 +224,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
             }}
             isDataSet
             value={semanticsPriority as number}
-            marks={{markKey: DEFAULT_SEMANTICS_PRIORITY, markText: 'Default'}}
+            marks={{markKey: DEFAULT_SEMANTICS_PRIORITY, markText: ''}}
             disabled={readonly || disabled}
             onChange={v => {
               onDataSetInfoChange({
@@ -284,7 +278,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
               marks={{
                 markKey: DEFAULT_TOP_K,
                 // Set margin-left to avoid overlap with number 1
-                markText: <span className="ml-2">Default</span>,
+                markText: '',
               }}
               onChange={v => {
                 onDataSetInfoChange({
@@ -379,7 +373,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
             }}
             isDataSet
             value={threshold as number}
-            marks={{markKey: DEFAULT_MIN_SCORE, markText: 'Default'}}
+            marks={{markKey: DEFAULT_MIN_SCORE, markText: ''}}
             disabled={readonly || disabled}
             onChange={v => {
               onDataSetInfoChange({

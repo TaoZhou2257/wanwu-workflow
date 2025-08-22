@@ -221,17 +221,13 @@ export const KnowledgeCardListVertical: FC<DatasetCardListVerticalProps> = ({
                 {searchType === OrderField.CreateTime ? (
                   <span className={styles.creator} style={{paddingLeft: 0}}>
                     {I18n.t('dataset_bot_create_time_knowledge', {
-                      time: item.create_time ? unix(item.create_time || 0).format(
-                        'YYYY-MM-DD HH:mm',
-                      ) : '--',
+                      time: item.createAt || '--',
                     })}
                   </span>
                 ) : (
                   <span className={styles.creator}>
                     {I18n.t('dataset_bot_update_time_knowledge', {
-                      time: unix(item.update_time || 0).format(
-                        'YYYY-MM-DD HH:mm',
-                      ),
+                      time: item.updateAt || '--',
                     })}
                   </span>
                 )}
