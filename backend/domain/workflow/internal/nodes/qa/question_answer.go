@@ -29,12 +29,12 @@ import (
 	"github.com/cloudwego/eino/schema"
 
 	crossmodel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/modelmgr"
-	crossmodelmgr "github.com/coze-dev/coze-studio/backend/crossdomain/contract/modelmgr"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/canvas/convert"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes"
+	wanwu_util "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-util"
 	schema2 "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/schema"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ternary"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
@@ -233,7 +233,9 @@ func (c *Config) Build(ctx context.Context, ns *schema2.NodeSchema, _ ...schema2
 		err error
 	)
 	if c.LLMParams != nil {
-		m, _, err = crossmodelmgr.DefaultSVC().GetModel(ctx, c.LLMParams)
+		// 替换crossmodelmgr -> chatmodel factory
+		// m, _, err = crossmodelmgr.DefaultSVC().GetModel(ctx, c.LLMParams)
+		m, _, err = wanwu_util.CreateChatModel(ctx, c.LLMParams)
 		if err != nil {
 			return nil, err
 		}
