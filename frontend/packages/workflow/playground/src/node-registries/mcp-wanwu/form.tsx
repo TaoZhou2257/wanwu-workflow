@@ -1,7 +1,8 @@
-import React, {useEffect, useState} from "react";
+import React, { useState } from "react";
 import { I18n } from '@coze-arch/i18n';
 
 import { NodeConfigForm } from '@/node-registries/common/components';
+import { INPUT_PATH } from './constants'
 
 import { OutputsField } from '../common/fields';
 import { McpParamsField, McpSelectField } from "./componets";
@@ -24,7 +25,7 @@ export const FormRender = () => {
         afterChange={afterChange}
       />
       <McpParamsField
-        name="inputParameters"
+        name={INPUT_PATH}
         params={params}
         paramsRequiredArr={paramsRequiredArr}
         // defaultValue={params}

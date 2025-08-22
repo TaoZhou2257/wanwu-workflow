@@ -106,7 +106,7 @@ export const McpParamsField = withFieldArray(({
             required={required}
             inputType={ViewVariableType.String}
             disabledTypes={disabledTypes}
-            name={`inputParameters.${index}.input`}
+            name={`inputs.inputParameters.${index}.input`}
           />
         ))}
       </FieldArrayList>

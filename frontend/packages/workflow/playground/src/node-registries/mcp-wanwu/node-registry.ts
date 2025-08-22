@@ -6,6 +6,7 @@ import {
   StandardNodeType,
   type WorkflowNodeRegistry,
 } from '@coze-workflow/base';
+import { INPUT_PATH } from './constants'
 
 import { MCP_WANWU_FORM_META } from './form-meta';
 import { test, type NodeTestMeta } from './node-test';
@@ -17,7 +18,7 @@ export const MCP_WANWU_NODE_REGISTRY: WorkflowNodeRegistry<NodeTestMeta> = {
     size: { width: 360, height: 130.7 },
     nodeMetaPath: DEFAULT_NODE_META_PATH,
     outputsPath: DEFAULT_OUTPUTS_PATH,
-    inputParametersPath: '/inputParameters', //INPUT_PATH,
+    inputParametersPath: INPUT_PATH,
     test,
   },
   formMeta: MCP_WANWU_FORM_META,
