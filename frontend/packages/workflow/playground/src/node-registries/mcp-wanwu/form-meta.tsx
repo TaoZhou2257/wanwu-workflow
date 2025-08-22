@@ -30,7 +30,7 @@ export const MCP_WANWU_FORM_META: FormMetaV2<FormData> = {
       const currentName = get(formValues, currentKey)?.name || ''
       return required?.includes(currentName) && !value.content
         ? I18n.t('workflow_detail_node_error_empty', {}, '参数值不可为空')
-        : ''
+        : undefined
     }
   },
 
