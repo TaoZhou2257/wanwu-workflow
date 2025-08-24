@@ -23,23 +23,23 @@ import (
 func JwtUser(ctx context.Context, appCtx *app.RequestContext) {
 	requestAuthType := appCtx.GetInt32(middleware.RequestAuthTypeStr)
 	if requestAuthType != int32(middleware.RequestAuthTypeWebAPI) {
-		httputil.InternalError(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", "invalid request auth type")))
+		httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", "invalid request auth type")))
 		return
 	}
 
 	token, err := getJWTToken(appCtx)
 	if err != nil {
-		httputil.InternalError(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
+		httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
 		return
 	}
 
 	claims, err := jwt_util.ParseToken(token)
 	if err != nil {
-		httputil.InternalError(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
+		httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
 		return
 	}
 	if claims.Subject != jwt_util.USER {
-		httputil.InternalError(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", "invalid token subject")))
+		httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", "invalid token subject")))
 		return
 	}
 
