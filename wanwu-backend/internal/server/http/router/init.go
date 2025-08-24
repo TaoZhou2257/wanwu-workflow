@@ -22,6 +22,15 @@ func Register(r *hertz_server.Hertz) {
 			_bot.POST("/get_type_list", append(_gettypelistMw(), coze.GetTypeList)...)
 		}
 		{
+			_common := _api.Group("/common", _commonMw()...)
+			{
+				_upload := _common.Group("/upload", _uploadMw()...)
+				_upload.GET("/apply_upload_action", append(_applyuploadactionMw(), coze.ApplyUploadActionByWanwu)...)
+				_upload.POST("/apply_upload_action", append(_applyuploadaction0Mw(), coze.ApplyUploadActionByWanwu)...)
+				_upload.POST("/*tos_uri", append(_commonuploadMw(), coze.CommonUpload)...)
+			}
+		}
+		{
 			_playground_api := _api.Group("/playground_api", _playground_apiMw()...)
 			{
 				_space := _playground_api.Group("/space", _spaceMw()...)

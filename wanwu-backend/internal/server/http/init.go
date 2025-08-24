@@ -30,7 +30,7 @@ func Init() {
 	// Middleware order matters
 	s.Use(coze_middleware.ContextCacheMW())     // must be first
 	s.Use(coze_middleware.RequestInspectorMW()) // must be second
-	s.Use(coze_middleware.SetHostMW())
+	s.Use(middleware.SetHost)
 	s.Use(coze_middleware.SetLogIDMW())
 	s.Use(corsHandler)
 	s.Use(coze_middleware.AccessLogMW())

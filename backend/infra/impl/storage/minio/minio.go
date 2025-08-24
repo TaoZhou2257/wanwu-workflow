@@ -35,6 +35,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/infra/contract/storage"
 	"github.com/coze-dev/coze-studio/backend/infra/impl/storage/proxy"
 	"github.com/coze-dev/coze-studio/backend/pkg/ctxcache"
+	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/types/consts"
 )
 
@@ -209,8 +210,8 @@ func (m *minioClient) GetObjectUrl(ctx context.Context, objectKey string, opts .
 		return "", fmt.Errorf("GetObjectUrl failed: %v", err)
 	}
 
-	// logs.CtxDebugf(ctx, "[GetObjectUrl] origin presignedURL.String = %s", presignedURL.String())
-	ok, proxyURL := proxy.CheckIfNeedReplaceHost(ctx, presignedURL.String())
+	logs.CtxDebugf(ctx, "[GetObjectUrl] origin presignedURL.String = %s", presignedURL.String())
+	ok, proxyURL := proxy.CheckIfNeedReplaceHostByWanwu(ctx, presignedURL.String())
 	if ok {
 		return proxyURL, nil
 	}

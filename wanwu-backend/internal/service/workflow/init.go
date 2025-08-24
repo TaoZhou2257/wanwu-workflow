@@ -14,11 +14,13 @@ import (
 	crossuserImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/user"
 	"github.com/UnicomAI/wanwu/pkg/log"
 	coze_app_modelmgr "github.com/coze-dev/coze-studio/backend/application/modelmgr"
+	coze_app_upload "github.com/coze-dev/coze-studio/backend/application/upload"
 	coze_app_user "github.com/coze-dev/coze-studio/backend/application/user"
 	coze_app_workflow "github.com/coze-dev/coze-studio/backend/application/workflow"
 	coze_crossuser "github.com/coze-dev/coze-studio/backend/crossdomain/contract/user"
 	coze_workflow "github.com/coze-dev/coze-studio/backend/domain/workflow"
 	coze_workflow_service "github.com/coze-dev/coze-studio/backend/domain/workflow/service"
+	coze_imagex "github.com/coze-dev/coze-studio/backend/infra/contract/imagex"
 	coze_storage "github.com/coze-dev/coze-studio/backend/infra/contract/storage"
 	coze_cache "github.com/coze-dev/coze-studio/backend/infra/impl/cache/redis"
 	coze_checkpoint "github.com/coze-dev/coze-studio/backend/infra/impl/checkpoint"
@@ -37,6 +39,7 @@ type Infra struct {
 	DB      *gorm.DB
 	Cache   *redis.Client
 	Storage coze_storage.Storage
+	ImageX  coze_imagex.ImageX
 }
 
 func Init(ctx context.Context, infra Infra) error {
@@ -66,12 +69,15 @@ func Init(ctx context.Context, infra Infra) error {
 	// domain workflow service
 	_workflowService = coze_workflow_service.NewWorkflowService(workflowRepo)
 
+	// init application upload
+	coze_app_upload.InitService(infra.Storage, cache)
 	// init application modelmgr
 	_ = coze_app_modelmgr.InitService(crossmodelmgrImpl.DefaultMock(), nil)
 	// init application user
 	_ = coze_app_user.InitService(ctx, infra.DB, infra.Storage, idGen)
 	// init application workflow
 	coze_app_workflow.SVC.DomainSVC = _workflowService
+	coze_app_workflow.SVC.ImageX = infra.ImageX
 	coze_app_workflow.SVC.TosClient = infra.Storage
 	coze_app_workflow.SVC.IDGenerator = idGen
 	coze_app_workflow.SetEventBus(crosssearchImpl.DefaultResourceEventBusMock())
@@ -81,10 +87,6 @@ func Init(ctx context.Context, infra Infra) error {
 
 	return nil
 }
-
-// func Service() coze_workflow.Service {
-// 	return _workflowService
-// }
 
 func initRepo(db *gorm.DB) error {
 	// 读取sql文件

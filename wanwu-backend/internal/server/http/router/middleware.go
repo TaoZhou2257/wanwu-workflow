@@ -22,6 +22,31 @@ func _gettypelistMw() []app.HandlerFunc {
 	return nil
 }
 
+func _commonMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _uploadMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _applyuploadactionMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _applyuploadaction0Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _commonuploadMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _playground_apiMw() []app.HandlerFunc {
 	// your code...
 	return nil
