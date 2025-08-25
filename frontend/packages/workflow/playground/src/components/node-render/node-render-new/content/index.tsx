@@ -31,6 +31,7 @@ import { JsonStringifyContent } from '@/node-registries/json-stringify';
 import { McpWanwuContent } from '@/node-registries/mcp-wanwu';
 import { FileParseWanwuContent } from '@/node-registries/file-parse-wanwu';
 import { FileGenerateWanwuContent } from '@/node-registries/file-generate-wanwu';
+import { JsonParserWanwuContent } from '@/node-registries/json-parser-wanwu'
 import { IntentContent } from '@/node-registries/intent';
 import { InputContent } from '@/node-registries/input';
 import { ImageCanvasContent } from '@/node-registries/image-canvas';
@@ -99,6 +100,7 @@ const ContentMap = {
   [StandardNodeType.McpWanwu]: McpWanwuContent,
   [StandardNodeType.FileParseWanwu]: FileParseWanwuContent,
   [StandardNodeType.FileGenerateWanwu]: FileGenerateWanwuContent,
+  [StandardNodeType.JsonParserWanwu]: JsonParserWanwuContent,
   [StandardNodeType.JsonStringify]: JsonStringifyContent,
   // The cli script inserts the identifier (registry), do not modify/delete this line comment
 };

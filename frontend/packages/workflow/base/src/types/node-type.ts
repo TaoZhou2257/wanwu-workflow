@@ -24,7 +24,6 @@ export enum StandardNodeType {
   Api = '4',
   Code = '5',
   Dataset = '6',
-  DatasetWanwu = '1006',
   If = '8',
   SubWorkflow = '9',
   Variable = '11',
@@ -106,9 +105,11 @@ export enum StandardNodeType {
   JsonStringify = '58',
   JsonParser = '59',
 
+  DatasetWanwu = '1006',
   McpWanwu = '1009',
   FileGenerateWanwu = '1007',
   FileParseWanwu = '1008',
+  JsonParserWanwu = '1010',
 }
 
 /**

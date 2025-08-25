@@ -34,6 +34,7 @@ export const getEnabledNodeTypes = (_params: {
     [StandardNodeType.McpWanwu]: true,
     [StandardNodeType.FileParseWanwu]: true,
     [StandardNodeType.FileGenerateWanwu]: true,
+    [StandardNodeType.JsonParserWanwu]: true,
     [StandardNodeType.If]: true,
     [StandardNodeType.SubWorkflow]: true,
     [StandardNodeType.Database]: true,
