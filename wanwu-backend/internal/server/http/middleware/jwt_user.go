@@ -16,6 +16,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/pkg/ctxcache"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
 	"github.com/coze-dev/coze-studio/backend/pkg/i18n"
+	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/types/consts"
 	"github.com/coze-dev/coze-studio/backend/types/errno"
 )
@@ -29,7 +30,9 @@ func JwtUser(ctx context.Context, appCtx *app.RequestContext) {
 
 	token, err := getJWTToken(appCtx)
 	if err != nil {
-		httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
+		// httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
+		logs.CtxErrorf(ctx, "check jwt token err: %v", err)
+		appCtx.Next(ctx)
 		return
 	}
 
