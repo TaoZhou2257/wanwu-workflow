@@ -153,7 +153,7 @@ export const getLLMModels = async ({
 
         const resp = await developerApi.GetLLMList();
         const list = resp?.data?.list ?? [];
-        const _modelList: Model[] = list.map(item => ({...item, name: item.displayName || item.model, model_type: Number(item.modelId)}))
+        const _modelList: Model[] = list.map(item => ({...item, name: item.model, model_type: Number(item.modelId)}))
         console.log(_modelList, '-----------------------------------llm_model_list')
 
         // From here to return modelList is all about wiping the butt of the backend

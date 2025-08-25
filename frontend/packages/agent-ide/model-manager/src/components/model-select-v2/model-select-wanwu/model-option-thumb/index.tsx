@@ -29,7 +29,7 @@ export function ModelOptionThumb({ model }: { model: Model }) {
         className="rounded-[4px] border border-solid coz-stroke-primary"
       />*/}
       <span className="pl-[3px] text-[14px] leading-[20px] coz-fg-primary">
-        {model.name}
+        {model.displayName || model.name}
       </span>
       {model.model_status_details?.is_upcoming_deprecated ? (
         <Tag size="mini" color="yellow">

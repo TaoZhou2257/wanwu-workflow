@@ -4431,6 +4431,7 @@ export interface MigrateResponse {
 
 export interface Model {
   name?: string;
+  displayName?: string;
   model_type?: Int64;
   model_class?: ModelClass;
   /** model icon的url */

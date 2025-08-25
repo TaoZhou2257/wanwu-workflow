@@ -120,7 +120,6 @@ export function ModelOption({
           { [styles['model-option_selected']]: selected },
         )}
         onClick={() => {
-          console.log(disabled, onClick, '--------------------disabled')
           if (disabled) {
             return;
           }
@@ -152,7 +151,7 @@ export function ModelOption({
         >
           <div className="w-full flex items-center gap-[6px] overflow-hidden">
             <Typography.Title fontSize="14px" ellipsis={{ showTooltip: true }}>
-              {model.name}
+              {model.displayName || model.name}
             </Typography.Title>
            {/* <div className="shrink-0 flex gap-[6px]">
               {model.model_status_details?.is_free_model &&

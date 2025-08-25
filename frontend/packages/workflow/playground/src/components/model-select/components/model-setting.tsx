@@ -72,6 +72,7 @@ export const ModelSetting: FC<ModelSettingProps> = ({
     // Specialization 1: Filter out the response format and display it in the output node
     const modelParams =
       model?.model_params?.filter(m => m.name !== RESPONSE_FORMAT_NAME) ?? [];
+    console.log(modelParams, '-------------------------------------------modelParams')
 
     // Get the group first
     let groups: ModelParamClass[] = [];
@@ -206,6 +207,7 @@ export const ModelSetting: FC<ModelSettingProps> = ({
     };
   }, [settingExpand, value, model, readonly]);
 
+  console.log(doms, '---------------------doms')
   return (
     <div
       className={'p-[24px] flex flex-col gap-[16px]'}
