@@ -10,5 +10,12 @@ export const OUTPUTS = [
     key: nanoid(),
     name: 'result',
     type: ViewVariableType.Object,
+    children: [
+      {
+        key: nanoid(),
+        name: 'content',
+        type: ViewVariableType.ArrayObject,
+      },
+    ],
   },
 ];
