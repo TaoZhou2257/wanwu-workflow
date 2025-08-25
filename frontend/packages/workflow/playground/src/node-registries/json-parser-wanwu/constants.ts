@@ -8,9 +8,10 @@ export const INPUT_PATH = 'inputs.inputParameters';
 export const OUTPUTS = [
   {
     key: nanoid(),
-    name: 'outputList',
-    type: ViewVariableType.ArrayObject,
-    children: [
+    name: 'output',
+    isPreset: true,
+    type: ViewVariableType.Object,
+    /*children: [
       {
         key: nanoid(),
         name: 'id',
@@ -21,6 +22,6 @@ export const OUTPUTS = [
         name: 'content',
         type: ViewVariableType.String,
       },
-    ],
+    ],*/
   },
 ];

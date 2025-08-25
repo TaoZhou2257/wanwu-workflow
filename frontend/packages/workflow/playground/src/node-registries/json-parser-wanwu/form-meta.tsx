@@ -15,7 +15,7 @@ import { transformOnInit, transformOnSubmit } from './data-transformer';
 
 export const JSON_PARSER_WANWU_FORM_META: FormMetaV2<FormData> = {
   // 节点表单渲染
-  render: () => <FormRender />,
+  render: (props) => <FormRender {...props} />,
 
   // 验证触发时机
   validateTrigger: ValidateTrigger.onChange,
