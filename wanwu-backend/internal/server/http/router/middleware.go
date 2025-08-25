@@ -291,3 +291,18 @@ func _upload1Mw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _v1Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _workflowMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _openapirunflowMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}

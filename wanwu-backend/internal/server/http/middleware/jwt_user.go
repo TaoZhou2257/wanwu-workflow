@@ -31,7 +31,7 @@ func JwtUser(ctx context.Context, appCtx *app.RequestContext) {
 	token, err := getJWTToken(appCtx)
 	if err != nil {
 		// httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
-		logs.CtxErrorf(ctx, "check jwt token err: %v", err)
+		logs.CtxWarnf(ctx, "request (%v) check jwt token err: %v", string(appCtx.Request.Path()), err)
 		appCtx.Next(ctx)
 		return
 	}

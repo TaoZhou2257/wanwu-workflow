@@ -95,4 +95,14 @@ func Register(r *hertz_server.Hertz) {
 			_workflow_api.POST("/workflow_list_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowListByWanwu}...)
 		}
 	}
+	{
+		_v1 := root.Group("/v1", _v1Mw()...)
+		{
+			_workflow := _v1.Group("/workflow", _workflowMw()...)
+
+			// --- wanwu adapt ---
+			_workflow.GET("/:workflow_id/schema_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowOpenAPIV3SchemaByWanwu}...)
+			_workflow.POST("/:workflow_id/run_by_wanwu", append(_openapirunflowMw(), coze.OpenAPIRunWorkFlowByWanwu)...)
+		}
+	}
 }
