@@ -1,0 +1,393 @@
+package http_client
+
+import (
+	"bytes"
+	"compress/gzip"
+	"context"
+	"crypto/tls"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/coze-dev/coze-studio/backend/pkg/logs"
+	"io"
+	"mime/multipart"
+	"net"
+	"net/http"
+	"net/url"
+	"strings"
+	"sync"
+	"time"
+)
+
+const (
+	timeout        = 120 * time.Second
+	connectTimeout = 60 * time.Second
+)
+
+type LogLevel int
+
+const (
+	LogNone         LogLevel = 0
+	LogBasic        LogLevel = 1
+	LogParams       LogLevel = 2
+	LogAll          LogLevel = 3
+	formContentType          = "application/x-www-form-urlencoded"
+	jsonContentType          = "application/json"
+)
+
+var defaultClint = CreateDefault()
+var lock sync.Mutex
+
+type HttpRequestParams struct {
+	Headers    map[string]string
+	Params     map[string]string
+	Body       []byte
+	FileParams []*HttpRequestFileParams
+	Url        string
+	Timeout    time.Duration
+	MonitorKey string
+	LogLevel   LogLevel
+}
+
+type HttpRequestFileParams struct {
+	FileName string
+	FileData io.Reader
+}
+
+type HttpClient struct {
+	Client *http.Client
+}
+
+func Create(client *http.Client) *HttpClient {
+	return &HttpClient{client}
+}
+
+func CreateDefault() *HttpClient {
+	return &HttpClient{newHttpClient()}
+}
+
+func GetDefaultClient() *HttpClient {
+	if defaultClint == nil {
+		defer lock.Unlock()
+		lock.Lock()
+		defaultClint = &HttpClient{newHttpClient()}
+	}
+	return defaultClint
+}
+
+func GetClient() *HttpClient {
+	return &HttpClient{newHttpClient()}
+}
+
+// newHttpClient 初始化httpclient,httpclient 是一个比较重的资源，
+// 为了http连接的复用在启动时做一次初始化，但是请注意如果需要做http请求的绝对隔离可以再创建其他的httpclient
+func newHttpClient() *http.Client {
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			DialContext: (&net.Dialer{
+				Timeout:   connectTimeout, // 连接超时时间
+				KeepAlive: timeout,        // 连接保持活跃的时间
+			}).DialContext,
+			ResponseHeaderTimeout: timeout,
+		},
+		Timeout: timeout,
+	}
+}
+
+func (c HttpClient) Get(ctx context.Context, httpRequestParams *HttpRequestParams) (result []byte, err error) {
+	return SendRequest(ctx, c.Client, httpRequestParams, "GET", func(params *HttpRequestParams, ctx context.Context) (*http.Request, string, error) {
+		var url = httpRequestParams.Url
+		if len(httpRequestParams.Params) > 0 {
+			var buffer bytes.Buffer
+			buffer.WriteString(url)
+			if !strings.Contains(url, "?") {
+				buffer.WriteString("?")
+			}
+			url = buffer.String()
+			if !strings.HasSuffix(url, "?") && !strings.HasSuffix(url, "&") {
+				buffer.WriteString("&")
+			}
+			idx := 0
+			for k, v := range httpRequestParams.Params {
+				buffer.WriteString(k)
+				buffer.WriteString("=")
+				buffer.WriteString(v)
+				if idx < len(httpRequestParams.Params)-1 {
+					buffer.WriteString("&")
+				}
+				idx++
+			}
+			url = buffer.String()
+		}
+
+		request, err2 := http.NewRequest("GET", url, nil)
+		return request, "", err2
+	})
+}
+
+func (c HttpClient) PostJson(ctx context.Context, httpRequestParams *HttpRequestParams) (result []byte, err error) {
+	return SendRequest(ctx, c.Client, httpRequestParams, "POST-JSON", func(params *HttpRequestParams, ctx context.Context) (*http.Request, string, error) {
+		var requestBody *bytes.Buffer
+		if len(httpRequestParams.Body) > 0 {
+			requestBody = bytes.NewBuffer(httpRequestParams.Body)
+		}
+		request, err2 := http.NewRequest("POST", httpRequestParams.Url, requestBody)
+		return request, jsonContentType, err2
+	})
+}
+
+// PostJsonOriResp 此方法需要在外部设置content 超时，并进行defer cancel
+func (c HttpClient) PostJsonOriResp(ctx context.Context, httpRequestParams *HttpRequestParams) (result *http.Response, err error) {
+	return SendRequestOriResp(ctx, c.Client, httpRequestParams, "POST-JSON", func(params *HttpRequestParams, ctx context.Context) (*http.Request, string, error) {
+		var requestBody *bytes.Buffer
+		if len(httpRequestParams.Body) > 0 {
+			requestBody = bytes.NewBuffer(httpRequestParams.Body)
+		}
+		request, err2 := http.NewRequest("POST", httpRequestParams.Url, requestBody)
+		return request, jsonContentType, err2
+	})
+}
+
+func (c HttpClient) PostForm(ctx context.Context, httpRequestParams *HttpRequestParams) (result []byte, err error) {
+	return SendRequest(ctx, c.Client, httpRequestParams, "POST-FORM", func(params *HttpRequestParams, ctx context.Context) (*http.Request, string, error) {
+		data := url.Values{}
+		if len(params.Params) > 0 {
+			for k, v := range params.Params {
+				data.Set(k, v)
+			}
+		}
+		request, err2 := http.NewRequest("POST", httpRequestParams.Url, strings.NewReader(data.Encode()))
+		return request, formContentType, err2
+	})
+}
+
+func (c HttpClient) PostFile(ctx context.Context, httpRequestParams *HttpRequestParams) (result []byte, err error) {
+	return SendRequest(ctx, c.Client, httpRequestParams, "POST-FILE", func(params *HttpRequestParams, ctx context.Context) (*http.Request, string, error) {
+		payload := &bytes.Buffer{}
+		writer := multipart.NewWriter(payload)
+
+		if len(httpRequestParams.FileParams) == 0 {
+			return nil, "", errors.New("no file params")
+		}
+		for _, fileParam := range httpRequestParams.FileParams {
+			fileWriter, errW := writer.CreateFormFile("file", fileParam.FileName)
+			if errW != nil {
+				return nil, "", errW
+			}
+			_, errC := io.Copy(fileWriter, fileParam.FileData)
+			if errC != nil {
+				return nil, "", errC
+			}
+		}
+
+		if len(httpRequestParams.Params) > 0 {
+			for k, v := range httpRequestParams.Params {
+				err2 := writer.WriteField(k, v)
+				if err2 != nil {
+					return nil, "", err2
+				}
+			}
+		}
+
+		err1 := writer.Close()
+		if err1 != nil {
+			return nil, "", err1
+		}
+
+		request, err2 := http.NewRequest("POST", httpRequestParams.Url, payload)
+		return request, writer.FormDataContentType(), err2
+	})
+}
+
+// Delete 删除数据
+func (c HttpClient) Delete(ctx context.Context, httpRequestParams *HttpRequestParams) (result []byte, err error) {
+	return SendRequest(ctx, c.Client, httpRequestParams, "DELETE", func(params *HttpRequestParams, ctx context.Context) (*http.Request, string, error) {
+		var requestBody *bytes.Buffer
+		if len(httpRequestParams.Body) > 0 {
+			requestBody = bytes.NewBuffer(httpRequestParams.Body)
+		}
+		request, err2 := http.NewRequest("DELETE", httpRequestParams.Url, requestBody)
+		return request, "", err2
+	})
+}
+
+// SendRequest 此方法实现的目的是作为一个通用的http调用方法，也是最核心http调用
+func SendRequest(ctx context.Context, client *http.Client, httpRequestParams *HttpRequestParams, requestType string, buildRequest func(*HttpRequestParams, context.Context) (*http.Request, string, error)) (result []byte, err error) {
+	start := time.Now()
+	if httpRequestParams == nil {
+		return nil, errors.New("httpRequestParams is nil")
+	}
+	var hasLog = false
+	defer func() {
+		if r := recover(); r != nil {
+			//log.Errorf("SendRequest panic %v", r)
+			err = errors.New("sendHttpRequest panic err")
+		}
+		if !hasLog && err != nil {
+			// 6.打印日志
+			logRequest(ctx, httpRequestParams, requestType, start, -1, nil, err)
+		}
+	}()
+
+	//1.开启超时监控
+	if httpRequestParams.Timeout == 0 {
+		httpRequestParams.Timeout = time.Minute * 1
+	}
+	ctx, cancel := context.WithTimeout(ctx, httpRequestParams.Timeout)
+	defer cancel()
+
+	//2.构造请求
+	req, contentType, err := buildRequest(httpRequestParams, ctx)
+	if err != nil {
+		return nil, err
+	}
+	//3.设置请求头
+	setHeader(req, httpRequestParams.Headers, contentType)
+	req = req.WithContext(ctx)
+	//4.执行请求
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	//5.处理返回结果
+	defer func(Body io.ReadCloser) {
+		err1 := Body.Close()
+		if err1 != nil {
+			//todo 通用日志文件
+			err = err1
+		}
+	}(resp.Body) // 确保关闭响应体
+
+	var body []byte
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		reader, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			err1 := reader.Close()
+			if err1 != nil {
+				err = err1
+			}
+		}()
+		body, err = io.ReadAll(reader)
+	} else {
+		body, err = io.ReadAll(resp.Body)
+	}
+
+	hasLog = true
+	// 6.打印日志
+	logRequest(ctx, httpRequestParams, requestType, start, resp.StatusCode, body, err)
+	return body, err
+}
+
+// SendRequestOriResp 此方法实现的目的是作为一个通用的http调用方法，也是最核心http调用
+func SendRequestOriResp(ctx context.Context, client *http.Client, httpRequestParams *HttpRequestParams, requestType string, buildRequest func(*HttpRequestParams, context.Context) (*http.Request, string, error)) (result *http.Response, err error) {
+	start := time.Now()
+	if httpRequestParams == nil {
+		return nil, errors.New("httpRequestParams is nil")
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			//log.Errorf("SendRequest panic %v", r)
+			err = errors.New("sendHttpRequest panic err")
+		}
+	}()
+
+	//2.构造请求
+	req, contentType, err := buildRequest(httpRequestParams, ctx)
+	if err != nil {
+		return nil, err
+	}
+	//3.设置请求头
+	setHeader(req, httpRequestParams.Headers, contentType)
+	req = req.WithContext(ctx)
+	//4.执行请求
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	// 6.打印日志
+	logRequest(ctx, httpRequestParams, requestType, start, resp.StatusCode, nil, err)
+	return resp, err
+}
+
+// setHeader 设置请求头
+func setHeader(request *http.Request, headerMap map[string]string, contentType string) {
+	hasContentType := false
+	if len(headerMap) > 0 {
+		for k, v := range headerMap {
+			if k == "Content-Type" {
+				hasContentType = true
+			}
+			request.Header.Set(k, v)
+		}
+	}
+	if !hasContentType && len(contentType) > 0 {
+		request.Header.Set("Content-Type", contentType)
+	}
+}
+
+// logRequest 打印http请求日志，不会抛出panic
+func logRequest(ctx context.Context, httpRequestParams *HttpRequestParams, requestType string, start time.Time, statusCode int, response []byte, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			logs.CtxErrorf(ctx, "logRequest panic, r=%v\n", r)
+		}
+	}()
+	if httpRequestParams.LogLevel == LogNone {
+		return
+	}
+	requestBody := ""
+	if (httpRequestParams.LogLevel == LogParams || httpRequestParams.LogLevel == LogAll) && len(httpRequestParams.Body) > 0 {
+		requestBody = string(httpRequestParams.Body)
+	}
+	responseBody := ""
+	if (httpRequestParams.LogLevel == LogAll) && len(response) > 0 {
+		responseBody = string(response)
+	}
+	var paramsMap = make(map[string]interface{})
+	paramsMap["url"] = httpRequestParams.Url
+	paramsMap["requestBody"] = requestBody
+	LogRpcJson(ctx, "HTTP-"+requestType, httpRequestParams.MonitorKey, paramsMap, responseBody, err, start.UnixMilli())
+}
+
+func LogRpcJson(ctx context.Context, business string, method string, params interface{}, result interface{}, err error, starTimestamp int64) {
+	defer func() {
+		if err1 := recover(); err1 != nil {
+			fmt.Println(err1)
+		}
+	}()
+	var success = 1
+	if err != nil {
+		success = 0
+	}
+	var paramsStr = Convert2LogString(params)
+	var resultStr = Convert2LogString(result)
+	var errMsg = "-"
+	if err != nil {
+		errMsg = err.Error()
+	}
+	logs.CtxInfof(ctx, "%s|%s|%d|%d|%+v|%+v|%s", business, method, success, time.Now().UnixMilli()-starTimestamp, paramsStr, resultStr, errMsg)
+}
+
+func Convert2LogString(object interface{}) string {
+	if object == nil {
+		return "-"
+	}
+	switch obj := object.(type) {
+	case string:
+		return obj
+	case []byte:
+		return string(obj)
+	default:
+		bytesData, err := json.Marshal(object)
+		if err != nil {
+			return "-"
+		}
+		return string(bytesData)
+	}
+}
