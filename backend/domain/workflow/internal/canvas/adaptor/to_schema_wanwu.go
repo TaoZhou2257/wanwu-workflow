@@ -18,11 +18,6 @@ func RegisterWanwuAllNodeAdaptors() {
 		return &wanwu_intentdetector.Config{}
 	})
 
-	// register branch adaptors
-	nodes.RegisterBranchAdaptor(entity.NodeTypeWanwuIntentDetector, func() nodes.BranchAdaptor {
-		return &wanwu_intentdetector.Config{}
-	})
-
 	nodes.RegisterNodeAdaptor(entity.NodeTypeWanWuKnowledgeRetriever, func() nodes.NodeAdaptor {
 		return &knowledge.WanWuRetrieveConfig{}
 	})
@@ -37,5 +32,10 @@ func RegisterWanwuAllNodeAdaptors() {
 
 	nodes.RegisterNodeAdaptor(entity.NodeTypeWanWuMCPTool, func() nodes.NodeAdaptor {
 		return &mcp.Config{}
+	})
+
+	// register branch adaptors
+	nodes.RegisterBranchAdaptor(entity.NodeTypeWanwuIntentDetector, func() nodes.BranchAdaptor {
+		return &wanwu_intentdetector.Config{}
 	})
 }

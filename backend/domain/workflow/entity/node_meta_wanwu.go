@@ -6,17 +6,44 @@ const (
 	NodeTypeWanWuKnowledgeRetriever NodeType = "WanWuKnowledgeRetriever"
 	NodeTypeWanWuFileGenerator      NodeType = "WanWuFileGenerator"
 	NodeTypeWanWuFileParser         NodeType = "WanWuFileParser"
-	NodeTypeWanWuMCPTool        NodeType = "WanWuMCPTool"
+	NodeTypeWanWuMCPTool            NodeType = "WanWuMCPTool"
 )
 
 // Wanwu NodeTypeMetas Init
 func init() {
+	// wanwu新增节点分类
+	Categories = append(Categories, Category{
+		Key:      "document",
+		Name:     "文档",
+		EnUSName: "Document",
+	})
+
+	// wanwu禁用一些节点
+	NodeTypeMetas[NodeTypePlugin].Disabled = true
+	NodeTypeMetas[NodeTypeKnowledgeRetriever].Disabled = true
+	NodeTypeMetas[NodeTypeSubWorkflow].Disabled = true
+	NodeTypeMetas[NodeTypeDatabaseCustomSQL].Disabled = true
+	NodeTypeMetas[NodeTypeQuestionAnswer].Disabled = true
+	NodeTypeMetas[NodeTypeKnowledgeIndexer].Disabled = true
+	NodeTypeMetas[NodeTypeMessageList].Disabled = true
+	NodeTypeMetas[NodeTypeClearMessage].Disabled = true
+	NodeTypeMetas[NodeTypeCreateConversation].Disabled = true
+	NodeTypeMetas[NodeTypeVariableAssigner].Disabled = true
+	NodeTypeMetas[NodeTypeDatabaseUpdate].Disabled = true
+	NodeTypeMetas[NodeTypeDatabaseQuery].Disabled = true
+	NodeTypeMetas[NodeTypeDatabaseDelete].Disabled = true
+	NodeTypeMetas[NodeTypeDatabaseInsert].Disabled = true
+	NodeTypeMetas[NodeTypeKnowledgeDeleter].Disabled = true
+	// 和前端约定，反序列化节点ID 59 -> 1059
+	NodeTypeMetas[NodeTypeJsonDeserialization].ID = 1059
+
+	// wanwu新增节点
 	NodeTypeMetas[NodeTypeWanWuKnowledgeRetriever] = &NodeTypeMeta{
 		ID:           1006,
 		Key:          NodeTypeWanWuKnowledgeRetriever,
 		DisplayKey:   "Dataset",
 		Name:         "知识库检索",
-		Category:     "data",
+		Category:     "",
 		Desc:         "在选定的知识中,根据输入变量召回最匹配的信息,并以列表形式返回",
 		Color:        "#FF811A",
 		IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
@@ -34,7 +61,7 @@ func init() {
 		Key:          NodeTypeWanWuFileGenerator,
 		DisplayKey:   "FileGenerator",
 		Name:         "文档生成",
-		Category:     "data",
+		Category:     "document",
 		Desc:         "基于生成的文档标题和文档内容生成文档",
 		Color:        "#FF811A",
 		IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
@@ -52,7 +79,7 @@ func init() {
 		Key:          NodeTypeWanWuFileParser,
 		DisplayKey:   "FileParser",
 		Name:         "文档解析",
-		Category:     "data",
+		Category:     "document",
 		Desc:         "用于解析传入文档内容",
 		Color:        "#FF811A",
 		IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
@@ -63,25 +90,6 @@ func init() {
 		},
 		EnUSName:        "File generator",
 		EnUSDescription: "Parse documents content.",
-	}
-
-	NodeTypeMetas[NodeTypeWanwuIntentDetector] = &NodeTypeMeta{
-		ID:           1022,
-		Key:          NodeTypeWanwuIntentDetector,
-		DisplayKey:   "Intent",
-		Name:         "意图识别",
-		Category:     "logic",
-		Desc:         "用于用户输入的意图识别，并将其与预设意图选项进行匹配。",
-		Color:        "#00B2B2",
-		IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Intent-v2.jpg",
-		SupportBatch: false,
-		ExecutableMeta: ExecutableMeta{
-			PreFillZero:     true,
-			PostFillNil:     true,
-			MayUseChatModel: true,
-		},
-		EnUSName:        "Intent recognition",
-		EnUSDescription: "Used for recognizing the intent in user input and matching it with preset intent options.",
 	}
 
 	NodeTypeMetas[NodeTypeWanWuMCPTool] = &NodeTypeMeta{
@@ -100,5 +108,26 @@ func init() {
 		},
 		EnUSName:        "MCP tool",
 		EnUSDescription: "Used to call MCP tools.",
+	}
+
+	// 只用于示例，并不开放（Disable = true）
+	NodeTypeMetas[NodeTypeWanwuIntentDetector] = &NodeTypeMeta{
+		Disabled:     true,
+		ID:           1022,
+		Key:          NodeTypeWanwuIntentDetector,
+		DisplayKey:   "Intent",
+		Name:         "意图识别",
+		Category:     "logic",
+		Desc:         "用于用户输入的意图识别，并将其与预设意图选项进行匹配。",
+		Color:        "#00B2B2",
+		IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Intent-v2.jpg",
+		SupportBatch: false,
+		ExecutableMeta: ExecutableMeta{
+			PreFillZero:     true,
+			PostFillNil:     true,
+			MayUseChatModel: true,
+		},
+		EnUSName:        "Intent recognition",
+		EnUSDescription: "Used for recognizing the intent in user input and matching it with preset intent options.",
 	}
 }
