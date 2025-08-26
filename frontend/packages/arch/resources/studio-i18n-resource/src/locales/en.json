@@ -3248,6 +3248,7 @@
   "workflow_detail_error_interface_initialization": "Interface initialization error",
   "workflow_detail_error_message": "Error: {msg}",
   "workflow_detail_error_missing_id": "Missing workflow_id",
+  "workflow_detail_file_parse_input_tooltip": "输入文档url",
   "workflow_detail_knowledge_error_empty": "Knowledge cannot be empty",
   "workflow_detail_knowledge_input_tooltip": "Enter the key information to be matched from knowledge",
   "workflow_detail_knowledge_knowledge": "Knowledge",

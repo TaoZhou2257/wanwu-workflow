@@ -1,20 +1,62 @@
-import { type NodeDataDTO } from '@coze-workflow/base';
-
-import { type FormData } from './types';
 import { OUTPUTS } from './constants';
+import { set } from "lodash-es";
 
 /**
  * 节点后端数据 -> 前端表单数据
  */
-export const transformOnInit = (value: NodeDataDTO) => ({
-  ...(value ?? {}),
-  outputs: value?.outputs ?? OUTPUTS,
-});
+export function transformOnInit(value) {
+  // New drag-in node initialization
+  if (!value) {
+    return {
+      nodeMeta: undefined,
+      inputs: {
+        inputParameters: {
+          FileUrl: { type: 'ref', content: '' },
+        },
+      },
+      outputs: OUTPUTS,
+    };
+  }
+
+  const { inputParameters } = value.inputs;
+  const formData = {
+    ...value,
+    inputs: {},
+  };
+
+  formData.inputs.inputParameters = inputParameters.reduce(
+    (map, obj: { name: string | number; input: unknown }) => {
+      map[obj.name] = obj.input;
+      return map;
+    },
+    {},
+  );
+
+  return formData;
+}
 
 /**
  * 前端表单数据 -> 节点后端数据
  * @param value
  * @returns
  */
-export const transformOnSubmit = (value: FormData): NodeDataDTO =>
-  value as unknown as NodeDataDTO;
+export function transformOnSubmit(value) {
+  const { nodeMeta, inputs, outputs } = value;
+  const { inputParameters = { FileUrl: { type: 'ref' } } } =
+  inputs ?? {};
+  const actualData = {
+    nodeMeta,
+    outputs,
+    inputs: {},
+  };
+  set(
+    actualData.inputs,
+    'inputParameters',
+    Object.entries(inputParameters).map(([key, mapValue]) => ({
+      name: key,
+      input: mapValue,
+    })) || [],
+  );
+
+  return actualData;
+}
