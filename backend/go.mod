@@ -284,3 +284,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 	stathat.com/c/consistent v1.0.0 // indirect
 )
+
+require github.com/ThinkInAIXYZ/go-mcp v0.2.21
+
+require (
+	github.com/orcaman/concurrent-map/v2 v2.0.1 // indirect
+	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
+)
