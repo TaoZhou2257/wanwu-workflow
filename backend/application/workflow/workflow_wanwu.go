@@ -187,6 +187,42 @@ func (w *ApplicationService) ListWorkflowByWanwu(ctx context.Context, req *workf
 	return response, nil
 }
 
+func (w *ApplicationService) ListWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Context, workflowIDs []string) (
+	_ []map[string]any, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowExecuteFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	if len(workflowIDs) == 0 {
+		return nil, fmt.Errorf("workflowIDs empty")
+	}
+	var ids []int64
+	for _, workflowID := range workflowIDs {
+		ids = append(ids, mustParseInt64(workflowID))
+	}
+
+	wfs, _, err := GetWorkflowDomainSVC().MGet(ctx, &vo.MGetPolicy{MetaQuery: vo.MetaQuery{IDs: ids}})
+	if err != nil {
+		return nil, err
+	}
+	var rets []map[string]any
+	for _, wf := range wfs {
+		wfSchema, err := workflowOpenAPIV3Schema(wf)
+		if err != nil {
+			return nil, err
+		}
+		rets = append(rets, wfSchema)
+	}
+	return rets, nil
+}
+
 func (w *ApplicationService) GetWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Context, workflowID string) (
 	_ map[string]any, err error,
 ) {
