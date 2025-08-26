@@ -9,7 +9,6 @@ export const OUTPUTS = [
   {
     key: nanoid(),
     name: 'output',
-    isPreset: true,
     type: ViewVariableType.Object,
     /*children: [
       {

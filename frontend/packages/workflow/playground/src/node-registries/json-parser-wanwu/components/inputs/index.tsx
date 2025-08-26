@@ -18,7 +18,7 @@ import {
   FieldArray,
   type FieldArrayRenderProps,
 } from '@flowgram-adapter/free-layout-editor';
-import { ViewVariableType, type InputValueVO } from '@coze-workflow/base';
+import { ViewVariableType, type InputValueVO, ValueExpressionType } from '@coze-workflow/base';
 import { I18n } from '@coze-arch/i18n';
 
 import { useReadonly } from '@/nodes-v2/hooks/use-readonly';
@@ -51,9 +51,15 @@ export const InputsField = ({
   return (
     <FieldArray<InputValueVO> name={name} defaultValue={defaultValue}>
       {({ field }: FieldArrayRenderProps<InputValueVO>) => {
-        const { value = [] } = field;
+        const { value = [], append } = field;
         const length = value?.length ?? 0;
         const isEmpty = !length;
+        if (isEmpty) {
+          field.append({
+            name: 'input',
+            input: { type: ValueExpressionType.REF },
+          });
+        }
         return (
           <Section
             title={title}
