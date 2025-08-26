@@ -457,13 +457,13 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
             "color": "F2B600"
           },
           {
-            "id": "1010",
-            "type": 1010,
+            "id": "1059",
+            "type": 1059,
             "name": "JSON 反序列化",
             "desc": "用于将JSON字符串解析为变量",
             "icon_url": "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-from_json.png",
             "support_batch": 1,
-            "node_type": "1010",
+            "node_type": "1059",
             "color": "F2B600"
           }
         ],
@@ -500,13 +500,10 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
             ]
           },
           {
-            "name": "数据库",
+            "name": "文档",
             "node_type_list": [
-              "12",
-              "42",
-              "43",
-              "44",
-              "46"
+              "1008",
+              "1007"
             ]
           },
           {
@@ -516,9 +513,7 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
               "18",
               "45",
               "58",
-              "1010",
-              "1008",
-              "1007"
+              "1059",
             ]
           }
         ],
