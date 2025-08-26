@@ -28,16 +28,16 @@ func Init() {
 	corsHandler := hertz_cors.New(corsCfg)
 
 	// Middleware order matters
-	s.Use(coze_middleware.ContextCacheMW())     // must be first
-	s.Use(coze_middleware.RequestInspectorMW()) // must be second
-	s.Use(coze_middleware.SetHostMW())
+	s.Use(coze_middleware.ContextCacheMW()) // must be first
+	// s.Use(coze_middleware.RequestInspectorMW()) // must be second
+	s.Use(middleware.SetHost)
 	s.Use(coze_middleware.SetLogIDMW())
 	s.Use(corsHandler)
 	s.Use(coze_middleware.AccessLogMW())
 	// s.Use(coze_middleware.OpenapiAuthMW())
 	// s.Use(coze_middleware.SessionAuthMW())
-	s.Use(middleware.JwtUser)
-	s.Use(middleware.I18n) // must after JwtUser
+	s.Use(middleware.I18n)
+	s.Use(middleware.JwtUser) // must after I18n
 
 	router.Register(s)
 	s.Spin()

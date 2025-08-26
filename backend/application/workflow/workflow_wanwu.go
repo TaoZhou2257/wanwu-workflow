@@ -1,0 +1,441 @@
+package workflow
+
+import (
+	"context"
+	"fmt"
+	"path"
+	"runtime/debug"
+	"strconv"
+
+	"github.com/cloudwego/eino/schema"
+	workflowModel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/workflow"
+	"github.com/coze-dev/coze-studio/backend/api/model/playground"
+	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
+	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
+	"github.com/coze-dev/coze-studio/backend/application/user"
+	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
+	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
+	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
+	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
+	"github.com/coze-dev/coze-studio/backend/pkg/lang/slices"
+	"github.com/coze-dev/coze-studio/backend/pkg/lang/ternary"
+	"github.com/coze-dev/coze-studio/backend/pkg/safego"
+	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
+	"github.com/coze-dev/coze-studio/backend/types/consts"
+	"github.com/coze-dev/coze-studio/backend/types/errno"
+	"github.com/getkin/kin-openapi/openapi3"
+	xmaps "golang.org/x/exp/maps"
+)
+
+// ListWorkflowByWanwu 参考ListWorkflow
+// 1. size上限 300 -> 99999
+// 2. space_id非必须
+// 3. login_user_create为true时筛选workflow.CreatorID为当前用户
+func (w *ApplicationService) ListWorkflowByWanwu(ctx context.Context, req *workflow.GetWorkFlowListRequest) (
+	_ *workflow.GetWorkFlowListResponse, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	option := vo.MetaQuery{}
+
+	if req.GetPage() <= 0 || req.GetSize() <= 0 || req.GetSize() > 99999 {
+		return nil, fmt.Errorf("the number of page or size must be greater than 0, and the size must be greater than 0 and less than 99999")
+	}
+	option.Page = &vo.Page{
+		Page: req.GetPage(),
+		Size: req.GetSize(),
+	}
+
+	userID := ctxutil.MustGetUIDFromCtx(ctx)
+	if req.GetSpaceID() != "" {
+		spaceID := mustParseInt64(req.GetSpaceID())
+		if err := checkUserSpace(ctx, userID, spaceID); err != nil {
+			return nil, err
+		}
+		option.SpaceID = ptr.Of(spaceID)
+	}
+
+	if len(req.GetName()) > 0 {
+		option.Name = req.Name
+	}
+
+	if len(req.GetWorkflowIds()) > 0 {
+		ids, err := slices.TransformWithErrorCheck[string, int64](req.GetWorkflowIds(), func(s string) (int64, error) {
+			return strconv.ParseInt(s, 10, 64)
+		})
+		if err != nil {
+			return nil, err
+		}
+		option.IDs = ids
+	}
+
+	status := req.GetStatus()
+	var qType workflowModel.Locator
+	if status == workflow.WorkFlowListStatus_UnPublished {
+		option.PublishStatus = ptr.Of(vo.UnPublished)
+		qType = workflowModel.FromDraft
+	} else if status == workflow.WorkFlowListStatus_HadPublished {
+		option.PublishStatus = ptr.Of(vo.HasPublished)
+		qType = workflowModel.FromLatestVersion
+	}
+
+	wfs, total, err := GetWorkflowDomainSVC().MGet(ctx, &vo.MGetPolicy{
+		MetaQuery: option,
+		QType:     qType,
+		MetaOnly:  false,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	response := &workflow.GetWorkFlowListResponse{
+		Data: &workflow.WorkFlowListData{
+			AuthList:     make([]*workflow.ResourceAuthInfo, 0),
+			WorkflowList: make([]*workflow.Workflow, 0, len(wfs)),
+		},
+	}
+
+	wf2CreatorID := make(map[int64]string)
+	workflowList := make([]*workflow.Workflow, 0, len(wfs))
+	for _, w := range wfs {
+
+		if req.GetLoginUserCreate() && w.CreatorID != userID {
+			continue
+		}
+
+		wf2CreatorID[w.ID] = strconv.FormatInt(w.CreatorID, 10)
+		ww := &workflow.Workflow{
+			WorkflowID:       strconv.FormatInt(w.ID, 10),
+			Name:             w.Name,
+			Desc:             w.Desc,
+			IconURI:          w.IconURI,
+			URL:              w.IconURL,
+			CreateTime:       w.CreatedAt.Unix(),
+			Type:             w.ContentType,
+			SchemaType:       workflow.SchemaType_FDL,
+			Tag:              w.Tag,
+			TemplateAuthorID: ptr.Of(strconv.FormatInt(w.AuthorID, 10)),
+			SpaceID:          ptr.Of(strconv.FormatInt(w.SpaceID, 10)),
+			PluginID: func() string {
+				if status == workflow.WorkFlowListStatus_UnPublished {
+					return "0"
+				}
+				return strconv.FormatInt(w.ID, 10)
+			}(),
+			Creator: &workflow.Creator{
+				ID:   strconv.FormatInt(w.CreatorID, 10),
+				Self: ternary.IFElse[bool](w.CreatorID == ptr.From(ctxutil.GetUIDFromCtx(ctx)), true, false),
+			},
+		}
+
+		if qType == workflowModel.FromDraft {
+			ww.UpdateTime = w.DraftMeta.Timestamp.Unix()
+		} else if qType == workflowModel.FromLatestVersion || qType == workflowModel.FromSpecificVersion {
+			ww.UpdateTime = w.VersionMeta.VersionCreatedAt.Unix()
+		} else if w.UpdatedAt != nil {
+			ww.UpdateTime = w.UpdatedAt.Unix()
+		}
+
+		startNode := &workflow.Node{
+			NodeID:    "100001",
+			NodeName:  "start-node",
+			NodeParam: &workflow.NodeParam{InputParameters: make([]*workflow.Parameter, 0)},
+		}
+
+		for _, in := range w.InputParams {
+			param, err := toWorkflowParameter(in)
+			if err != nil {
+				return nil, err
+			}
+			startNode.NodeParam.InputParameters = append(startNode.NodeParam.InputParameters, param)
+		}
+
+		ww.StartNode = startNode
+
+		auth := &workflow.ResourceAuthInfo{
+			WorkflowID: strconv.FormatInt(w.ID, 10),
+			UserID:     strconv.FormatInt(w.CreatorID, 10),
+			Auth:       &workflow.ResourceActionAuth{CanEdit: true, CanDelete: true, CanCopy: true},
+		}
+		workflowList = append(workflowList, ww)
+		response.Data.AuthList = append(response.Data.AuthList, auth)
+	}
+
+	userBasicInfoResponse, err := user.UserApplicationSVC.MGetUserBasicInfo(ctx, &playground.MGetUserBasicInfoRequest{UserIds: slices.Unique(xmaps.Values(wf2CreatorID))})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, w := range workflowList {
+		if u, ok := userBasicInfoResponse.UserBasicInfoMap[w.Creator.ID]; ok {
+			w.Creator.Name = u.Username
+			w.Creator.AvatarURL = u.UserAvatar
+		}
+	}
+
+	response.Data.WorkflowList = workflowList
+	response.Data.Total = total
+
+	return response, nil
+}
+
+func (w *ApplicationService) GetWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Context, workflowID string) (
+	_ map[string]any, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowExecuteFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	wf, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{ID: mustParseInt64(workflowID)})
+	if err != nil {
+		return nil, err
+	}
+	return workflowOpenAPIV3Schema(wf)
+}
+
+func workflowOpenAPIV3Schema(wf *entity.Workflow) (map[string]any, error) {
+	inputSchema, err := workflowParamsToSchema(wf.InputParams)
+	if err != nil {
+		return nil, fmt.Errorf("workflow(%v) input params to openapi v3 schema err: %v", wf.ID, err)
+	}
+	outputSchema, err := workflowParamsToSchema(wf.OutputParams)
+	if err != nil {
+		return nil, fmt.Errorf("workflow(%v) output params to openapi v3 schema err: %v", wf.ID, err)
+	}
+
+	var input any = inputSchema
+	if inputSchema == nil {
+		input = map[string]string{
+			"type": "object",
+		}
+	}
+	var output any = outputSchema
+	if outputSchema == nil {
+		output = map[string]string{
+			"type": "object",
+		}
+	}
+
+	return map[string]any{
+		"openapi": "3.0.0",
+		"info": map[string]string{
+			"title":       wf.Name,
+			"version":     "1.0.0",
+			"description": wf.Desc,
+		},
+		"servers": []map[string]string{
+			{
+				"url": "http://workflow-wanwu:8999/v1",
+			},
+		},
+		"paths": map[string]any{
+			path.Join("/workflow", strconv.Itoa(int(wf.ID)), "/run_by_wanwu"): map[string]any{
+				"post": map[string]any{
+					"summary":     wf.Name,
+					"operationId": "action_" + wf.Name,
+					"description": wf.Desc,
+					"parameters": []map[string]any{
+						{
+							"in":   "header",
+							"name": "Content-Type",
+							"schema": map[string]string{
+								"type":    "string",
+								"example": "application/json",
+							},
+							"required": true,
+						},
+					},
+					"requestBody": map[string]any{
+						"content": map[string]any{
+							"application/json": map[string]any{
+								"schema": input,
+							},
+						},
+					},
+					"responses": map[string]any{
+						"200": map[string]any{
+							"description": "请求成功时的结果",
+							"content": map[string]any{
+								"application/json": map[string]any{
+									"schema": output,
+								},
+							},
+						},
+						"default": map[string]any{
+							"description": "请求失败时的错误信息",
+							"content": map[string]any{
+								"application/json": map[string]any{
+									"schema": map[string]string{
+										"type": "object",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, nil
+}
+
+func workflowParamsToSchema(params []*vo.NamedTypeInfo) (*openapi3.Schema, error) {
+	var paramsMap map[string]*schema.ParameterInfo
+	for _, param := range params {
+		paramInfo, err := param.ToParameterInfo()
+		if err != nil {
+			return nil, err
+		}
+		if paramsMap == nil {
+			paramsMap = make(map[string]*schema.ParameterInfo)
+		}
+		paramsMap[param.Name] = paramInfo
+	}
+	return schema.NewParamsOneOfByParams(paramsMap).ToOpenAPIV3()
+}
+
+// OpenAPIRunByWanwu 参考OpenAPIRun
+// 1. 去掉api auth、user check等业务逻辑
+// 2. 去掉appID、agentID、connectorID等业务逻辑
+// 3. 将必须publish才能执行的workflow，改为可以执行draft
+func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID string, req *workflow.OpenAPIRunFlowRequest) (
+	_ *workflow.OpenAPIRunFlowResponse, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowExecuteFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	// apiKeyInfo := ctxutil.GetApiAuthFromCtx(ctx)
+	// userID := apiKeyInfo.UserID
+
+	parameters := make(map[string]any)
+	if req.Parameters != nil {
+		err := sonic.UnmarshalString(*req.Parameters, &parameters)
+		if err != nil {
+			return nil, vo.WrapError(errno.ErrInvalidParameter, err)
+		}
+	}
+
+	meta, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{
+		ID:       mustParseInt64(workflowID),
+		MetaOnly: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// if meta.LatestPublishedVersion == nil {
+	// 	return nil, vo.NewError(errno.ErrWorkflowNotPublished)
+	// }
+
+	// if err = checkUserSpace(ctx, userID, meta.SpaceID); err != nil {
+	// 	return nil, err
+	// }
+
+	// var appID, agentID *int64
+	// if req.IsSetAppID() {
+	// 	appID = ptr.Of(mustParseInt64(req.GetAppID()))
+	// } else if req.IsSetProjectID() {
+	// 	appID = ptr.Of(mustParseInt64(req.GetProjectID()))
+	// }
+	// if req.IsSetBotID() {
+	// 	agentID = ptr.Of(mustParseInt64(req.GetBotID()))
+	// }
+
+	// var connectorID int64
+	// if req.IsSetConnectorID() {
+	// 	connectorID = mustParseInt64(req.GetConnectorID())
+	// }
+
+	// if connectorID != consts.WebSDKConnectorID {
+	// 	connectorID = apiKeyInfo.ConnectorID
+	// }
+
+	exeCfg := workflowModel.ExecuteConfig{
+		ID:   meta.ID,
+		From: workflowModel.FromDraft,
+		// Version:  *meta.LatestPublishedVersion,
+		Operator: meta.CreatorID,
+		Mode:     workflowModel.ExecuteModeRelease,
+		// AppID:         appID,
+		// AgentID:       agentID,
+		ConnectorID:   consts.WebSDKConnectorID,
+		ConnectorUID:  strconv.FormatInt(meta.CreatorID, 10),
+		InputFailFast: true,
+		BizType:       workflowModel.BizTypeWorkflow,
+	}
+
+	// if exeCfg.AppID != nil && exeCfg.AgentID != nil {
+	// 	return nil, errors.New("project_id and bot_id cannot be set at the same time")
+	// }
+
+	if req.GetIsAsync() {
+		exeCfg.SyncPattern = workflowModel.SyncPatternAsync
+		exeCfg.TaskType = workflowModel.TaskTypeBackground
+		exeID, err := GetWorkflowDomainSVC().AsyncExecute(ctx, exeCfg, parameters)
+		if err != nil {
+			return nil, err
+		}
+
+		return &workflow.OpenAPIRunFlowResponse{
+			ExecuteID: ptr.Of(strconv.FormatInt(exeID, 10)),
+			DebugUrl:  ptr.Of(fmt.Sprintf(workflowModel.DebugURLTpl, exeID, meta.SpaceID, meta.ID)),
+		}, nil
+	}
+
+	exeCfg.SyncPattern = workflowModel.SyncPatternSync
+	exeCfg.TaskType = workflowModel.TaskTypeForeground
+	wfExe, tPlan, err := GetWorkflowDomainSVC().SyncExecute(ctx, exeCfg, parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	if wfExe.Status == entity.WorkflowInterrupted {
+		return nil, vo.NewError(errno.ErrInterruptNotSupported)
+	}
+
+	var data *string
+	if tPlan == vo.ReturnVariables {
+		data = wfExe.Output
+	} else {
+		answerOutput := map[string]any{
+			"content_type":   1,
+			"data":           *wfExe.Output,
+			"type_for_model": 2,
+		}
+
+		answerOutputStr, err := sonic.MarshalString(answerOutput)
+		if err != nil {
+			return nil, err
+		}
+
+		data = ptr.Of(answerOutputStr)
+	}
+
+	return &workflow.OpenAPIRunFlowResponse{
+		Data:      data,
+		ExecuteID: ptr.Of(strconv.FormatInt(wfExe.ID, 10)),
+		DebugUrl:  ptr.Of(fmt.Sprintf(workflowModel.DebugURLTpl, wfExe.ID, wfExe.SpaceID, meta.ID)),
+		Token:     ptr.Of(wfExe.TokenInfo.InputTokens + wfExe.TokenInfo.OutputTokens),
+		Cost:      ptr.Of("0.00000"),
+	}, nil
+}

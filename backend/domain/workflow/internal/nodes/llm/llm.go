@@ -40,7 +40,6 @@ import (
 	workflowModel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/workflow"
 	workflow3 "github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	crossknowledge "github.com/coze-dev/coze-studio/backend/crossdomain/contract/knowledge"
-	crossmodelmgr "github.com/coze-dev/coze-studio/backend/crossdomain/contract/modelmgr"
 	crossplugin "github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
@@ -48,6 +47,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/canvas/convert"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/execute"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes"
+	wanwu_util "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-util"
 	schema2 "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/schema"
 	"github.com/coze-dev/coze-studio/backend/infra/contract/modelmgr"
 	"github.com/coze-dev/coze-studio/backend/pkg/ctxcache"
@@ -364,7 +364,9 @@ func (c *Config) Build(ctx context.Context, ns *schema2.NodeSchema, _ ...schema2
 		knowledgeRecallConfig *KnowledgeRecallConfig
 	)
 
-	chatModel, info, err = crossmodelmgr.DefaultSVC().GetModel(ctx, c.LLMParams)
+	// 替换crossmodelmgr -> chatmodel factory
+	// chatModel, info, err = crossmodelmgr.DefaultSVC().GetModel(ctx, c.LLMParams)
+	chatModel, info, err = wanwu_util.CreateChatModel(ctx, c.LLMParams)
 	if err != nil {
 		return nil, err
 	}
@@ -373,7 +375,9 @@ func (c *Config) Build(ctx context.Context, ns *schema2.NodeSchema, _ ...schema2
 	if exceptionConf != nil && exceptionConf.MaxRetry > 0 {
 		backupModelParams := c.BackupLLMParams
 		if backupModelParams != nil {
-			fallbackM, fallbackI, err = crossmodelmgr.DefaultSVC().GetModel(ctx, backupModelParams)
+			// 替换crossmodelmgr -> chatmodel factory
+			// fallbackM, fallbackI, err = crossmodelmgr.DefaultSVC().GetModel(ctx, backupModelParams)
+			fallbackM, fallbackI, err = wanwu_util.CreateChatModel(ctx, backupModelParams)
 			if err != nil {
 				return nil, err
 			}
@@ -731,10 +735,7 @@ func (c *Config) Build(ctx context.Context, ns *schema2.NodeSchema, _ ...schema2
 	_ = g.AddEdge(llmNodeKey, outputConvertNodeKey)
 	_ = g.AddEdge(outputConvertNodeKey, compose.END)
 
-	requireCheckpoint := false
-	if len(tools) > 0 {
-		requireCheckpoint = true
-	}
+	requireCheckpoint := c.RequireCheckpoint()
 
 	var compileOpts []compose.GraphCompileOption
 	if requireCheckpoint {
@@ -759,8 +760,16 @@ func (c *Config) Build(ctx context.Context, ns *schema2.NodeSchema, _ ...schema2
 
 func (c *Config) RequireCheckpoint() bool {
 	if c.FCParam != nil {
-		if c.FCParam.WorkflowFCParam != nil || c.FCParam.PluginFCParam != nil {
-			return true
+		if c.FCParam.WorkflowFCParam != nil {
+			if len(c.FCParam.WorkflowFCParam.WorkflowList) > 0 {
+				return true
+			}
+		}
+
+		if c.FCParam.PluginFCParam != nil {
+			if len(c.FCParam.PluginFCParam.PluginList) > 0 {
+				return true
+			}
 		}
 	}
 
@@ -965,6 +974,8 @@ func (l *LLM) prepare(ctx context.Context, _ map[string]any, opts ...nodes.NodeO
 						"deleted ID: %d, resumingEvent ID: %d", ie.ID, resumingEvent.ID)
 					return ctx
 				}
+
+				c.RootCtx.ResumeEvent.Popped = true
 
 				return ctx
 			},
