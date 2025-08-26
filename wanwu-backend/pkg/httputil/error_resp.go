@@ -40,6 +40,11 @@ func BadRequest(c *app.RequestContext, errMsg string) {
 	c.AbortWithStatusJSON(http.StatusBadRequest, data{Code: http.StatusBadRequest, Msg: errMsg})
 }
 
+func Unauthorized(ctx context.Context, c *app.RequestContext, err error) {
+	logs.CtxErrorf(ctx, "[Unauthorized] request %v error: %v \n", string(c.Request.Path()), err)
+	c.AbortWithStatusJSON(http.StatusUnauthorized, data{Code: http.StatusUnauthorized, Msg: err.Error()})
+}
+
 func InternalError(ctx context.Context, c *app.RequestContext, err error) {
 	var customErr errorx.StatusError
 
@@ -49,6 +54,6 @@ func InternalError(ctx context.Context, c *app.RequestContext, err error) {
 		return
 	}
 
-	logs.CtxErrorf(ctx, "[InternalError]  error: %v \n", err)
+	logs.CtxErrorf(ctx, "[InternalError] error: %v \n", err)
 	c.AbortWithStatusJSON(http.StatusInternalServerError, data{Code: 500, Msg: "internal server error"})
 }

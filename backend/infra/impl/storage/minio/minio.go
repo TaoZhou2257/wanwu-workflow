@@ -35,6 +35,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/infra/contract/storage"
 	"github.com/coze-dev/coze-studio/backend/infra/impl/storage/proxy"
 	"github.com/coze-dev/coze-studio/backend/pkg/ctxcache"
+	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/types/consts"
 )
 
@@ -138,6 +139,11 @@ func (m *minioClient) test() {
 }
 
 func (m *minioClient) PutObject(ctx context.Context, objectKey string, content []byte, opts ...storage.PutOptFn) error {
+	opts = append(opts, storage.WithObjectSize(int64(len(content))))
+	return m.PutObjectWithReader(ctx, objectKey, bytes.NewReader(content), opts...)
+}
+
+func (m *minioClient) PutObjectWithReader(ctx context.Context, objectKey string, content io.Reader, opts ...storage.PutOptFn) error {
 	option := storage.PutOption{}
 	for _, opt := range opts {
 		opt(&option)
@@ -165,7 +171,7 @@ func (m *minioClient) PutObject(ctx context.Context, objectKey string, content [
 	}
 
 	_, err := m.client.PutObject(ctx, m.bucketName, objectKey,
-		bytes.NewReader(content), int64(len(content)), minioOpts)
+		content, option.ObjectSize, minioOpts)
 	if err != nil {
 		return fmt.Errorf("PutObject failed: %v", err)
 	}
@@ -209,8 +215,8 @@ func (m *minioClient) GetObjectUrl(ctx context.Context, objectKey string, opts .
 		return "", fmt.Errorf("GetObjectUrl failed: %v", err)
 	}
 
-	// logs.CtxDebugf(ctx, "[GetObjectUrl] origin presignedURL.String = %s", presignedURL.String())
-	ok, proxyURL := proxy.CheckIfNeedReplaceHost(ctx, presignedURL.String())
+	logs.CtxDebugf(ctx, "[GetObjectUrl] origin presignedURL.String = %s", presignedURL.String())
+	ok, proxyURL := proxy.CheckIfNeedReplaceHostByWanwu(ctx, presignedURL.String())
 	if ok {
 		return proxyURL, nil
 	}

@@ -12,6 +12,56 @@ func _apiMw() []app.HandlerFunc {
 	return nil
 }
 
+func _botMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _gettypelistMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _commonMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _uploadMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _applyuploadactionMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _applyuploadaction0Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _commonuploadMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _playground_apiMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _spaceMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _getspacelistv2Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _workflow_apiMw() []app.HandlerFunc {
 	// your code...
 	return nil
@@ -238,6 +288,21 @@ func _gethistoryschemaMw() []app.HandlerFunc {
 }
 
 func _upload1Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _v1Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _workflowMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _openapirunflowMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }

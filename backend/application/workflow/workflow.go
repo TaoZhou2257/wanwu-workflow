@@ -292,7 +292,7 @@ func (w *ApplicationService) DeleteWorkflow(ctx context.Context, req *workflow.D
 }
 
 func (w *ApplicationService) deleteWorkflowResource(ctx context.Context, policy *vo.DeletePolicy) error {
-	ids, err := w.DomainSVC.Delete(ctx, policy)
+	ids, err := GetWorkflowDomainSVC().Delete(ctx, policy)
 	if err != nil {
 		return err
 	}
@@ -991,7 +991,7 @@ func (w *ApplicationService) CopyWorkflowFromAppToLibrary(ctx context.Context, w
 }
 
 func (w *ApplicationService) copyWorkflowFromAppToLibrary(ctx context.Context, workflowID int64, appID int64, related vo.ExternalResourceRelated) (map[int64]entity.IDVersionPair, []*vo.ValidateIssue, error) {
-	resp, err := w.DomainSVC.CopyWorkflowFromAppToLibrary(ctx, workflowID, appID, related)
+	resp, err := GetWorkflowDomainSVC().CopyWorkflowFromAppToLibrary(ctx, workflowID, appID, related)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1096,7 +1096,7 @@ func (w *ApplicationService) CopyWorkflowFromLibraryToApp(ctx context.Context, w
 }
 
 func (w *ApplicationService) copyWorkflow(ctx context.Context, workflowID int64, policy vo.CopyWorkflowPolicy) (*entity.Workflow, error) {
-	wf, err := w.DomainSVC.CopyWorkflow(ctx, workflowID, policy)
+	wf, err := GetWorkflowDomainSVC().CopyWorkflow(ctx, workflowID, policy)
 	if err != nil {
 		return nil, err
 	}
@@ -3351,7 +3351,7 @@ func (w *ApplicationService) CopyWkTemplateApi(ctx context.Context, req *workflo
 }
 
 func (w *ApplicationService) publishWorkflowResource(ctx context.Context, policy *vo.PublishPolicy) error {
-	err := w.DomainSVC.Publish(ctx, policy)
+	err := GetWorkflowDomainSVC().Publish(ctx, policy)
 	if err != nil {
 		return err
 	}
@@ -3618,13 +3618,13 @@ func toVariable(p *workflow.APIParameter) (*vo.Variable, error) {
 		v.Type = vo.VariableTypeBoolean
 	case workflow.ParameterType_Array:
 		v.Type = vo.VariableTypeList
-		if len(p.SubParameters) == 1 {
+		if len(p.SubParameters) == 1 && p.SubType != nil && *p.SubType != workflow.ParameterType_Object {
 			av, err := toVariable(p.SubParameters[0])
 			if err != nil {
 				return nil, err
 			}
 			v.Schema = &av
-		} else if len(p.SubParameters) > 1 {
+		} else {
 			subVs := make([]any, 0)
 			for _, ap := range p.SubParameters {
 				av, err := toVariable(ap)

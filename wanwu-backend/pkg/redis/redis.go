@@ -16,11 +16,7 @@ type Config struct {
 	MasterName string `json:"master_name" mapstructure:"master_name"`
 }
 
-type redisImpl struct {
-	client *redis.Client
-}
-
-func newClient(ctx context.Context, c Config, db int) (*redisImpl, error) {
+func newClient(ctx context.Context, c Config, db int) (*redis.Client, error) {
 	redisAddr := c.Host + ":" + c.Port
 	var r *redis.Client
 	if c.Standalone {
@@ -42,7 +38,5 @@ func newClient(ctx context.Context, c Config, db int) (*redisImpl, error) {
 	if _, err := r.Ping(ctx).Result(); err != nil {
 		return nil, err
 	}
-	return &redisImpl{
-		client: r,
-	}, nil
+	return r, nil
 }

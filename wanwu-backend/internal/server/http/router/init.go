@@ -1,9 +1,15 @@
 package router
 
 import (
+	wanwu_mock "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/server/http/handler/wanwu-mock"
+	"github.com/cloudwego/hertz/pkg/app"
 	hertz_server "github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/coze-dev/coze-studio/backend/api/handler/coze"
 )
+
+// ！！！同步于：backend/api/router/coze/api.go
+// ！！！同步于：backend/api/router/coze/api.go
+// ！！！同步于：backend/api/router/coze/api.go
 
 func Register(r *hertz_server.Hertz) {
 	// TODO auto generated
@@ -11,6 +17,26 @@ func Register(r *hertz_server.Hertz) {
 	root := r.Group("/", rootMw()...)
 	{
 		_api := root.Group("/api", _apiMw()...)
+		{
+			_bot := _api.Group("/bot", _botMw()...)
+			_bot.POST("/get_type_list", append(_gettypelistMw(), coze.GetTypeList)...)
+		}
+		{
+			_common := _api.Group("/common", _commonMw()...)
+			{
+				_upload := _common.Group("/upload", _uploadMw()...)
+				_upload.GET("/apply_upload_action", append(_applyuploadactionMw(), coze.ApplyUploadActionByWanwu)...)
+				_upload.POST("/apply_upload_action", append(_applyuploadaction0Mw(), coze.ApplyUploadActionByWanwu)...)
+				_upload.POST("/*tos_uri", append(_commonuploadMw(), coze.CommonUpload)...)
+			}
+		}
+		{
+			_playground_api := _api.Group("/playground_api", _playground_apiMw()...)
+			{
+				_space := _playground_api.Group("/space", _spaceMw()...)
+				_space.POST("/list", append(_getspacelistv2Mw(), wanwu_mock.GetSpaceListV2)...)
+			}
+		}
 		{
 			_workflow_api := _api.Group("/workflow_api", _workflow_apiMw()...)
 			_workflow_api.GET("/apiDetail", append(_getapidetailMw(), coze.GetApiDetail)...)
@@ -64,6 +90,19 @@ func Register(r *hertz_server.Hertz) {
 				_upload1 := _workflow_api.Group("/upload", _upload1Mw()...)
 				_upload1.POST("/auth_token", append(_getworkflowuploadauthtokenMw(), coze.GetWorkflowUploadAuthToken)...)
 			}
+
+			// --- wanwu adapt ---
+			_workflow_api.POST("/workflow_list_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowListByWanwu}...)
+		}
+	}
+	{
+		_v1 := root.Group("/v1", _v1Mw()...)
+		{
+			_workflow := _v1.Group("/workflow", _workflowMw()...)
+
+			// --- wanwu adapt ---
+			_workflow.GET("/:workflow_id/schema_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowOpenAPIV3SchemaByWanwu}...)
+			_workflow.POST("/:workflow_id/run_by_wanwu", append(_openapirunflowMw(), coze.OpenAPIRunWorkFlowByWanwu)...)
 		}
 	}
 }
