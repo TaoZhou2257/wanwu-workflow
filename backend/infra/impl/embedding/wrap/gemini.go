@@ -14,28 +14,20 @@
  * limitations under the License.
  */
 
-package entity
+package wrap
 
 import (
-	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/knowledge"
+	"context"
+
+	"github.com/cloudwego/eino-ext/components/embedding/gemini"
+
+	contract "github.com/coze-dev/coze-studio/backend/infra/contract/embedding"
 )
 
-type Slice = knowledge.Slice
-
-type WhereSliceOpt struct {
-	KnowledgeID int64
-	DocumentID  int64
-	DocumentIDs []int64
-	Keyword     *string
-	PageSize    int64
-	Offset      int64
-	NotEmpty    *bool
-}
-
-type WherePhotoSliceOpt struct {
-	KnowledgeID int64
-	DocumentIDs []int64
-	Limit       *int
-	Offset      *int
-	HasCaption  *bool
+func NewGeminiEmbedder(ctx context.Context, config *gemini.EmbeddingConfig, dimensions int64, batchSize int) (contract.Embedder, error) {
+	emb, err := gemini.NewEmbedder(ctx, config)
+	if err != nil {
+		return nil, err
+	}
+	return &denseOnlyWrap{dims: dimensions, batchSize: batchSize, Embedder: emb}, nil
 }
