@@ -6,6 +6,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/filegenerator"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/fileparser"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/knowledge"
+	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/mcp"
 	wanwu_intentdetector "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-intentdetector"
 )
 
@@ -32,5 +33,9 @@ func RegisterWanwuAllNodeAdaptors() {
 
 	nodes.RegisterNodeAdaptor(entity.NodeTypeWanWuFileGenerator, func() nodes.NodeAdaptor {
 		return &filegenerator.WanWuRetrieveConfig{}
+	})
+
+	nodes.RegisterNodeAdaptor(entity.NodeTypeWanWuMCPTool, func() nodes.NodeAdaptor {
+		return &mcp.Config{}
 	})
 }

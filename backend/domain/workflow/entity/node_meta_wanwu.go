@@ -6,6 +6,7 @@ const (
 	NodeTypeWanWuKnowledgeRetriever NodeType = "WanWuKnowledgeRetriever"
 	NodeTypeWanWuFileGenerator      NodeType = "WanWuFileGenerator"
 	NodeTypeWanWuFileParser         NodeType = "WanWuFileParser"
+	NodeTypeWanWuMCPTool        NodeType = "WanWuMCPTool"
 )
 
 // Wanwu NodeTypeMetas Init
@@ -83,4 +84,21 @@ func init() {
 		EnUSDescription: "Used for recognizing the intent in user input and matching it with preset intent options.",
 	}
 
+	NodeTypeMetas[NodeTypeWanWuMCPTool] = &NodeTypeMeta{
+		ID:           1009,
+		Key:          NodeTypeWanWuMCPTool,
+		DisplayKey:   "MCPTool",
+		Name:         "MCP工具",
+		Category:     "utilities",
+		Desc:         "用于调用MCP服务的工具",
+		Color:        "#FF811A",
+		IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
+		SupportBatch: false,
+		ExecutableMeta: ExecutableMeta{
+			PreFillZero: true,
+			PostFillNil: true,
+		},
+		EnUSName:        "MCP tool",
+		EnUSDescription: "Used to call MCP tools.",
+	}
 }
