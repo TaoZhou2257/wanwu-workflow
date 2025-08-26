@@ -90,6 +90,12 @@ export function transformOnInit(value) {
     maxHistory: datasetParam.find(item => item.name === 'maxHistory')?.input.value
       .content as number,
 
+    rerankKeywordPriority: datasetParam.find(item => item.name === 'rerankKeywordPriority')?.input.value
+      .content as number,
+
+    rerankKeywordPrioritySwitch: datasetParam.find(item => item.name === 'rerankKeywordPrioritySwitch')?.input
+      .value.content as boolean,
+
     matchType: datasetParam.find(item => item.name === 'matchType')?.input.value
       .content as string,
 
@@ -149,6 +155,7 @@ export function transformOnSubmit(value) {
         },
       },
     },
+    BlockInput.createBoolean('rerankKeywordPrioritySwitch', datasetSetting?.rerankKeywordPrioritySwitch),
     BlockInput.createBoolean('rewrite', datasetSetting?.rewrite),
   ]);
 
@@ -186,6 +193,19 @@ export function transformOnSubmit(value) {
         value: {
           type: 'literal',
           content: datasetSetting?.maxHistory,
+        },
+      },
+    });
+  }
+
+  if (datasetSetting?.rerankKeywordPriority !== undefined) {
+    actualData.inputs.datasetParam.push({
+      name: 'rerankKeywordPriority',
+      input: {
+        type: 'float',
+        value: {
+          type: 'literal',
+          content: datasetSetting?.rerankKeywordPriority,
         },
       },
     });

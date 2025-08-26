@@ -73,6 +73,8 @@ export const datasetNodeFormDataRuntimeType = t.type({
         threshold: t.union([t.number, t.undefined]),
         semanticsPriority: t.union([t.number, t.undefined]),
         maxHistory: t.union([t.number, t.undefined]),
+        rerankKeywordPriority: t.union([t.number, t.undefined]),
+        rerankKeywordPrioritySwitch: t.boolean,
         matchType: t.string,
         rerankModelId: t.string,
         rewrite: t.boolean,
@@ -144,6 +146,26 @@ export const datasetNodeActualDataRuntimeType = t.type({
           }),
         }),
         t.type({
+          name: t.literal('rerankKeywordPriority'),
+          input: t.type({
+            type: t.literal('float'),
+            value: t.type({
+              type: t.literal('literal'),
+              content: t.number,
+            }),
+          }),
+        }),
+        t.type({
+          name: t.literal('rerankKeywordPrioritySwitch'),
+          input: t.type({
+            type: t.literal('boolean'),
+            value: t.type({
+              type: t.literal('literal'),
+              content: t.boolean,
+            }),
+          }),
+        }),
+        t.type({
           name: t.literal('matchType'),
           input: t.type({
             type: t.literal('string'),
@@ -179,7 +201,8 @@ export const datasetNodeActualDataRuntimeType = t.type({
       topK: t.number,
       threshold: t.number,
       semanticsPriority: t.number,
-      maxHistory: t.number
+      maxHistory: t.number,
+      rerankKeywordPriority: t.number,
     }),
     inputParameters: t.array(
       t.type({

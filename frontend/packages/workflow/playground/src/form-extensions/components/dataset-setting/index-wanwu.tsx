@@ -17,9 +17,8 @@
 /* eslint-disable complexity */
 import { type FC, useEffect, useState, useMemo } from 'react';
 
-import { isNil, set, omit } from 'lodash-es';
+import { isNil, set } from 'lodash-es';
 import { useNodeTestId } from '@coze-workflow/base';
-import { RewriteTips, RerankTips } from '@coze-common/biz-tooltip-ui';
 import { type Dataset, FormatType } from '@coze-arch/idl/knowledge';
 import { I18n } from '@coze-arch/i18n';
 import { IconWarningInfo } from '@coze-arch/bot-icons';
@@ -37,6 +36,7 @@ const SUGGEST_TOP_K = 5;
 const DEFAULT_MIN_SCORE = 0.4;
 
 const DEFAULT_SEMANTICS_PRIORITY = 0.2;
+const DEFAULT_KEYWORD_PRIORITY = 1;
 const DEFAULT_MAX_HISTORY = 0;
 /** default maximum recall  */
 const DEFAULT_TOP_K = 5;
@@ -63,6 +63,8 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
   const {
     threshold,
     maxHistory,
+    rerankKeywordPriority,
+    rerankKeywordPrioritySwitch,
     topK,
     matchType,
     rerankModelId,
@@ -71,6 +73,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
   } = dataSetInfo || {};
 
   const isDatasetWriteActive = true;
+  const isDatasetKeywordPrioritySwitch = false;
 
   const [isDatasetEmpty, setDatasetEmpty] = useState(true);
 
@@ -90,6 +93,8 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
     if (
       isNil(threshold) &&
       isNil(maxHistory) &&
+      isNil(rerankKeywordPriority) &&
+      isNil(rerankKeywordPrioritySwitch) &&
       isNil(semanticsPriority) &&
       isNil(topK) &&
       isNil(matchType) &&
@@ -102,11 +107,16 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
         matchType: MatchType.Semantic,
         rerankModelId: '',
         maxHistory: DEFAULT_MAX_HISTORY,
+        rerankKeywordPriority: DEFAULT_KEYWORD_PRIORITY,
         semanticsPriority: DEFAULT_SEMANTICS_PRIORITY
       };
 
       if (isDatasetWriteActive) {
         set(initDataSetInfo, 'rewrite', true);
+      }
+
+      if (!isDatasetKeywordPrioritySwitch) {
+        set(initDataSetInfo, 'rerankKeywordPrioritySwitch', false);
       }
 
       // The search policy for new nodes defaults to Hybird
@@ -129,8 +139,16 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
         ...dataSetInfo,
         rewrite: true,
       });
+    } else if (
+      isNil(rerankKeywordPrioritySwitch) &&
+      isDatasetKeywordPrioritySwitch
+    ) {
+      onDataSetInfoChange?.({
+        ...dataSetInfo,
+        rerankKeywordPrioritySwitch: true,
+      });
     }
-  }, [dataSetInfo, isDatasetWriteActive, isContainSqlDataSet, isDatasetEmpty]);
+  }, [dataSetInfo, isDatasetWriteActive, isDatasetKeywordPrioritySwitch, isContainSqlDataSet, isDatasetEmpty]);
 
   useEffect(() => {
     if (!isReady) {
@@ -390,6 +408,62 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
           />
         </div>
       </div>
+
+      {matchType === MatchType.Hybird && (<>
+        <div className={s['setting-item']}>
+          <CheckboxWithLabel
+            checked={rerankKeywordPrioritySwitch}
+            onChange={checked => {
+              onDataSetInfoChange({
+                ...dataSetInfo,
+                rerankKeywordPrioritySwitch: checked,
+              });
+            }}
+            readonly={readonly}
+            label={I18n.t('dataset_keyword_priority_switch')}
+            tooltip={I18n.t('bot_edit_datasetsSettings_keyword_priority_switch')}
+            dataTestId={getNodeSetterId('dataset_keyword_priority_switch')}
+          />
+        </div>
+        {rerankKeywordPrioritySwitch && (<div className={s['setting-item']}>
+          <TitleArea
+            title={I18n.t('dataset_keyword_priority')}
+            tip={I18n.t('bot_edit_datasetsSettings_keyword_priority')}
+          />
+          <div style={{position: 'relative'}}>
+            <SliderArea
+              min={0}
+              max={2}
+              step={0.1}
+              customStyles={{
+                sliderAreaStyle: {
+                  width: '160px',
+                },
+                boundaryStyle: {
+                  width: '158px',
+                  margin: 0,
+                },
+              }}
+              isDataSet
+              value={rerankKeywordPriority as number}
+              marks={{markKey: DEFAULT_KEYWORD_PRIORITY, markText: ''}}
+              disabled={readonly || disabled}
+              onChange={v => {
+                onDataSetInfoChange({
+                  ...dataSetInfo,
+                  rerankKeywordPriority: v,
+                });
+              }}
+              onClickDefault={() => {
+                onDataSetInfoChange({
+                  ...dataSetInfo,
+                  rerankKeywordPriority: DEFAULT_KEYWORD_PRIORITY,
+                });
+              }}
+            />
+          </div>
+        </div>)}
+      </>)}
 
       <div className={s['setting-item']}>
         <CheckboxWithLabel

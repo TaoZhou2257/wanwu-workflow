@@ -39,6 +39,8 @@ export interface DataSetInfo {
   matchType?: MatchType;
   threshold?: number;
   maxHistory?: number;
+  rerankKeywordPriority?: number;
+  rerankKeywordPrioritySwitch?: boolean;
   rewrite?: boolean;
   semanticsPriority?: number,
   rerankModelId?: string

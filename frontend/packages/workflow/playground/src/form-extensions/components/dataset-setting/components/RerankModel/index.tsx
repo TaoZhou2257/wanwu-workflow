@@ -19,6 +19,7 @@ import React, { useEffect, useState } from 'react';
 import { useNodeTestId } from '@coze-workflow/base';
 import { Select } from '@coze-arch/coze-design';
 import { KnowledgeApi } from '@coze-arch/bot-api';
+import { I18n } from '@coze-arch/i18n';
 
 import s from './index.module.less';
 
@@ -56,6 +57,7 @@ export const RerankModelWanwu: React.FC<RerankModelProps> = props => {
         ...style,
         pointerEvents: readonly ? 'none' : 'auto',
       }}
+      placeholder={I18n.t('knowledge_rerank_placeholder')}
       onChange={onChange as (v: unknown) => void}
       data-testid={getNodeSetterId('dataset-rerank-model')}
     >
