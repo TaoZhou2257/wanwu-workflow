@@ -2,16 +2,16 @@ import { I18n } from '@coze-arch/i18n';
 
 import { NodeConfigForm } from '@/node-registries/common/components';
 
-import { OutputsField, InputsParametersField } from '../common/fields';
+import { OutputsField } from '../common/fields';
 import { INPUT_PATH } from './constants';
+import { FileGenerateParamsField } from "./components/file-generate-params-field";
+import React from "react";
+
 
 export const FormRender = () => (
   <NodeConfigForm>
-    <InputsParametersField
+    <FileGenerateParamsField
       name={INPUT_PATH}
-      title={I18n.t('node_http_request_params')}
-      tooltip={I18n.t('node_http_request_params_desc')}
-      defaultValue={[]}
     />
 
     <OutputsField

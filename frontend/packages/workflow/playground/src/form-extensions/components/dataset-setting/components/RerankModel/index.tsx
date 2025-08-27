@@ -46,7 +46,6 @@ export const RerankModelWanwu: React.FC<RerankModelProps> = props => {
   }
 
   return (
-    <div>
     <Select
       className={s['strategy-area']}
       dropdownClassName={s['strategy-area-dropdown']}
@@ -70,6 +69,5 @@ export const RerankModelWanwu: React.FC<RerankModelProps> = props => {
         </Select.Option>
       ))}
     </Select>
-    </div>
   );
 };

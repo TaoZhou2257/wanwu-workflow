@@ -21,7 +21,7 @@ export const workflowRouter: ReturnType<typeof createBrowserRouter> =
   createBrowserRouter([
     {
       path: '/',
-      // errorElement: <GlobalError />,
+      errorElement: <GlobalError />,
       children: [
         /*{
           path: 'sign',

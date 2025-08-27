@@ -23,7 +23,7 @@ export const FILE_GENERATE_WANWU_FORM_META: FormMetaV2<FormData> = {
   // 验证规则
   validate: {
     // 必填
-    'inputs.inputParameters.0.input': createValueExpressionInputValidate({
+    'inputs.inputParameters.*.input': createValueExpressionInputValidate({
       required: true,
     }),
   },
