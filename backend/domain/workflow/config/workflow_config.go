@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-package prompt
+package config
 
-import (
-	"context"
+type WorkflowConfig struct {
+	NodeOfCodeConfig *NodeOfCodeConfig `yaml:"NodeOfCodeConfig"`
+}
 
-	"github.com/coze-dev/coze-studio/backend/domain/prompt/entity"
-)
+func (w WorkflowConfig) GetNodeOfCodeConfig() *NodeOfCodeConfig {
+	return w.NodeOfCodeConfig
+}
 
-type Prompt interface {
-	CreatePromptResource(ctx context.Context, p *entity.PromptResource) (int64, error)
-	GetPromptResource(ctx context.Context, promptID int64) (*entity.PromptResource, error)
-	UpdatePromptResource(ctx context.Context, promptID int64, name, description, promptText *string) error
-	DeletePromptResource(ctx context.Context, promptID int64) error
+type NodeOfCodeConfig struct {
+	SupportThirdPartModules []string `yaml:"SupportThirdPartModules"`
+}
 
-	ListOfficialPromptResource(ctx context.Context, keyword string) ([]*entity.PromptResource, error)
+func (n *NodeOfCodeConfig) GetSupportThirdPartModules() []string {
+	return n.SupportThirdPartModules
 }
