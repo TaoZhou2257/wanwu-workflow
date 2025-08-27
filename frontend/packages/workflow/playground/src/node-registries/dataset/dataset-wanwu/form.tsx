@@ -23,14 +23,12 @@ import { OutputsField } from '@/node-registries/common/fields';
 import { NodeConfigForm } from '@/node-registries/common/components';
 import { Section } from '@/form';
 
-import { DatasetSelectField } from '../common/componets/dataset-select-field';
-import { DatasetParamsField } from '../common/componets/dataset-params-field';
-import { DatasetSettingFieldWanwu } from './components/dataset-setting-field-wanwu';
+import { DatasetSelectField, DatasetParamsField, DatasetSettingFieldWanwu } from './components';
 
 const Render = () => (
   <NodeConfigForm>
     <DatasetParamsField
-      inputFiedlName="inputs.inputParameters.Query"
+      inputFieldName="inputs.inputParameters.Query"
       testId="/inputs/inputParameters/Query"
       tooltip={I18n.t(
         'workflow_detail_knowledge_input_tooltip',
