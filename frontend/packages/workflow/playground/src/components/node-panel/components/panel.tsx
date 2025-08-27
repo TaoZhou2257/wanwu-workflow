@@ -106,7 +106,7 @@ export const NodePanel: FC<NodePanelRenderProps> = props => {
   const adaptiveHeight = useMemo(() => {
     const docHeight = document.body.clientHeight;
     let targetHeight: number;
-    const MAXMIUM_HEIGHT = 580;
+    const MAXMIUM_HEIGHT = 525;
     const ADD_NODE_BTN_TOP = 32 + 24 + 8;
     if (panelProps.fromAddNodeBtn) {
       targetHeight = Math.min(MAXMIUM_HEIGHT, docHeight - ADD_NODE_BTN_TOP);
