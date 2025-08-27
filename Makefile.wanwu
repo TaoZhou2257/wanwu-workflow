@@ -1,0 +1,13 @@
+include ./wanwu-backend/.env
+
+LDFLAGS := -X main.buildTime=$(shell date +%Y-%m-%d,%H:%M:%S) \
+			-X main.buildVersion=${WANWU_WORKFLOW_VERSION} \
+			-X main.gitCommitID=$(shell git --git-dir=./.git rev-parse HEAD) \
+			-X main.gitBranch=$(shell git --git-dir=./.git for-each-ref --format='%(refname:short)->%(upstream:short)' $(shell git --git-dir=./.git symbolic-ref -q HEAD)) \
+			-X main.builder=$(shell git config user.name)
+
+docker-image-backend:
+	docker build -f Dockerfile.wanwu-backend --build-arg WANWU_ARCH=${WANWU_ARCH} -t wanwulite/workflow:${WANWU_WORKFLOW_VERSION}-$(shell git rev-parse --short HEAD)-${WANWU_ARCH} .
+
+docker-image-backend-base:
+	docker build -f Dockerfile.wanwu-backend-base --build-arg WANWU_ARCH=${WANWU_ARCH} -t wanwulite/workflow-base:${WANWU_WORKFLOW_VERSION}-$(shell date +%Y%m%d) .

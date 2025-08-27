@@ -14,11 +14,13 @@ import (
 	crosssearchImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/search"
 	crossuserImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/user"
 	"github.com/UnicomAI/wanwu/pkg/log"
+	coze_app_infra "github.com/coze-dev/coze-studio/backend/application/base/appinfra"
 	coze_app_modelmgr "github.com/coze-dev/coze-studio/backend/application/modelmgr"
 	coze_app_upload "github.com/coze-dev/coze-studio/backend/application/upload"
 	coze_app_user "github.com/coze-dev/coze-studio/backend/application/user"
 	coze_app_workflow "github.com/coze-dev/coze-studio/backend/application/workflow"
 	coze_crossuser "github.com/coze-dev/coze-studio/backend/crossdomain/contract/user"
+	coze_crosscode "github.com/coze-dev/coze-studio/backend/crossdomain/impl/code"
 	coze_workflow "github.com/coze-dev/coze-studio/backend/domain/workflow"
 	coze_workflow_service "github.com/coze-dev/coze-studio/backend/domain/workflow/service"
 	coze_imagex "github.com/coze-dev/coze-studio/backend/infra/contract/imagex"
@@ -85,6 +87,8 @@ func Init(ctx context.Context, infra Infra) error {
 
 	// init cross domain user
 	coze_crossuser.SetDefaultSVC(crossuserImpl.DefaultMock())
+	// init cross domain code
+	coze_crosscode.SetCodeRunner(coze_app_infra.InitCodeRunner())
 
 	return nil
 }
