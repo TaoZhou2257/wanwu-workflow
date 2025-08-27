@@ -234,8 +234,6 @@ export default function CustomTreeNode(props: CustomTreeNodeProps) {
     [withExpandContent, expand, readonly],
   );
 
-  console.log(value, '---------------------------------params_values')
-
   const paramRow = !readonly ? (
     <div
       className={classNames({

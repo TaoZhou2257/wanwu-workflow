@@ -91,7 +91,6 @@ export class DataSetStore {
     const { data = {} } = await knowledgeApi.ListSelectDataset();
     const ids = this.queryQueue;
     this.queryQueue = [];
-    console.log(data, '-------------------------------dataset_list_view_card')
 
     const knowledgeList = data?.knowledgeList || []
     const dataset_list = knowledgeList.map(((item: any) => ({...item, dataset_id: item.name})))

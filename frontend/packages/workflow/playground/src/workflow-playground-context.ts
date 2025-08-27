@@ -161,7 +161,6 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
         });
       }
     });
-    console.log(this.pluginCategoryMap, this.nodeTemplateMap, this.nodeCategoryList, '-----------------------------loadNodeInfos')
   }
 
   getImageFlowNode(pluginId: string, apiName: string) {

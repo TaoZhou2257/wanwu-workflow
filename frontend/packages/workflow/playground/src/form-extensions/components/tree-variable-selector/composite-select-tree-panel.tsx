@@ -75,7 +75,6 @@ const CompositeSelectTreePanel = React.forwardRef(
 
     const isNodeVariable = value?.length === 1;
 
-    console.log(treeDataSortByGroup, '-------------------------------treeDataSortByGroup')
     const renderContent = () => {
       if (!extraOption) {
         return treeDataSortByGroup?.length ? (

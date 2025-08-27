@@ -298,7 +298,6 @@ const PublishForm: React.FC<{
         appId: workflowId
       };
 
-      console.log(next, '---------------------------next')
       onSubmit(next);
 
       cb?.();

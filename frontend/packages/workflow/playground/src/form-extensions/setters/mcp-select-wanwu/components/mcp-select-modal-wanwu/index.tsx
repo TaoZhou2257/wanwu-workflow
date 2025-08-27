@@ -140,7 +140,6 @@ export const useSelectMcpModal = ({
   };
 
   const handleAdd = () => {
-    console.log(window.location, '------------------------add_mcp')
     window.location.href = window.location.origin + '/aibase/mcp'
   };
 
@@ -151,7 +150,6 @@ export const useSelectMcpModal = ({
 
     setActiveKey([currentKey])
     if (serverUrl) fetchMcpToolList({serverUrl})
-    console.log([currentKey], value, currentObj, serverUrl, '-----------------------------------mcp_change')
   }
   
   const renderList = () => (

@@ -82,7 +82,6 @@ const getDatasetList = async (
   pageIndex = 1,
 ) => {
   const { data = {} } = await KnowledgeApi.ListSelectDataset();
-  console.log(data, '------------------------------------------------------dataset_list')
   const knowledgeList = data?.knowledgeList || []
   const dataset_list = knowledgeList.map(((item: any) => ({...item, dataset_id: item.name})))
 
@@ -113,7 +112,6 @@ const EmptyToCreate: FC<{
       return;
     }
     createKnowledgeModal?.open();*/
-    console.log(window.location, '----------------------------add_knowledge')
     window.location.href = window.location.origin + '/aibase/knowledge'
   };
   return (

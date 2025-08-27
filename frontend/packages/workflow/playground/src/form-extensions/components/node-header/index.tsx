@@ -234,7 +234,6 @@ export const NodeHeader: React.FC<NodeHeaderProps> = ({
 
   const accessCert = JSON.parse(localStorage.getItem("access_cert")) || {}
   const docLinkList = accessCert?.user?.commonInfo?.data?.linkList || {}
-  console.log(docLinkList, registry, docLinkList[`workflow-${registry.type}`], '-----------------------------docLinkList')
 
   return (
     <div

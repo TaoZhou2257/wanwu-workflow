@@ -89,8 +89,6 @@ export function PopoverModelListView({
     />
   );
 
-  console.log(modelList, modelGroups, '---------------------------------modelList')
-
   return (
     <div
       className={cls(

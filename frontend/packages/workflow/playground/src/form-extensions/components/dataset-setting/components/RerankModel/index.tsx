@@ -42,7 +42,6 @@ export const RerankModelWanwu: React.FC<RerankModelProps> = props => {
 
   const getRerankModel = async () => {
     const { data = {} } = await KnowledgeApi.getRerankModel()
-    console.log(data, '-----------------------------------rerank_model_list')
     setRerankList(data?.list || [])
   }
 
