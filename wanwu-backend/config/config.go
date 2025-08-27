@@ -5,6 +5,7 @@ import (
 	"github.com/UnicomAI/wanwu/pkg/db"
 	"github.com/UnicomAI/wanwu/pkg/log"
 	"github.com/UnicomAI/wanwu/pkg/util"
+	coze_workflow_config "github.com/coze-dev/coze-studio/backend/domain/workflow/config"
 )
 
 var (
@@ -18,6 +19,8 @@ type Config struct {
 	DB     db.Config    `json:"db" mapstructure:"db"`
 	Redis  redis.Config `json:"redis" mapstructure:"redis"`
 	Minio  MinioConfig  `json:"minio" mapstructure:"minio"`
+
+	Workflow coze_workflow_config.WorkflowConfig `json:"workflow" mapstructure:"workflow"`
 }
 
 type ServerConfig struct {

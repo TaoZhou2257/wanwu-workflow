@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/config"
 	crossmodelmgrImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/modelmgr"
 	crosssearchImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/search"
 	crossuserImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/user"
@@ -63,7 +64,7 @@ func Init(ctx context.Context, infra Infra) error {
 	// check point store
 	cps := coze_checkpoint.NewRedisStore(cache)
 	// workflow repo
-	workflowRepo := coze_workflow_service.NewWorkflowRepository(idGen, infra.DB, cache, infra.Storage, cps, nil)
+	workflowRepo := coze_workflow_service.NewWorkflowRepository(idGen, infra.DB, cache, infra.Storage, cps, nil, config.Cfg().Workflow)
 	coze_workflow.SetRepository(workflowRepo)
 
 	// domain workflow service
