@@ -26,7 +26,7 @@ import type { BoundSkills } from '../skills/types';
 import {
   SystemPrompt as DefaultSystemPrompt,
   type SystemPromptProps,
-} from '../../components/system-prompt';
+} from '../../components/system-prompt-wanwu';
 import useSkillLibraries from './use-skill-libraries';
 
 interface Props extends Omit<SystemPromptProps, 'libraries'> {
