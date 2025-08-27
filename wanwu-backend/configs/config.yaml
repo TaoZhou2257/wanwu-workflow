@@ -69,3 +69,12 @@ minio:
   endpoint: localhost:9000
   user: root
   password: Wanwu123456
+
+workflow:
+  # ！！！同步于：backend/conf/workflow/config.yaml
+  # ！！！同步于：backend/conf/workflow/config.yaml
+  # ！！！同步于：backend/conf/workflow/config.yaml
+  NodeOfCodeConfig:
+    SupportThirdPartModules:
+      - httpx
+      - numpy
