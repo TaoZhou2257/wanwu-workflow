@@ -102,7 +102,6 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 	if !ok {
 		return nil, errors.New("capital query key is required")
 	}
-
 	retrieveParams := kr.retrieveParams
 	req := &FileGenerateParams{
 		Title:             title,
@@ -123,13 +122,14 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 
 // fileGenerate 文档生成
 func fileGenerate(ctx context.Context, fileGenerateParams *FileGenerateParams) (*FileGenerateResp, error) {
-	paramsByte, err := sonic.Marshal(fileGenerateParams)
-	if err != nil {
-		return nil, err
-	}
-	result, err := http_client.GetDefaultClient().PostJson(ctx, &http_client.HttpRequestParams{
+	var params = make(map[string]string)
+	params["title"] = fileGenerateParams.Title
+	params["formatted_markdown"] = fileGenerateParams.FormattedMarkdown
+	params["to_format"] = fileGenerateParams.ToFormat
+
+	result, err := http_client.GetDefaultClient().PostForm(ctx, &http_client.HttpRequestParams{
 		Url:        fileGeneratorUrl,
-		Body:       paramsByte,
+		Params:     params,
 		Timeout:    time.Duration(10) * time.Second,
 		MonitorKey: "file_generate",
 		LogLevel:   http_client.LogAll,
