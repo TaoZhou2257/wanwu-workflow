@@ -110,15 +110,10 @@ export const FileGenerateParamsField = withFieldArray(({
         {value?.map(({name, input}, index) => (
           name === FILE_TYPE ? (
             <div key={FILE_TYPE + index}>
-              <span style={{fontSize: '13px'}}>fileType</span>
+              <span className="text-[12px]">fileType</span>
               <Select
-                className={'strategy-area'}
-                dropdownClassName={'strategy-area-dropdown'}
+                className="float-right w-[186px]"
                 size="small"
-                style={{
-                  float: 'right',
-                  width: '186px'
-                }}
                 value={input.content}
                 onChange={(v: unknown) => {
                   const fileTypeIndex = value?.findIndex(item => item.name === FILE_TYPE)
