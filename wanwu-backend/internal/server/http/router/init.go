@@ -13,7 +13,7 @@ import (
 
 func Register(r *hertz_server.Hertz) {
 	// TODO auto generated
-
+	r.Static("/api/static", "./configs/static")
 	root := r.Group("/", rootMw()...)
 	{
 		_api := root.Group("/api", _apiMw()...)
@@ -59,7 +59,7 @@ func Register(r *hertz_server.Hertz) {
 			_workflow_api.POST("/llm_fc_setting_merged", append(_getllmnodefcsettingsmergedMw(), coze.GetLLMNodeFCSettingsMerged)...)
 			_workflow_api.POST("/nodeDebug", append(_workflownodedebugv2Mw(), coze.WorkflowNodeDebugV2)...)
 			_workflow_api.POST("/node_panel_search", append(_nodepanelsearchMw(), coze.NodePanelSearch)...)
-			_workflow_api.POST("/node_template_list", append(_nodetemplatelistMw(), coze.NodeTemplateList)...)
+			_workflow_api.POST("/node_template_list", append(_nodetemplatelistMw(), wanwu_mock.NodeTemplateListByWanwu)...)
 			_workflow_api.POST("/node_type", append(_queryworkflownodetypesMw(), coze.QueryWorkflowNodeTypes)...)
 			_workflow_api.POST("/publish", append(_publishworkflowMw(), coze.PublishWorkflow)...)
 			_workflow_api.POST("/released_workflows", append(_getreleasedworkflowsMw(), coze.GetReleasedWorkflows)...)
