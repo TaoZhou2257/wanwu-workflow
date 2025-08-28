@@ -7,12 +7,13 @@ package knowledge
 import (
 	"context"
 	"errors"
+	"strconv"
+	"time"
+
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	http_client "github.com/coze-dev/coze-studio/backend/pkg/http-client"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
-	"strconv"
-	"time"
 
 	"github.com/spf13/cast"
 

@@ -13,9 +13,12 @@ import (
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	"github.com/coze-dev/coze-studio/backend/application/user"
+	user_entity "github.com/coze-dev/coze-studio/backend/domain/user/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
+	"github.com/coze-dev/coze-studio/backend/pkg/ctxcache"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
+	"github.com/coze-dev/coze-studio/backend/pkg/i18n"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/slices"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ternary"
@@ -344,6 +347,7 @@ func workflowParamsToSchema(params []*vo.NamedTypeInfo) (*openapi3.Schema, error
 }
 
 // OpenAPIRunByWanwu 参考OpenAPIRun
+// 0. FIXME 智能体运行该接口，不会在header中带userId、orgId，跳过jwt校验后，需要在该方法中设置ctxcache
 // 1. 去掉api auth、user check等业务逻辑
 // 2. 去掉appID、agentID、connectorID等业务逻辑
 // 3. 将必须publish才能执行的workflow，改为可以执行draft
@@ -377,6 +381,15 @@ func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID s
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// 设置ctxcache
+	if ctxutil.GetUserSessionFromCtx(ctx) == nil {
+		ctxcache.Store(ctx, consts.SessionDataKeyInCtx, &user_entity.Session{
+			UserID: meta.CreatorID,
+			Locale: string(i18n.GetLocale(ctx)),
+		})
+		ctxcache.Store(ctx, "X-Org-Id", strconv.Itoa(int(meta.SpaceID)))
 	}
 
 	// if meta.LatestPublishedVersion == nil {
