@@ -19,6 +19,7 @@ type Config struct {
 	DB     db.Config    `json:"db" mapstructure:"db"`
 	Redis  redis.Config `json:"redis" mapstructure:"redis"`
 	Minio  MinioConfig  `json:"minio" mapstructure:"minio"`
+	Icons  []IconConfig `json:"icons" mapstructure:"icons"`
 
 	Workflow coze_workflow_config.WorkflowConfig `json:"workflow" mapstructure:"workflow"`
 }
@@ -42,6 +43,11 @@ type MinioConfig struct {
 	Endpoint string `json:"endpoint" mapstructure:"endpoint"`
 	User     string `json:"user" mapstructure:"user"`
 	Password string `json:"password" mapstructure:"password"`
+}
+
+type IconConfig struct {
+	ID  string `json:"id" mapstructure:"id"`
+	Url string `json:"url" mapstructure:"url"`
 }
 
 func LoadConfig(in string) error {
