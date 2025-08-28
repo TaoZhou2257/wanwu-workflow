@@ -35,29 +35,31 @@ type WanWuRetrieveConfig struct {
 }
 
 type RetrieveParams struct {
-	MatchType             string  `json:"matchType"  validate:"required"` //matchType：vector（向量检索）、text（文本检索）、mix（混合检索：向量+文本）
-	RerankModelId         string  `json:"rerankModelId"`                  //rerank模型id
-	PriorityMatch         int     `json:"priorityMatch"`                  // 权重匹配，只有在混合检索模式下，选择权重设置后，这个才设置为1
-	SemanticsPriority     float64 `json:"semanticsPriority"`              // 语义权重
-	KeywordPriority       float64 `json:"keywordPriority"`                // 关键词权重
-	RerankKeywordPriority float64 `json:"rerankKeywordPriority"`          // 混合搜索的关键词权重
-	TopK                  int64   `json:"topK"`                           //topK 获取最高的几行
-	Threshold             float64 `json:"threshold"`                      //threshold 过滤分数阈值
-	Rewrite               bool    `json:"rewrite"`                        //是否开启重写
+	MatchType                   string  `json:"matchType"  validate:"required"` //matchType：vector（向量检索）、text（文本检索）、mix（混合检索：向量+文本）
+	RerankModelId               string  `json:"rerankModelId"`                  //rerank模型id
+	PriorityMatch               int     `json:"priorityMatch"`                  // 权重匹配，只有在混合检索模式下，选择权重设置后，这个才设置为1
+	SemanticsPriority           float64 `json:"semanticsPriority"`              // 语义权重
+	KeywordPriority             float64 `json:"keywordPriority"`                // 关键词权重
+	RerankKeywordPriority       float64 `json:"rerankKeywordPriority"`          // 混合搜索的关键词权重
+	RerankKeywordPrioritySwitch bool    `json:"rerankKeywordPrioritySwitch"`    // 混合搜索的关键词权重开关
+	TopK                        int64   `json:"topK"`                           //topK 获取最高的几行
+	Threshold                   float64 `json:"threshold"`                      //threshold 过滤分数阈值
+	Rewrite                     bool    `json:"rewrite"`                        //是否开启重写
 }
 
 type HitParams struct {
-	UserId         string        `json:"userId"`
-	Question       string        `json:"question" validate:"required"`
-	KnowledgeBase  []string      `json:"knowledgeBase" validate:"required"`
-	Threshold      float64       `json:"threshold"`
-	TopK           int64         `json:"topK"`
-	RerankModelId  string        `json:"rerank_model_id"` // rerankId
-	RerankMod      string        `json:"rerank_mod"`      // rerank_model:重排序模式，weighted_score：权重搜索
-	RetrieveMethod string        `json:"retrieve_method"` // hybrid_search:混合搜索， semantic_search:向量搜索， full_text_search：文本搜索
-	Weight         *WeightParams `json:"weights"`         // 权重搜索下的权重配置
-	RewriteQuery   bool          `json:"rewrite_query"`   // 查询重写
-	ReturnMeta     bool          `json:"return_meta"`     // 展示角标
+	UserId                string        `json:"userId"`
+	Question              string        `json:"question" validate:"required"`
+	KnowledgeBase         []string      `json:"knowledgeBase" validate:"required"`
+	Threshold             float64       `json:"threshold"`
+	TopK                  int64         `json:"topK"`
+	RerankModelId         string        `json:"rerank_model_id"`         // rerankId
+	RerankMod             string        `json:"rerank_mod"`              // rerank_model:重排序模式，weighted_score：权重搜索
+	RetrieveMethod        string        `json:"retrieve_method"`         // hybrid_search:混合搜索， semantic_search:向量搜索， full_text_search：文本搜索
+	Weight                *WeightParams `json:"weights"`                 // 权重搜索下的权重配置
+	RewriteQuery          bool          `json:"rewrite_query"`           // 查询重写
+	ReturnMeta            bool          `json:"return_meta"`             // 展示角标
+	TermWeightCoefficient *float64      `json:"term_weight_coefficient"` // 展示角标
 }
 
 type WeightParams struct {
@@ -147,6 +149,14 @@ func (r *WanWuRetrieveConfig) Adapt(_ context.Context, n *vo.Node, _ ...nodes.Ad
 		retrieveParams.RerankKeywordPriority = rerankKeywordPriority
 	}
 
+	if content, ok := getDesignatedParamContent("rerankKeywordPrioritySwitch"); ok {
+		rerankKeywordPrioritySwitch, err := cast.ToBoolE(content)
+		if err != nil {
+			return nil, err
+		}
+		retrieveParams.RerankKeywordPrioritySwitch = rerankKeywordPrioritySwitch
+	}
+
 	if content, ok := getDesignatedParamContent("rewrite"); ok {
 		rewrite, err := cast.ToBoolE(content)
 		if err != nil {
@@ -219,18 +229,24 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 
 	retrieveParams := kr.retrieveParams
 	priorityMatch := retrieveParams.PriorityMatch
+
+	var termWeightCoefficient *float64 = nil
+	if retrieveParams.RerankKeywordPrioritySwitch {
+		termWeightCoefficient = &retrieveParams.RerankKeywordPriority
+	}
 	req := &HitParams{
-		Question:       query,
-		KnowledgeBase:  kr.knowledgeIDs,
-		TopK:           retrieveParams.TopK,
-		Threshold:      retrieveParams.Threshold,
-		RerankModelId:  buildRerankId(priorityMatch, retrieveParams.RerankModelId),
-		RetrieveMethod: buildRetrieveMethod(retrieveParams.MatchType),
-		RerankMod:      buildRerankMod(priorityMatch),
-		Weight:         buildWeight(priorityMatch, retrieveParams.SemanticsPriority, retrieveParams.KeywordPriority),
-		RewriteQuery:   retrieveParams.Rewrite,
-		UserId:         userIdStr,
-		ReturnMeta:     true,
+		Question:              query,
+		KnowledgeBase:         kr.knowledgeIDs,
+		TopK:                  retrieveParams.TopK,
+		Threshold:             retrieveParams.Threshold,
+		RerankModelId:         buildRerankId(priorityMatch, retrieveParams.RerankModelId),
+		RetrieveMethod:        buildRetrieveMethod(retrieveParams.MatchType),
+		RerankMod:             buildRerankMod(priorityMatch),
+		Weight:                buildWeight(priorityMatch, retrieveParams.SemanticsPriority, retrieveParams.KeywordPriority),
+		RewriteQuery:          retrieveParams.Rewrite,
+		UserId:                userIdStr,
+		ReturnMeta:            true,
+		TermWeightCoefficient: termWeightCoefficient,
 	}
 
 	response, err := ragKnowledgeSearch(ctx, req)

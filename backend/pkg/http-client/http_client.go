@@ -345,6 +345,10 @@ func logRequest(ctx context.Context, httpRequestParams *HttpRequestParams, reque
 	if (httpRequestParams.LogLevel == LogParams || httpRequestParams.LogLevel == LogAll) && len(httpRequestParams.Body) > 0 {
 		requestBody = string(httpRequestParams.Body)
 	}
+	var params = make(map[string]string)
+	if (httpRequestParams.LogLevel == LogParams || httpRequestParams.LogLevel == LogAll) && len(httpRequestParams.Params) > 0 {
+		params = httpRequestParams.Params
+	}
 	responseBody := ""
 	if (httpRequestParams.LogLevel == LogAll) && len(response) > 0 {
 		responseBody = string(response)
@@ -352,6 +356,7 @@ func logRequest(ctx context.Context, httpRequestParams *HttpRequestParams, reque
 	var paramsMap = make(map[string]interface{})
 	paramsMap["url"] = httpRequestParams.Url
 	paramsMap["requestBody"] = requestBody
+	paramsMap["params"] = params
 	LogRpcJson(ctx, "HTTP-"+requestType, httpRequestParams.MonitorKey, paramsMap, responseBody, err, start.UnixMilli())
 }
 
