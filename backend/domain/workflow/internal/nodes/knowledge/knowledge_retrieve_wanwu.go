@@ -7,13 +7,13 @@ package knowledge
 import (
 	"context"
 	"errors"
-	"strconv"
-	"time"
-
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	http_client "github.com/coze-dev/coze-studio/backend/pkg/http-client"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
+	"os"
+	"strconv"
+	"time"
 
 	"github.com/spf13/cast"
 
@@ -25,9 +25,8 @@ import (
 )
 
 const (
-	successCode  = 0
-	wanWuOutput  = "output"
-	ragSearchUrl = "http://rag-wanwu:8681/rag/search-knowledge-base" // todo 变成环境变量
+	successCode = 0
+	wanWuOutput = "output"
 )
 
 type WanWuRetrieveConfig struct {
@@ -272,7 +271,7 @@ func ragKnowledgeSearch(ctx context.Context, knowledgeHitParams *HitParams) (*Ra
 		return nil, err
 	}
 	result, err := http_client.GetDefaultClient().PostJson(ctx, &http_client.HttpRequestParams{
-		Url:        ragSearchUrl,
+		Url:        os.Getenv("WANWU_KNOWLEDGE_SEARCH_URL"),
 		Body:       paramsByte,
 		Timeout:    time.Duration(10) * time.Second,
 		MonitorKey: "rag_knowledge_hit",

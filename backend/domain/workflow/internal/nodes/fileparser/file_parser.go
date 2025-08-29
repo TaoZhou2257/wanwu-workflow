@@ -9,6 +9,7 @@ import (
 	"errors"
 	http_client "github.com/coze-dev/coze-studio/backend/pkg/http-client"
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
+	"os"
 	"time"
 
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
@@ -16,10 +17,6 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/canvas/convert"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/schema"
-)
-
-const (
-	fileParserUrl = "http://agent-wanwu:15003/doc_pra" //todo 改成环境变量注入
 )
 
 type WanWuRetrieveConfig struct {
@@ -92,7 +89,7 @@ func fileParser(ctx context.Context, fileParserParams *FileParserParams) ([]*Fil
 		return nil, err
 	}
 	result, err := http_client.GetDefaultClient().PostJson(ctx, &http_client.HttpRequestParams{
-		Url:        fileParserUrl,
+		Url:        os.Getenv("WANWU_FILE_PARSER_URL"),
 		Body:       paramsByte,
 		Timeout:    time.Duration(10) * time.Second,
 		MonitorKey: "file_parser",
