@@ -150,7 +150,7 @@ export function useCommitAction() {
   const viewCommitNewPage = (item: VersionMetaInfo) => {
     const query = new URLSearchParams();
     query.append('space_id', item.space_id || '');
-    query.append('workflow_id', item.workflow_id || '');
+    query.append('id', item.workflow_id || '');
 
     if (item.submit_commit_id) {
       query.append('version', item.submit_commit_id || '');
@@ -161,7 +161,7 @@ export function useCommitAction() {
       query.append('version', item.commit_id || '');
     }
 
-    const targetUrl = `/work_flow?${query.toString()}`;
+    const targetUrl = `/aibase/workflow?${query.toString()}`;
 
     window.open(targetUrl, '_blank');
   };

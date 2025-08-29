@@ -67,7 +67,7 @@ export const SubWorkflowLink: FC<{
     if (subWorkflowProjectId && projectApi?.navigate) {
       projectApi?.navigate(`/workflow/${workflowId}`);
     } else {
-      let url = `/work_flow?space_id=${spaceId}&workflow_id=${workflowId}`;
+      let url = `/aibase/workflow?space_id=${spaceId}&id=${workflowId}`;
       if (commitId) {
         url += `&version=${commitId}`;
       }

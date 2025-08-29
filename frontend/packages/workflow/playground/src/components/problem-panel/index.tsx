@@ -77,7 +77,7 @@ export const ProblemPanel = () => {
         return;
       }
       const url =
-        `/work_flow?space_id=${globalState.spaceId}&workflow_id=${globalState.workflowId}` +
+        `/aibase/workflow?space_id=${globalState.spaceId}&id=${globalState.workflowId}` +
         `&node_id=${problem.nodeId}`;
       window.open(url);
     },

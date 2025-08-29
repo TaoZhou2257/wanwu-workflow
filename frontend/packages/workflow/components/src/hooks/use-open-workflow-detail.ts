@@ -38,9 +38,9 @@ export const useOpenWorkflowDetail = () => {
       const query = new URLSearchParams();
       botId && query.append('bot_id', botId);
       query.append('space_id', spaceId ?? '');
-      query.append('workflow_id', workflowId);
+      query.append('id', workflowId);
       query.append('from', 'createSuccess');
-      window.open(`/work_flow?${query.toString()}`, '_blank');
+      window.open(`/aibase/workflow?${query.toString()}`, '_blank');
     }
   };
   return openWorkflowDetailPage;

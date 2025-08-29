@@ -135,7 +135,7 @@ export const TriggerBindWorkflowField =
                     projectApi?.navigate(`/workflow/${value}`);
                   } else {
                     window.open(
-                      `/work_flow?space_id=${spaceId}&workflow_id=${value}`,
+                      `/aibase/workflow?space_id=${spaceId}&id=${value}`,
                       '_blank',
                     );
                   }

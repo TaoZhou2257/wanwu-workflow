@@ -72,7 +72,7 @@ export const navigateResource = ({
         break;
       case NodeType.WORKFLOW:
       case NodeType.CHAT_FLOW:
-        window.open(`/work_flow?space_id=${spaceId}&workflow_id=${info.id}`);
+        window.open(`/aibase/workflow?space_id=${spaceId}&id=${info.id}`);
         break;
       case NodeType.KNOWLEDGE:
         window.open(`/space/${spaceId}/knowledge/${info.id}`);

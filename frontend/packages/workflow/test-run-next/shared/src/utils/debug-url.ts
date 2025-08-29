@@ -29,12 +29,12 @@ const getDebugUrl = (params: DebugUrlParams) => {
   const { spaceId, workflowId, executeId, subExecuteId, nodeId } = params;
   const search = new URLSearchParams({
     space_id: spaceId,
-    workflow_id: workflowId,
+    id: workflowId,
     execute_id: executeId,
     node_id: nodeId || '',
     sub_execute_id: subExecuteId || '',
   });
-  return `/work_flow?${search.toString()}`;
+  return `/aibase/workflow?${search.toString()}`;
 };
 
 export const gotoDebugFlow = (params: DebugUrlParams, op?: boolean) => {
