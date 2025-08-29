@@ -9,6 +9,7 @@ import (
 	"errors"
 	http_client "github.com/coze-dev/coze-studio/backend/pkg/http-client"
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
+	"os"
 	"time"
 
 	"github.com/spf13/cast"
@@ -18,10 +19,6 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/canvas/convert"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/schema"
-)
-
-const (
-	fileGeneratorUrl = "http://agent-wanwu:15002/upload" //todo 改成环境变量注入
 )
 
 type WanWuRetrieveConfig struct {
@@ -128,7 +125,7 @@ func fileGenerate(ctx context.Context, fileGenerateParams *FileGenerateParams) (
 	params["to_format"] = fileGenerateParams.ToFormat
 
 	result, err := http_client.GetDefaultClient().PostForm(ctx, &http_client.HttpRequestParams{
-		Url:        fileGeneratorUrl,
+		Url:        os.Getenv("WANWU_FILE_GENERATOR_URL"),
 		Params:     params,
 		Timeout:    time.Duration(10) * time.Second,
 		MonitorKey: "file_generate",
