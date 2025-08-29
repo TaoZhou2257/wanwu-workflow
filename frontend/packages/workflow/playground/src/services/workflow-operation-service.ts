@@ -116,6 +116,35 @@ export class WorkflowOperationService {
     }
   };
 
+  publishWorkflow = async (obj: Partial<PublishWorkflowRequest> = {}) => {
+    try {
+      let published = false;
+      this.globalState.updateConfig({ publishing: true });
+      const data = await workflowApi.PublishWanwuWorkflow({
+        appId: this.workflowId,
+        appType: "workflow",
+        ...obj,
+      });
+      published = data?.code === 0;
+
+      reporter.successEvent({
+        eventName: 'workflow_publish_success',
+        namespace: 'workflow',
+      });
+
+      return published;
+    } catch (error) {
+      reporter.errorEvent({
+        eventName: 'workflow_publish_fail',
+        namespace: 'workflow',
+        error,
+      });
+      return false;
+    } finally {
+      this.globalState.updateConfig({ publishing: false });
+    }
+  };
+
   copy = async (): Promise<
     Pick<CopyWorkflowData, 'workflow_id'> | undefined
   > => {

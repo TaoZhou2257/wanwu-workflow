@@ -86,7 +86,7 @@ const ReferencingList: FC<
               onClick={() => {
                 const referencesUrl = getWorkflowUrl({
                   space_id: workflow.space_id ?? '',
-                  workflow_id: workflow.workflow_id ?? '',
+                  id: workflow.workflow_id ?? '',
                 });
                 window.open(referencesUrl, '_blank');
               }}

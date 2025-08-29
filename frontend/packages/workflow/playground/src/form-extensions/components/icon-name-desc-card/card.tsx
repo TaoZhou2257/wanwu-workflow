@@ -76,7 +76,7 @@ export const IconNameDescCard: FC<IconNameDescProps> = props => {
       <div
         className="h-8"
         style={{
-          flex: '0 0 32px',
+          flex: icon ? '0 0 32px' : '0',
         }}
       >
         {icon ? (

@@ -19,7 +19,8 @@ import { Suspense } from 'react';
 
 import { Spin } from '@coze-arch/coze-design';
 
-import { router } from './routes';
+// import { router } from './routes';
+import { workflowRouter } from './workflowRoutes';
 
 export function App() {
   return (
@@ -30,7 +31,7 @@ export function App() {
         </div>
       }
     >
-      <RouterProvider router={router} fallbackElement={<div>loading...</div>} />
+      <RouterProvider router={workflowRouter} fallbackElement={<div>loading...</div>} />
     </Suspense>
   );
 }

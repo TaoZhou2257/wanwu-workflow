@@ -52,12 +52,12 @@ const generateCdnPrefix = () => {
       process.env.CDN_PATH_PREFIX ? `${process.env.CDN_PATH_PREFIX}/` : ''
     }`;
   }
-  return '/';
+  return '/workflow/';
 };
 
 export const defineConfig = (options: Partial<RsbuildConfig>) => {
   const cdnPrefix = generateCdnPrefix();
-  const port = 8080;
+  const port = 8081;
   const commonAssertsUrl = path.dirname(
     require.resolve('@coze-common/assets/package.json'),
   );

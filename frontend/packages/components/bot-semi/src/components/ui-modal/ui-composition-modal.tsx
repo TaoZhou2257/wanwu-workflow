@@ -133,10 +133,10 @@ export const UICompositionModal = ({
     className={classNames(s['ui-composition-modal'], props.className)}
   >
     <div className={s['composition-modal-layout']}>
-      <div className={classNames(s.aside, props.siderWrapperClassName)}>
+      {sider && <div className={classNames(s.aside, props.siderWrapperClassName)}>
         <div className={s.title}>{header}</div>
         {sider}
-      </div>
+      </div>}
       <div className={s.content}>
         <div
           className={classNames({
@@ -144,6 +144,14 @@ export const UICompositionModal = ({
             [s['filter-empty']]: !filter,
           })}
         >
+          {!sider && (
+            <div
+              className={s.title}
+              style={{textAlign: 'left', width: '100%', fontSize: '16px', fontWeight: 'bold'}}
+            >
+              {header}
+            </div>
+          )}
           {filter}
           {extra}
           <UIIconButton

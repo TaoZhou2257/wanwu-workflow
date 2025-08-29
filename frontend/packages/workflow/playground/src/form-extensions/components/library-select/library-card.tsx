@@ -44,7 +44,7 @@ export const LibraryCard: FC<LibraryCardProps> = props => {
       name={library?.name}
       nameSuffix={library?.nameExtra}
       description={library?.description}
-      icon={library?.iconUrl}
+      icon={null}
       onRemove={() => onDelete?.(library.id)}
       testID={testID}
       onClick={() => onClick?.(library.id)}

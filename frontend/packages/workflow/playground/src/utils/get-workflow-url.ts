@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const workflowPath = 'work_flow';
+const workflowPath = '/aibase/workflow';
 
 /**
  * Get Workflow page url
@@ -23,9 +23,9 @@ const workflowPath = 'work_flow';
  */
 export const getWorkflowUrl = (params: {
   space_id: string;
-  workflow_id: string;
+  id: string;
   version?: string;
 }) => {
   const urlParams = new URLSearchParams(params);
-  return `/${workflowPath}?${urlParams.toString()}`;
+  return `${workflowPath}?${urlParams.toString()}`;
 };

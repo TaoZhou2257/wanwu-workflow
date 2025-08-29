@@ -3832,6 +3832,11 @@ export interface GetTypeListRequest {
   model_scene?: ModelScene;
 }
 
+export interface GetListRequest {
+  page?: number;
+  pageSize?: number;
+}
+
 export interface GetTypeListResponse {
   code?: Int64;
   msg?: string;
@@ -4426,6 +4431,7 @@ export interface MigrateResponse {
 
 export interface Model {
   name?: string;
+  displayName?: string;
   model_type?: Int64;
   model_class?: ModelClass;
   /** model icon的url */

@@ -69,6 +69,7 @@ export interface CustomTreeNodeProps extends RenderFullLabelProps {
   onCollapse?: (collapsed: boolean) => void;
   withDefaultValue?: boolean;
   defaultExpand?: boolean;
+  isRootNameDisabled?: boolean;
   columnsRatio?: string;
   readonlyTooltip?: string;
 }
@@ -97,6 +98,7 @@ export default function CustomTreeNode(props: CustomTreeNodeProps) {
     needRenderAppendChild = true,
     withDefaultValue = false,
     defaultExpand = false,
+    isRootNameDisabled = false,
     columnsRatio,
     readonlyTooltip,
   } = props;
@@ -241,7 +243,7 @@ export default function CustomTreeNode(props: CustomTreeNodeProps) {
       })}
     >
       <ParamName
-        disabled={disabled || isPreset}
+        disabled={disabled || isPreset || (value.level === 0 ? isRootNameDisabled : false)} // output name
         data={value}
         onChange={onNameChange}
         style={columnsStyle.name}

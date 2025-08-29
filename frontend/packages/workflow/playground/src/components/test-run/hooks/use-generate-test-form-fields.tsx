@@ -207,6 +207,12 @@ export const useGenerateTestFormFieldsMap = () => {
         context,
         () => true,
       ),
+    [StandardNodeType.DatasetWanwu]: (formData, context) =>
+      generateObjectInputParametersRequired(
+        formData?.inputs?.inputParameters,
+        context,
+        () => true,
+      ),
     [StandardNodeType.DatasetWrite]: (formData, context) =>
       generateObjectInputParametersRequired(
         formData?.inputs?.inputParameters,

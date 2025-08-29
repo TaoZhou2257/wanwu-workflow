@@ -88,14 +88,12 @@ export class DataSetStore {
   }
 
   private query = debounce(async (spaceId: string) => {
-    const { dataset_list = [] } = await knowledgeApi.ListDataset({
-      space_id: spaceId,
-      page: 1,
-      size: 99,
-      filter: { dataset_ids: this.queryQueue },
-    });
+    const { data = {} } = await knowledgeApi.ListSelectDataset();
     const ids = this.queryQueue;
     this.queryQueue = [];
+
+    const knowledgeList = data?.knowledgeList || []
+    const dataset_list = knowledgeList.map(((item: any) => ({...item, dataset_id: item.name})))
 
     const unUseIds: string[] = [];
     ids.forEach(id => {

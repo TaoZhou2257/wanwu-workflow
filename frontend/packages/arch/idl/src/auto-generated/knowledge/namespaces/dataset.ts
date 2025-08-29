@@ -193,6 +193,8 @@ export interface Dataset {
   update_time?: number;
   icon_url?: string;
   description?: string;
+  createAt?: string;
+  updateAt?: string;
   icon_uri?: string;
   /** 是否可以编辑 */
   can_edit?: boolean;
@@ -355,6 +357,17 @@ export interface ListDatasetRequest {
   /** 存储位置，0: byterag，1: opensearch，2: douyin */
   storage_location?: common.StorageLocation;
   Base?: base.Base;
+}
+
+export interface ListSelectRequest {
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ListSelectResponse {
+  code?: number;
+  data?: any;
+  msg?: string;
 }
 
 export interface ListDatasetResponse {

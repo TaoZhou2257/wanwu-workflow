@@ -110,7 +110,7 @@ axiosInstance.interceptors.response.use(
         // 401 Identity Expired & No Identity
         if (typeof error.response.data === 'object') {
           const unauthorizedData = error.response.data as UnauthorizedResponse;
-          const redirectUri = unauthorizedData?.data?.redirect_uri;
+          const redirectUri = unauthorizedData?.data?.redirect_uri || (window.location.origin + '/aibase/login');
           if (redirectUri) {
             redirect(redirectUri);
           }
@@ -136,6 +136,12 @@ axiosInstance.interceptors.request.use(config => {
     }
     return config.headers[key];
   };
+
+  const accessCert = JSON.parse(localStorage.getItem("access_cert")) || {}
+  const {token, userInfo = {}} = accessCert.user || {}
+  setHeader('Authorization', "Bearer " + token);
+  setHeader('x-user-id', userInfo.uid);
+  setHeader('x-org-id', userInfo.orgId);
   setHeader('x-requested-with', 'XMLHttpRequest');
   if (
     ['post', 'get'].includes(config.method?.toLowerCase() ?? '') &&

@@ -415,6 +415,32 @@ export default class KnowledgeService<T> {
     return this.request({ url, method, data }, options);
   }
 
+  /** POST /user/api/v1/knowledge/select */
+  ListSelectDataset(
+    req?: dataset.ListSelectRequest,
+    options?: T,
+  ): Promise<dataset.ListSelectResponse> {
+    const _req = req || {};
+    const url = this.genBaseURL('/user/api/v1/knowledge/select');
+    const method = 'POST';
+    const data = {
+      page: _req['page'],
+      pageSize: _req['pageSize'],
+    };
+    return this.request({ url, method, data }, options);
+  }
+
+  /** GET /user/api/v1/model/select/rerank */
+  getRerankModel(
+    req?: dataset.ListSelectRequest,
+    options?: T,
+  ): Promise<dataset.ListSelectResponse> {
+    const url = this.genBaseURL('/user/api/v1/model/select/rerank');
+    const method = 'GET';
+    const params = {};
+    return this.request({ url, method, params }, options);
+  }
+
   /** POST /api/knowledge/detail */
   DatasetDetail(
     req?: dataset.DatasetDetailRequest,

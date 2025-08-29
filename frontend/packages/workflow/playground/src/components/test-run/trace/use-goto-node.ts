@@ -53,7 +53,7 @@ export const useGotoNode = () => {
     const { nodeId, workflowId, executeId, subExecuteId } = params;
     const { spaceId } = globalState;
     const url =
-      `/work_flow?space_id=${spaceId}&workflow_id=${workflowId}` +
+      `/aibase/workflow?space_id=${spaceId}&id=${workflowId}` +
       `&node_id=${nodeId}&execute_id=${executeId}&sub_execute_id=${subExecuteId}`;
 
     window.open(url);

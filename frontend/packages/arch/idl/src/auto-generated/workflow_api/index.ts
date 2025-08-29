@@ -513,6 +513,21 @@ export default class WorkflowApiService<T> {
     return this.request({ url, method, data }, options);
   }
 
+  PublishWanwuWorkflow(
+    req: workflow.PublishWanwuWorkflowRequest,
+    options?: T,
+  ): Promise<workflow.PublishWanwuWorkflowResponse> {
+    const _req = req;
+    const url = this.genBaseURL('/user/api/v1/appspace/app/publish');
+    const method = 'POST';
+    const data = {
+      appId: _req['appId'],
+      appType: _req['appType'],
+      publishType: _req['publishType'],
+    };
+    return this.request({ url, method, data }, options);
+  }
+
   /**
    * GET /api/workflow_api/get_process
    *

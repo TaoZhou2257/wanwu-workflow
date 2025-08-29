@@ -48,8 +48,8 @@ export {
   KnowledgeListModalContent,
   KnowledgeCard,
   KnowledgeCardListVertical,
-} from './knowledge-list-modal';
-export { type DataSetModalContentProps } from './knowledge-list-modal/use-content';
+} from './knowledge-list-modal-wanwu';
+export { type DataSetModalContentProps } from './knowledge-list-modal-wanwu/use-content';
 export {
   useUpdateFrequencyModal,
   type UseUpdateFrequencyModalProps,

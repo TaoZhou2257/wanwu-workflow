@@ -73,6 +73,7 @@ export interface OutputTreeProps {
   allowAppendRootData?: boolean;
   // Is it allowed to delete the last piece of data?
   allowDeleteLast?: boolean;
+  isRootNameDisabled?: boolean;
   // Is it batch processing?
   isBatch?: boolean;
   treeProps?: TreeProps;
@@ -203,6 +204,7 @@ export function OutputTree(props: PropsWithChildren<OutputTreeProps>) {
     maxLimit,
     withDefaultValue,
     defaultExpandParams = [],
+    isRootNameDisabled = false,
     columnsRatio,
   } = props;
 
@@ -637,6 +639,7 @@ export function OutputTree(props: PropsWithChildren<OutputTreeProps>) {
                   defaultExpand={defaultExpandParams?.includes(data.name)}
                   columnsRatio={columnsRatio}
                   readonlyTooltip={data.readonlyTooltip}
+                  isRootNameDisabled={isRootNameDisabled}
                 />
               );
             }}
@@ -674,7 +677,7 @@ export function OutputTree(props: PropsWithChildren<OutputTreeProps>) {
             treeData={formattedTreeData}
             disabledTypes={disabledTypes}
             disabledTooltip={disabledTooltip}
-            hideAddButton={isBatch || !!disabled}
+            hideAddButton={isBatch || !!disabled || !allowAppendRootData}
             rules={{
               jsonImport,
               readonly,

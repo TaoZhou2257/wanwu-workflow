@@ -244,8 +244,8 @@ export function useWorkflowAction({
     const query = new URLSearchParams();
     botId && query.append('bot_id', botId);
     query.append('space_id', context?.spaceId ?? '');
-    query.append('workflow_id', wId);
-    window.open(`/work_flow?${query.toString()}`, '_blank');
+    query.append('id', wId);
+    window.open(`/aibase/workflow?${query.toString()}`, '_blank');
   }
 
   const dupProduct = async () => {
@@ -317,7 +317,7 @@ export function useWorkflowAction({
                 color="primary"
                 onClick={() => {
                   window.open(
-                    `/work_flow?space_id=${context.spaceId}&workflow_id=${newWorkflow.workflow_id}&from=dupSuccess`,
+                    `/aibase/workflow?space_id=${context.spaceId}&id=${newWorkflow.workflow_id}&from=dupSuccess`,
                   );
                 }}
               >
@@ -415,7 +415,7 @@ export function useWorkflowAction({
                 color="primary"
                 onClick={() => {
                   window.open(
-                    `/work_flow?space_id=${context.spaceId}&workflow_id=${newWorkflow.workflow_id}`,
+                    `/aibase/workflow?space_id=${context.spaceId}&id=${newWorkflow.workflow_id}`,
                   );
                 }}
               >

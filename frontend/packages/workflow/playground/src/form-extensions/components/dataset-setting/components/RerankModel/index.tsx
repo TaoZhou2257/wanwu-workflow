@@ -1,0 +1,73 @@
+/*
+ * Copyright 2025 coze-dev Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import React, { useEffect, useState } from 'react';
+
+import { useNodeTestId } from '@coze-workflow/base';
+import { Select } from '@coze-arch/coze-design';
+import { KnowledgeApi } from '@coze-arch/bot-api';
+import { I18n } from '@coze-arch/i18n';
+
+import s from './index.module.less';
+
+interface RerankModelProps {
+  value: string;
+  onChange: (v: string) => void;
+  style?: React.CSSProperties;
+  readonly?: boolean;
+}
+
+export const RerankModelWanwu: React.FC<RerankModelProps> = props => {
+  const { value, onChange, style, readonly } = props;
+
+  const { getNodeSetterId } = useNodeTestId();
+  const [rerankList, setRerankList] = useState<any>([])
+
+  useEffect(() => {
+    getRerankModel()
+  }, []);
+
+  const getRerankModel = async () => {
+    const { data = {} } = await KnowledgeApi.getRerankModel()
+    setRerankList(data?.list || [])
+  }
+
+  return (
+    <Select
+      className={s['strategy-area']}
+      dropdownClassName={s['strategy-area-dropdown']}
+      size="small"
+      value={value}
+      style={{
+        ...style,
+        pointerEvents: readonly ? 'none' : 'auto',
+      }}
+      placeholder={I18n.t('knowledge_rerank_placeholder')}
+      onChange={onChange as (v: unknown) => void}
+      data-testid={getNodeSetterId('dataset-rerank-model')}
+    >
+      {rerankList.map(v => (
+        <Select.Option
+          value={v.modelId}
+          key={v.modelId}
+          data-testid={getNodeSetterId('dataset-rerank-model-option')}
+        >
+          {v.displayName || v.model}
+        </Select.Option>
+      ))}
+    </Select>
+  );
+};

@@ -18,6 +18,12 @@
  * Node base type definition
  */
 export enum StandardNodeType {
+  DatasetWanwu = '1006',
+  McpWanwu = '1009',
+  FileGenerateWanwu = '1007',
+  FileParseWanwu = '1008',
+  JsonParserWanwu = '1059',
+
   Start = '1',
   End = '2',
   LLM = '3',

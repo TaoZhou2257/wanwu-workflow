@@ -151,8 +151,9 @@ export const getLLMModels = async ({
           getTypeListParams.model_scene = ModelScene.Douyin;
         }
 
-        const resp = await developerApi.GetTypeList(getTypeListParams);
-        const _modelList: Model[] = resp?.data?.model_list ?? [];
+        const resp = await developerApi.GetLLMList();
+        const list = resp?.data?.list ?? [];
+        const _modelList: Model[] = list.map(item => ({...item, name: item.model, model_type: Number(item.modelId)}))
 
         // From here to return modelList is all about wiping the butt of the backend
         // There is hard code here, you need to set the default value of the output format to JSON

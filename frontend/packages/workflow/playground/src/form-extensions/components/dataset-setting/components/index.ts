@@ -17,3 +17,5 @@
 export { SliderArea } from './SliderArea';
 export { TitleArea } from './TitleArea';
 export { SearchStrategy } from './SearchStrategy';
+export { SearchStrategyWanwu } from './SearchStrategy/indexWanwu';
+export { RerankModelWanwu } from './RerankModel'

@@ -44,7 +44,7 @@ export const useWorkflowResourceClick = (spaceId?: string) => {
       },
     });
 
-    navigate(`/work_flow?workflow_id=${workflowId}&space_id=${sId}`);
+    navigate(`/aibase/workflow?id=${workflowId}&space_id=${sId}`);
   };
   const handleWorkflowResourceClick = (record: ResourceInfo) => {
     reporter.info({

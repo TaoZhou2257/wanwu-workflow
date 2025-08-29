@@ -117,7 +117,7 @@ export const useCreateWorkflowModal = ({
     },
     onDupSuccess: val => {
       window.open(
-        `/work_flow?space_id=${spaceId}&workflow_id=${val.workflow_id}&from=dupSuccess`,
+        `/aibase/workflow?space_id=${spaceId}&id=${val.workflow_id}&from=dupSuccess`,
       );
     },
   });

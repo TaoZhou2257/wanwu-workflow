@@ -68,6 +68,7 @@ export const JSONImport: FC<JSONImportProps> = props => {
     disabledTypes,
     testId,
     hideAddButton,
+    a
   } = props;
   const {
     disabled,

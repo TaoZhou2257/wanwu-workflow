@@ -82,7 +82,7 @@ export const DuplicateButton = ({ mode }: Props) => {
     setLoading(false);
     return getWorkflowUrl({
       space_id: _spaceID || '',
-      workflow_id: resp.workflow_id,
+      id: resp.workflow_id,
     });
   };
 

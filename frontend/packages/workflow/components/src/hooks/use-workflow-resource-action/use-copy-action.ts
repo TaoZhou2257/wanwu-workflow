@@ -77,7 +77,7 @@ export const useCopyAction = (props: CommonActionProps): CommonActionReturn => {
       await wait(300);
       // After copying, jump to the details page
       navigate(
-        `/work_flow?workflow_id=${data.workflow_id}&space_id=${spaceId}`,
+        `/aibase/workflow?id=${data.workflow_id}&space_id=${spaceId}`,
       );
     } catch (error) {
       reporter.error({

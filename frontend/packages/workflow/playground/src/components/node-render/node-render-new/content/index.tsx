@@ -28,6 +28,10 @@ import { OutputContent } from '@/node-registries/output';
 import { LtmContent } from '@/node-registries/ltm';
 import { LoopContent } from '@/node-registries/loop';
 import { JsonStringifyContent } from '@/node-registries/json-stringify';
+import { McpWanwuContent } from '@/node-registries/mcp-wanwu';
+import { FileParseWanwuContent } from '@/node-registries/file-parse-wanwu';
+import { FileGenerateWanwuContent } from '@/node-registries/file-generate-wanwu';
+import { JsonParserWanwuContent } from '@/node-registries/json-parser-wanwu'
 import { IntentContent } from '@/node-registries/intent';
 import { InputContent } from '@/node-registries/input';
 import { ImageCanvasContent } from '@/node-registries/image-canvas';
@@ -43,7 +47,9 @@ import { VariableMergeContent } from './variable-merge-content';
 import { VariableAssignContent } from './variable-assign-content';
 import { QuestionContent } from './question-content';
 import { LLMContent } from './llm-content';
+import { LLMWanwuContent } from './llm-wanwu-content';
 import { DatasetContent } from './knowledge-content';
+import { DatasetWanwuContent } from './knowledge-wanwu-content';
 import { ImageGenerateContent } from './image-generate-content';
 import { HttpContent } from './http-content';
 import { DatabaseUpdateContent } from './database-update-content';
@@ -63,10 +69,11 @@ const ContentMap = {
   [StandardNodeType.Intent]: IntentContent,
   [StandardNodeType.SubWorkflow]: SubWorkflowContentV2,
   [StandardNodeType.Dataset]: DatasetContent,
+  [StandardNodeType.DatasetWanwu]: DatasetWanwuContent,
   [StandardNodeType.DatasetWrite]: DatasetContent,
   [StandardNodeType.Question]: QuestionContent,
   [StandardNodeType.Output]: OutputContent,
-  [StandardNodeType.LLM]: LLMContent,
+  [StandardNodeType.LLM]: LLMWanwuContent,
   [StandardNodeType.Loop]: LoopContent,
   [StandardNodeType.Break]: BreakContent,
   [StandardNodeType.Continue]: ContinueContent,
@@ -90,6 +97,10 @@ const ContentMap = {
   [StandardNodeType.TriggerRead]: TriggerReadContent,
   [StandardNodeType.Api]: PluginContent,
   [StandardNodeType.Variable]: VariableContent,
+  [StandardNodeType.McpWanwu]: McpWanwuContent,
+  [StandardNodeType.FileParseWanwu]: FileParseWanwuContent,
+  [StandardNodeType.FileGenerateWanwu]: FileGenerateWanwuContent,
+  [StandardNodeType.JsonParserWanwu]: JsonParserWanwuContent,
   [StandardNodeType.JsonStringify]: JsonStringifyContent,
   // The cli script inserts the identifier (registry), do not modify/delete this line comment
 };

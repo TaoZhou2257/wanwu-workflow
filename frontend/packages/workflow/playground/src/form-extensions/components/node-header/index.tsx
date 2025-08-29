@@ -232,6 +232,9 @@ export const NodeHeader: React.FC<NodeHeaderProps> = ({
     node.flowNodeType === StandardNodeType.Api &&
     get(nodeData, 'pluginType') === PluginType.LOCAL;
 
+  const accessCert = JSON.parse(localStorage.getItem("access_cert")) || {}
+  const docLinkList = accessCert?.user?.commonInfo?.data?.linkList || {}
+
   return (
     <div
       className={classnames(
@@ -397,11 +400,12 @@ export const NodeHeader: React.FC<NodeHeaderProps> = ({
               </div>
             ) : null}
 
-            {registry?.meta?.helpLink && isNodeSideSheet ? (
+            {/* registry?.meta?.helpLink && isNodeSideSheet */}
+            {docLinkList[`workflow-${registry.type}`] && isNodeSideSheet ? (
               <HelpLinkButton
                 nodeData={nodeData}
                 nodeType={registry.type}
-                helpLink={registry.meta.helpLink}
+                helpLink={docLinkList[`workflow-${registry.type}`]} // registry.meta.helpLink
               />
             ) : null}
 

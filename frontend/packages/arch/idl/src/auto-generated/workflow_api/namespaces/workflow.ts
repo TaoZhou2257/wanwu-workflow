@@ -3232,6 +3232,20 @@ export interface PublishWorkflowResponse {
   BaseResp: base.BaseResp;
 }
 
+
+export interface PublishWanwuWorkflowRequest {
+  appType?: string;
+  appId?: string;
+  publishType?: string;
+}
+
+export interface PublishWanwuWorkflowResponse {
+  data: any;
+  code: Int64;
+  msg?: string;
+}
+
+
 export interface PublishWorkflowV2Data {
   workflow_id?: string;
   commit_id?: string;

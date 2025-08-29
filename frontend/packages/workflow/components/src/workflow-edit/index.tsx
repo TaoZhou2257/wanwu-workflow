@@ -397,14 +397,14 @@ export function CreateWorkflowModal({
           setConfirmDisabled(!name?.trim() || !target?.trim());
         }}
       >
-        <PictureUpload
+        {/*<PictureUpload
           noLabel
           fieldClassName={s['upload-field']}
           field="icon_uri"
           initValue={getPictureUploadInitValue(workFlow)}
           iconType={iconType}
           fileBizType={FileBizType.BIZ_BOT_WORKFLOW}
-        />
+        />*/}
         <UIFormTextArea
           stopValidateWithError
           className={s['textarea-single-line']}

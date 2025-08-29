@@ -151,7 +151,7 @@ export const useAddNodeModal = (prevAddNodeRef: {
                 color="primary"
                 onClick={() => {
                   window.open(
-                    `/work_flow?space_id=${spaceId}&workflow_id=${val.workflow_id}`,
+                    `/aibase/workflow?space_id=${spaceId}&id=${val.workflow_id}`,
                   );
                 }}
               >

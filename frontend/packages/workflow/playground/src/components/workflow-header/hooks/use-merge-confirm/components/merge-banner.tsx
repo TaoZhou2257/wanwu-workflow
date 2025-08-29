@@ -31,7 +31,7 @@ const MergeBanner = () => {
   const handleViewLatest = () => {
     const versionUrl = getWorkflowUrl({
       space_id: spaceId,
-      workflow_id: workflowId,
+      id: workflowId,
       version: submitCommitId,
     });
 

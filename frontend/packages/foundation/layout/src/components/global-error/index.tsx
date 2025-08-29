@@ -79,7 +79,7 @@ export const GlobalError: FC = () => {
             {sessionId}
           </div>
         )}
-        <UIButton
+        {/*<UIButton
           theme="solid"
           onClick={() => {
             let url = '';
@@ -104,7 +104,7 @@ export const GlobalError: FC = () => {
           }}
         >
           {I18n.t('errorpage_bot_btn', {}, 'Go to Bot Platform')}
-        </UIButton>
+        </UIButton>*/}
       </div>
     </div>
   );

@@ -386,6 +386,16 @@ export interface DatabaseInfo {
   volcano_storage_config?: volcano_database.VolcanoStorageConfig;
 }
 
+export interface McpInfo {
+  mcpId?: string;
+  mcpSquareId?: string;
+  name?: string;
+  description?: string;
+  serverUrl?: string;
+  serverFrom?: string;
+  uniqueId?: string;
+}
+
 export interface DateDefault {
   /** 动态函数（如 CURRENT_TIMESTAMP） */
   func?: FieldFunction;
@@ -704,6 +714,21 @@ export interface ListDatabaseRecordsResponse {
   /** 字段信息 */
   field_list?: Array<FieldItem>;
   BaseResp: base.BaseResp;
+}
+
+export interface ListMcpToolRequest {
+  serverUrl?: string,
+}
+
+export interface ListRequest {
+  page?: number,
+  pageSize?: number
+}
+
+export interface ListRecordsResponse {
+  data: Array<Record<string, string>>;
+  msg?: string;
+  code: number;
 }
 
 export interface ListDatabaseRequest {

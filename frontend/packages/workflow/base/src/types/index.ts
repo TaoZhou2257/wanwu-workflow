@@ -125,6 +125,7 @@ export enum WorkflowExecStatus {
 export * from './llm';
 
 export {
+  type WorkflowMcp,
   type WorkflowDatabase,
   type DatabaseField,
   type DatabaseSettingField,
