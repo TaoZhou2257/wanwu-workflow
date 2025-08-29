@@ -409,7 +409,8 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
         </div>
       </div>
 
-      {matchType === MatchType.Hybird && (<>
+      {/*暂时不展示*/}
+      {/*{matchType === MatchType.Hybird && (<>
         <div className={s['setting-item']}>
           <CheckboxWithLabel
             checked={rerankKeywordPrioritySwitch}
@@ -463,7 +464,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
             />
           </div>
         </div>)}
-      </>)}
+      </>)}*/}
 
       <div className={s['setting-item']}>
         <CheckboxWithLabel
