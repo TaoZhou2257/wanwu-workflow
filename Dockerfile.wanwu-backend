@@ -1,0 +1,32 @@
+ARG WANWU_ARCH
+
+# --- 第一阶段：构建阶段 ---
+FROM --platform=linux/$WANWU_ARCH golang:1.24.6-bookworm AS builder
+ARG WANWU_ARCH
+WORKDIR /app
+COPY . .
+
+WORKDIR /app/wanwu-backend
+RUN make build-$WANWU_ARCH
+
+# --- 第二阶段：运行阶段 ---
+FROM crpi-6pj79y7ddzdpexs8.cn-hangzhou.personal.cr.aliyuncs.com/wanwulite/workflow-base:v0.1.0-20250828
+ARG WANWU_ARCH
+WORKDIR /app
+
+COPY wanwu-backend/configs ./configs
+COPY --from=builder /app/wanwu-backend/bin/$WANWU_ARCH/workflow-wanwu ./bin/workflow-wanwu
+
+# ！！！同步于：backend/Dockerfile
+# ！！！同步于：backend/Dockerfile
+# ！！！同步于：backend/Dockerfile
+
+# Copy Python application scripts
+COPY backend/infra/impl/document/parser/builtin/parse_pdf.py /app/parse_pdf.py
+COPY backend/infra/impl/document/parser/builtin/parse_docx.py /app/parse_docx.py
+COPY backend/infra/impl/coderunner/script/sandbox.py /app/sandbox.py
+
+# Ensure python scripts are executable
+RUN chmod +x /app/parse_pdf.py /app/parse_docx.py
+
+EXPOSE 8999
