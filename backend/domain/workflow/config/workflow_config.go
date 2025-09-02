@@ -25,7 +25,7 @@ func (w WorkflowConfig) GetNodeOfCodeConfig() *NodeOfCodeConfig {
 }
 
 type NodeOfCodeConfig struct {
-	SupportThirdPartModules []string `yaml:"SupportThirdPartModules" mapstructure:"NodeOfCodeConfig"`
+	SupportThirdPartModules []string `yaml:"SupportThirdPartModules" mapstructure:"SupportThirdPartModules"`
 }
 
 func (n *NodeOfCodeConfig) GetSupportThirdPartModules() []string {
