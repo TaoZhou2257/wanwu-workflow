@@ -38,7 +38,7 @@ export const FieldLayout = ({
   label ? (
     <div className={layout === 'horizontal' ? 'flex gap-[4px] min-w-0' : ''}>
       <Label
-        className={layout === 'horizontal' ? 'w-[148px]' : ''}
+        className={layout === 'horizontal' ? 'w-[152px]' : ''}
         required={required}
         tooltip={tooltip}
         extra={labelExtra}
