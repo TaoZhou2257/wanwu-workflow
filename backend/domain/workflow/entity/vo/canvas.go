@@ -140,6 +140,7 @@ type Inputs struct {
 	*Batch              // exclusive configurations for NodeTypeBatch
 	*Comment            // exclusive configurations for NodeTypeComment
 	*InputReceiver      // exclusive configurations for NodeTypeInputReceiver
+	*WanWuMCPTool       // exclusive configurations for NodeTypeWanWuMCPTool
 }
 
 type OutputEmitter struct {

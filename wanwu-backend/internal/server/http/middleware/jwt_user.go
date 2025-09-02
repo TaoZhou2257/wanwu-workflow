@@ -28,32 +28,45 @@ func JwtUser(ctx context.Context, appCtx *app.RequestContext) {
 		return
 	}
 
-	token, err := getJWTToken(appCtx)
-	if err != nil {
-		// httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
-		logs.CtxWarnf(ctx, "request (%v) check jwt token err: %v", string(appCtx.Request.Path()), err)
-		appCtx.Next(ctx)
-		return
-	}
+	var createAt time.Time
+	var expiresAt time.Time
 
-	claims, err := jwt_util.ParseToken(token)
-	if err != nil {
-		httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
-		return
-	}
-	if claims.Subject != jwt_util.USER {
-		httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", "invalid token subject")))
-		return
-	}
-
+	// orgID
 	orgID := appCtx.Request.Header.Get(config.X_ORG_ID)
 	ctxcache.Store(ctx, config.X_ORG_ID, orgID)
 
+	// userID
+	userID := appCtx.Request.Header.Get(config.X_USER_ID)
+	if userID == "" {
+		// 未获取到则从jwt token中解析
+		token, err := getJWTToken(appCtx)
+		if err != nil {
+			// httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
+			// 可能是内部调用，没有jwt token
+			logs.CtxWarnf(ctx, "request (%v) check jwt token err: %v", string(appCtx.Request.Path()), err)
+			appCtx.Next(ctx)
+			return
+		}
+
+		claims, err := jwt_util.ParseToken(token)
+		if err != nil {
+			httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
+			return
+		}
+		if claims.Subject != jwt_util.USER {
+			httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", "invalid token subject")))
+			return
+		}
+		userID = claims.UserID
+		createAt = time.Unix(claims.NotBefore, 0)
+		expiresAt = time.Unix(claims.ExpiresAt, 0)
+	}
+
 	ctxcache.Store(ctx, consts.SessionDataKeyInCtx, &entity.Session{
-		UserID:    util.MustI64(claims.UserID),
+		UserID:    util.MustI64(userID),
 		Locale:    string(i18n.GetLocale(ctx)),
-		CreatedAt: time.Unix(claims.NotBefore, 0),
-		ExpiresAt: time.Unix(claims.ExpiresAt, 0),
+		CreatedAt: createAt,
+		ExpiresAt: expiresAt,
 	})
 	appCtx.Next(ctx)
 }

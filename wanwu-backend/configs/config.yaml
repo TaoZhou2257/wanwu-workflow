@@ -69,3 +69,58 @@ minio:
   endpoint: localhost:9000
   user: root
   password: Wanwu123456
+
+icons:
+  - id: 1
+    url: /api/static/icon/icon-Start-v2.jpg
+  - id: 2
+    url: /api/static/icon/icon-End-v2.jpg
+  - id: 3
+    url: /api/static/icon/icon-LLM-v2.jpg
+  - id: 5
+    url: /api/static/icon/icon-Code-v2.jpg
+  - id: 8
+    url: /api/static/icon/icon-Condition-v2.jpg
+  - id: 13
+    url: /api/static/icon/icon-Output-v2.jpg
+  - id: 15
+    url: /api/static/icon/icon-StrConcat-v2.jpg
+  - id: 19
+    url: api/static/icon/icon-Break-v2.jpg
+  - id: 20
+    url: api/static/icon/icon-LoopSetVariable-v2.jpg
+  - id: 29
+    url: api/static/icon/icon-Continue-v2.jpg
+  - id: 21
+    url: /api/static/icon/icon-Loop-v2.jpg
+  - id: 22
+    url: /api/static/icon/icon-Intent-v2.jpg
+  - id: 28
+    url: /api/static/icon/icon-Batch-v2.jpg
+  - id: 30
+    url: /api/static/icon/icon-Input-v2.jpg
+  - id: 32
+    url: /api/static/icon/VariableMerge-icon.jpg
+  - id: 45
+    url: /api/static/icon/icon-HTTP.png
+  - id: 58
+    url: /api/static/icon/icon-to_json.png
+  - id: 1006
+    url: /api/static/icon/icon-KnowledgeQuery-v2.jpg
+  - id: 1007
+    url: /api/static/icon/icon-KnowledgeQuery-v2.jpg
+  - id: 1008
+    url: /api/static/icon/icon-KnowledgeQuery-v2.jpg
+  - id: 1009
+    url: /api/static/icon/icon-Mcp-v2.jpg
+  - id: 1059
+    url: /api/static/icon/icon-from_json.png
+  
+workflow:
+  # ！！！同步于：backend/conf/workflow/config.yaml
+  # ！！！同步于：backend/conf/workflow/config.yaml
+  # ！！！同步于：backend/conf/workflow/config.yaml
+  NodeOfCodeConfig:
+    SupportThirdPartModules:
+      - httpx
+      - numpy

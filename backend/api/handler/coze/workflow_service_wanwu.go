@@ -34,6 +34,25 @@ func GetWorkFlowListByWanwu(ctx context.Context, c *app.RequestContext) {
 	c.JSON(consts.StatusOK, resp)
 }
 
+// ListWorkFlowOpenAPIV3SchemaByWanwu 获取workflow list openapi v3 schema
+// @router /v1/workflow/list_schema_by_wanwu [POST]
+func ListWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req workflow.GetWorkflowDetailRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+	schemas, err := appworkflow.SVC.ListWorkFlowOpenAPIV3SchemaByWanwu(ctx, req.WorkflowIds)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	c.JSON(consts.StatusOK, schemas)
+}
+
 // GetWorkFlowOpenAPIV3SchemaByWanwu 获取workflow openapi v3 schema
 // @router /v1/workflow/:workflow_id/schema_by_wanwu [GET]
 func GetWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Context, c *app.RequestContext) {
@@ -52,6 +71,7 @@ func GetWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Context, c *app.RequestContex
 }
 
 // OpenAPIRunWorkFlowByWanwu 参考OpenAPIRunFlow
+// 0. FIXME 智能体运行该接口，不会在header中带userId、orgId，跳过jwt校验后，需要在该方法中设置ctxcache
 // 1. 将workflow_id从 body => path
 // 2. 将body参数{...} marsharl到req.Parameters上
 // 3. 返回resp.Data unmarshal的结构体
