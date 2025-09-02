@@ -2,13 +2,11 @@
  * author wangliang
  */
 
-package fileparser
+package wanwu_fileparser
 
 import (
 	"context"
 	"errors"
-	http_client "github.com/coze-dev/coze-studio/backend/pkg/http-client"
-	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
 	"os"
 	"time"
 
@@ -17,6 +15,8 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/canvas/convert"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/schema"
+	http_client "github.com/coze-dev/coze-studio/backend/pkg/http-client"
+	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
 )
 
 type WanWuRetrieveConfig struct {
