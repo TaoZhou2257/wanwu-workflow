@@ -441,6 +441,17 @@ export default class KnowledgeService<T> {
     return this.request({ url, method, params }, options);
   }
 
+  /** GET /user/api/v1/model/select/gui */
+  getGuiModel(
+    req?: dataset.ListSelectRequest,
+    options?: T,
+  ): Promise<dataset.ListSelectResponse> {
+    const url = this.genBaseURL('/user/api/v1/model/select/gui');
+    const method = 'GET';
+    const params = {};
+    return this.request({ url, method, params }, options);
+  }
+
   /** POST /api/knowledge/detail */
   DatasetDetail(
     req?: dataset.DatasetDetailRequest,
