@@ -6,6 +6,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/knowledge"
 	wanwu_filegenerator "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-filegenerator"
 	wanwu_fileparser "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-fileparser"
+	wanwu_gui "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-gui"
 	wanwu_mcp "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-mcp"
 )
 
@@ -27,5 +28,9 @@ func RegisterWanwuAllNodeAdaptors() {
 
 	nodes.RegisterNodeAdaptor(entity.NodeTypeWanWuMCPTool, func() nodes.NodeAdaptor {
 		return &wanwu_mcp.Config{}
+	})
+
+	nodes.RegisterNodeAdaptor(entity.NodeTypeWanWuGUI, func() nodes.NodeAdaptor {
+		return &wanwu_gui.Config{}
 	})
 }

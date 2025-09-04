@@ -6,6 +6,7 @@ const (
 	NodeTypeWanWuFileGenerator      NodeType = "WanWuFileGenerator"
 	NodeTypeWanWuFileParser         NodeType = "WanWuFileParser"
 	NodeTypeWanWuMCPTool            NodeType = "WanWuMCPTool"
+	NodeTypeWanWuGUI                NodeType = "WanWuGUI"
 )
 
 // Wanwu NodeTypeMetas Init
@@ -107,6 +108,24 @@ func init() {
 		},
 		EnUSName:        "MCP tool",
 		EnUSDescription: "Used to call MCP tools.",
+	}
+
+	NodeTypeMetas[NodeTypeWanWuGUI] = &NodeTypeMeta{
+		ID:           1010,
+		Key:          NodeTypeWanWuGUI,
+		DisplayKey:   "GUI",
+		Name:         "GUI智能体",
+		Category:     "utilities",
+		Desc:         "通过视觉技术解析用户图形界面上的图像信息，并模拟人类操作行为来执行相应任务，与计算机系统进行交互的智能体。",
+		Color:        "#FF811A",
+		IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Plugin-v2.jpg",
+		SupportBatch: false,
+		ExecutableMeta: ExecutableMeta{
+			PreFillZero: true,
+			PostFillNil: true,
+		},
+		EnUSName:        "GUI Agent",
+		EnUSDescription: "An intelligent agent that analyzes image information on the user's graphical interface through visual technology and simulates human operational behaviors to perform corresponding tasks, interacting with computer systems.",
 	}
 
 }

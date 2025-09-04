@@ -121,6 +121,9 @@ type Inputs struct {
 	// Shared between most nodes requiring an ChatModel to function.
 	LLMParam any `json:"llmParam,omitempty"`
 
+	// WanwuGUIParam wanwu GUI Param
+	WanwuGUIParam *WanWuGUIParam `json:"guiParams,omitempty"`
+
 	*OutputEmitter      // exclusive configurations for NodeTypeEmitter and NodeTypeExit in Answer mode
 	*Exit               // exclusive configurations for NodeTypeExit
 	*LLM                // exclusive configurations for NodeTypeLLM
