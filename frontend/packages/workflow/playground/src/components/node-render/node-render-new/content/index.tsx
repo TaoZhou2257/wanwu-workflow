@@ -31,7 +31,8 @@ import { JsonStringifyContent } from '@/node-registries/json-stringify';
 import { McpWanwuContent } from '@/node-registries/mcp-wanwu';
 import { FileParseWanwuContent } from '@/node-registries/file-parse-wanwu';
 import { FileGenerateWanwuContent } from '@/node-registries/file-generate-wanwu';
-import { JsonParserWanwuContent } from '@/node-registries/json-parser-wanwu'
+import { JsonParserWanwuContent } from '@/node-registries/json-parser-wanwu';
+import { GuiAgentWanwuContent } from '@/node-registries/gui-agent-wanwu';
 import { IntentContent } from '@/node-registries/intent';
 import { InputContent } from '@/node-registries/input';
 import { ImageCanvasContent } from '@/node-registries/image-canvas';
@@ -63,17 +64,22 @@ import { CommonContent } from './common-content';
 import styles from './index.module.less';
 
 const ContentMap = {
+  [StandardNodeType.DatasetWanwu]: DatasetWanwuContent,
+  [StandardNodeType.McpWanwu]: McpWanwuContent,
+  [StandardNodeType.FileParseWanwu]: FileParseWanwuContent,
+  [StandardNodeType.FileGenerateWanwu]: FileGenerateWanwuContent,
+  [StandardNodeType.JsonParserWanwu]: JsonParserWanwuContent,
+  [StandardNodeType.GuiAgentWanwu]: GuiAgentWanwuContent,
+  [StandardNodeType.LLM]: LLMWanwuContent,
   [StandardNodeType.Start]: StartContent,
   [StandardNodeType.End]: EndContent,
   [StandardNodeType.If]: IfContent,
   [StandardNodeType.Intent]: IntentContent,
   [StandardNodeType.SubWorkflow]: SubWorkflowContentV2,
   [StandardNodeType.Dataset]: DatasetContent,
-  [StandardNodeType.DatasetWanwu]: DatasetWanwuContent,
   [StandardNodeType.DatasetWrite]: DatasetContent,
   [StandardNodeType.Question]: QuestionContent,
   [StandardNodeType.Output]: OutputContent,
-  [StandardNodeType.LLM]: LLMWanwuContent,
   [StandardNodeType.Loop]: LoopContent,
   [StandardNodeType.Break]: BreakContent,
   [StandardNodeType.Continue]: ContinueContent,
@@ -97,10 +103,6 @@ const ContentMap = {
   [StandardNodeType.TriggerRead]: TriggerReadContent,
   [StandardNodeType.Api]: PluginContent,
   [StandardNodeType.Variable]: VariableContent,
-  [StandardNodeType.McpWanwu]: McpWanwuContent,
-  [StandardNodeType.FileParseWanwu]: FileParseWanwuContent,
-  [StandardNodeType.FileGenerateWanwu]: FileGenerateWanwuContent,
-  [StandardNodeType.JsonParserWanwu]: JsonParserWanwuContent,
   [StandardNodeType.JsonStringify]: JsonStringifyContent,
   // The cli script inserts the identifier (registry), do not modify/delete this line comment
 };

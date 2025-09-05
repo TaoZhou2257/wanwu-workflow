@@ -1753,6 +1753,7 @@
   "knowlege_qqq_001": "分段预览",
   "knowlege_qqq_002": "处理中",
   "knowlege_qqq_003": "处理失败",
+  "model_placeholder": "选择模型",
   "landing_mobile_popup_button": "好的",
   "landing_mobile_popup_context": "此页面还没有适配当前的显示尺寸，建议在PC上使用，并调整为合适的尺寸",
   "landing_mobile_popup_title": "提示",
