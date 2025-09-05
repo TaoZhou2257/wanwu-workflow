@@ -7,7 +7,6 @@ WORKDIR /app
 COPY . .
 
 WORKDIR /app/wanwu-backend
-RUN make init
 RUN make build-$WANWU_ARCH
 
 # --- 第二阶段：运行阶段 ---
