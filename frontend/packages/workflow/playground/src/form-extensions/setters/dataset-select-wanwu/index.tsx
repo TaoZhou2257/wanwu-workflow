@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-import { InputParameters, Outputs, KnowledgeWanwu } from '../../fields';
+import React from 'react';
 
-export function DatasetWanwuContent() {
-  return (
-    <>
-      <InputParameters />
-      <Outputs />
-      <KnowledgeWanwu />
-    </>
-  );
-}
+import { type SetterComponentProps } from '@flowgram-adapter/free-layout-editor';
+
+import { DatasetSelect as BaseDatasetSelect } from '../../components/dataset-select-wanwu';
+
+const DatasetSelect = (props: SetterComponentProps<string[]>) => (
+  <BaseDatasetSelect {...props} />
+);
+
+export const DatasetSelectSetter = {
+  key: 'DatasetSelect',
+  component: DatasetSelect,
+};

@@ -98,6 +98,7 @@ const useKnowledgeListModalContent = ({
           loading={loading}
           onAdd={async dataset => {
             await onDatasetListChange([...datasetList, dataset]);
+            console.log([...datasetList, dataset], '---------------------------------onAdd')
             sendTeaEvent(EVENT_NAMES.click_database_select, {
               operation: 'add',
               bot_id: botId,
