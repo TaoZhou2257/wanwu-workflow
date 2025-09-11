@@ -78,7 +78,7 @@ const conditionList = {
 }
 
 export const DEFAULT_METADATA = {
-  filterEnable: true,
+  filterEnable: false,
   filterLogicType: 'and',
   metaFilterParams: []
 }
