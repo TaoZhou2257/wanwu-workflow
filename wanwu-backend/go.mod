@@ -18,6 +18,8 @@ require (
 	github.com/coze-dev/coze-studio/backend v0.0.0-00010101000000-000000000000
 	github.com/hertz-contrib/cors v0.1.0
 	github.com/redis/go-redis/v9 v9.8.0
+	gorm.io/driver/mysql v1.5.7
+	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.30.0
 )
 
@@ -289,8 +291,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c // indirect
-	gorm.io/driver/mysql v1.5.7 // indirect
-	gorm.io/driver/postgres v1.5.11 // indirect
 	gorm.io/gen v0.3.26 // indirect
 	gorm.io/hints v1.1.0 // indirect
 	gorm.io/plugin/dbresolver v1.6.0 // indirect
