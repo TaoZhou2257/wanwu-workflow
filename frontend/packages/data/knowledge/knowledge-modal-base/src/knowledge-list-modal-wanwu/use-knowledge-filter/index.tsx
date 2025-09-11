@@ -72,7 +72,7 @@ const DEFAULT_PAGE_SIZE = 20;
 
 const getDatasetList = async (
   props: {
-    query?: string;
+    name?: string;
     search_type?: OrderField;
     space_id: string;
     scope_type?: DatasetScopeType;
@@ -81,7 +81,7 @@ const getDatasetList = async (
   },
   pageIndex = 1,
 ) => {
-  const { data = {} } = await KnowledgeApi.ListSelectDataset();
+  const { data = {} } = await KnowledgeApi.ListSelectDataset(props);
   const knowledgeList = data?.knowledgeList || []
   const dataset_list = knowledgeList.map(((item: any) => ({...item, dataset_id: item.name})))
 
@@ -238,7 +238,7 @@ const useKnowledgeFilter = ({
         return getDatasetList(
           {
             space_id: id || '',
-            query,
+            name: query,
             search_type: searchType,
             scope_type: isPersonal ? DatasetScopeType.ScopeSelf : scopeType,
             format_type:
@@ -345,11 +345,18 @@ const useKnowledgeFilter = ({
   const renderSearch = useMemo(
     () => () =>
       (
-        <Input
+        /*<Input
           autoFocus
           key="query-input"
           placeholder={I18n.t('db2_014')}
           onChange={debounce(handleQueryChange, 500)}
+        />*/
+        <UISearch
+          className="mr-[10px] mt-[-5px]"
+          key="query-input"
+          loading={loading}
+          placeholder={I18n.t('db2_014')}
+          onSearch={debounce(handleQueryChange, 500)}
         />
       ),
     [],

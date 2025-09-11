@@ -424,6 +424,7 @@ export default class KnowledgeService<T> {
     const url = this.genBaseURL('/user/api/v1/knowledge/select');
     const method = 'POST';
     const data = {
+      name: _req['name'],
       page: _req['page'],
       pageSize: _req['pageSize'],
     };

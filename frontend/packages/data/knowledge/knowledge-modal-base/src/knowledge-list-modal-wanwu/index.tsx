@@ -96,7 +96,7 @@ export const useKnowledgeListModal = ({
     setVisible(true);
   };
 
-  const { renderContent, renderSearch, renderCreateBtn, renderFilters } =
+  const { renderContent, renderSearch, renderCreateBtn } =
     useKnowledgeListModalContent({
       hideHeader: true,
       showFilters: ['scope-type', 'search-type'],
@@ -127,11 +127,11 @@ export const useKnowledgeListModal = ({
         style={{width: '600px'}}
         centered
         onCancel={handleClose}
-        /*filter={
+        filter={
           <div className="flex justify-between gap-[24px]">
-            {renderFilters()}
+            {renderSearch()}
           </div>
-        }*/
+        }
         /*sider={
           <UICompositionModalSider className="!pt-[16px]">
             <UICompositionModalSider.Header className="flex flex-col gap-[16px]">
