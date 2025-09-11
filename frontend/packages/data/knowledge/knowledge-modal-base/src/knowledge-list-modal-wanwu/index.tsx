@@ -100,6 +100,7 @@ export const useKnowledgeListModal = ({
     useKnowledgeListModalContent({
       hideHeader: true,
       showFilters: ['scope-type', 'search-type'],
+      visible,
       datasetList,
       onDatasetListChange,
       onClickAddKnowledge,

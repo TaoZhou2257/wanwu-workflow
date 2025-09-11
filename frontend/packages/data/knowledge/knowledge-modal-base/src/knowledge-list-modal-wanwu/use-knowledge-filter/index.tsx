@@ -31,7 +31,6 @@ import cs from 'classnames';
 import {
   useInfiniteScroll,
   useUpdateEffect,
-  useDocumentVisibility,
 } from 'ahooks';
 import { FilterKnowledgeType } from '@coze-data/utils';
 import { DataNamespace, dataReporter } from '@coze-data/reporter';
@@ -154,6 +153,7 @@ export type DatasetFilterType = 'scope-type' | 'search-type' | 'query-input';
 
 export interface DatasetFilterProps {
   hideHeader?: boolean;
+  visible?: boolean;
   children:
     | ((action: DatasetFilterAction) => React.ReactNode)
     | React.ReactNode;
@@ -187,6 +187,7 @@ const defaultKnowledgeTypeFallback = (param: FilterKnowledgeType[]) => {
 
 const useKnowledgeFilter = ({
   hideHeader,
+  visible,
   children,
   showFilters,
   headerClassName,
@@ -256,11 +257,7 @@ const useKnowledgeFilter = ({
       },
       {
         manual: true,
-        isNoMore: newData =>
-          Boolean(
-            !newData?.total ||
-              (newData.nextPageIndex - 1) * DEFAULT_PAGE_SIZE >= newData.total,
-          ),
+        isNoMore: newData => true,
         onError: error => {
           dataReporter.errorEvent(DataNamespace.KNOWLEDGE, {
             eventName: REPORT_EVENTS.KnowledgeGetDataSetList,
@@ -276,12 +273,11 @@ const useKnowledgeFilter = ({
     handleResetFilter();
   }, [id]);
 
-  const documentVisibility = useDocumentVisibility();
   useEffect(() => {
-    if (documentVisibility === 'visible') {
-      reload();
+    if (visible) {
+      handleQueryChange()
     }
-  }, [documentVisibility]);
+  }, [visible]);
 
   const handleResetFilter = () => {
     setQuery(undefined);
