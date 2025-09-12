@@ -306,8 +306,7 @@ func buildRetrieveMethod(matchType string) string {
 		return "semantic_search"
 	case "text":
 		return "full_text_search"
-	case "mix_priority":
-	case "mix_rerank":
+	case "mix_priority", "mix_rerank":
 		return "hybrid_search"
 	}
 	return ""
