@@ -27,6 +27,8 @@ import { useBizWorkflowKnowledgeIDEFullScreenModal } from '@coze-data/knowledge-
 import { I18n } from '@coze-arch/i18n';
 import { ConfigProvider } from '@coze-arch/bot-semi';
 import { useGlobalState, useDataSetInfos } from '@/hooks';
+import { KnowledgeApi } from '@coze-arch/bot-api';
+import { Toast } from "@coze-arch/coze-design";
 
 import { LibrarySelect } from '../library-select-wanwu';
 import { MetadataFilterModal, DEFAULT_METADATA } from './metadata-filter-modal-wanwu'
@@ -94,6 +96,7 @@ export const DatasetSelect = ({
       onChange(list.map(item => ({
         dataset_id: item.dataset_id,
         name: item.name,
+        knowledgeId: item.knowledgeId,
         metaDataFilterParams: item.metaDataFilterParams
       })) as object[]);
     },
@@ -109,6 +112,30 @@ export const DatasetSelect = ({
       }
     },
   });
+
+  const showEditMetaData = async (id) => {
+    // saved dataset data, get current dataset metadata object
+    const currentValueItem:any = value.find(item => item.dataset_id === id) || {}
+    const { metaDataFilterParams } = currentValueItem
+    // origin dataset data, get current dataset knowledgeId
+    const currentDataset = dataSets.find(item => item.dataset_id === id) || {}
+    try {
+      const { data = {} } = await KnowledgeApi.getMetaSelectList({
+        knowledgeId: currentDataset.knowledgeId
+      });
+      const knowledgeMetaList = data.knowledgeMetaList || []
+      const metaDataKeyList = knowledgeMetaList
+        .map(item => ({key: item.metaKey, type: item.metaValueType}))
+        .filter(item => item.key)
+
+      setCurDateSetID(id);
+      setCurrentKeyList(metaDataKeyList)
+      setCurrentMetaData(metaDataFilterParams || DEFAULT_METADATA)
+      setVisible(true)
+    } catch(err) {
+      Toast.error(err?.response?.data?.msg || 'Server Error');
+    }
+  }
 
   useEffect(() => {
     // The knowledge base writing node can only select one knowledge base and then close it, limiting multiple selection
@@ -156,16 +183,7 @@ export const DatasetSelect = ({
         readonly={readonly}
         onEditLibrary={id => {
           if (id) {
-            // origin dataset data, get current dataset metadata key list
-            const currentDataset = dataSets.find(item => item.dataset_id === id) || {}
-            const metaDataKeyList = currentDataset.knowledgeMetaDataList || []
-            // saved dataset data, get current dataset metadata object
-            const currentValueItem:any = value.find(item => item.dataset_id === id) || {}
-            const { metaDataFilterParams } = currentValueItem
-            setCurDateSetID(id);
-            setCurrentKeyList(metaDataKeyList)
-            setCurrentMetaData(metaDataFilterParams || DEFAULT_METADATA)
-            setVisible(true)
+            showEditMetaData(id)
           }
         }}
         onDeleteLibrary={id => {
