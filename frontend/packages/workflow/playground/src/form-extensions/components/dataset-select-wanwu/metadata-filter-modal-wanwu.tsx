@@ -176,6 +176,13 @@ export const MetadataFilterModal = ({
                 icon={<IconCozPlus />}
                 color="primary"
                 onClick={() => {
+                  if (!currentMetaData.filterEnable) {
+                    Toast.warning({
+                      content: I18n.t('datasets_metadata_enable_hint'),
+                      showClose: false,
+                    });
+                    return
+                  }
                   if (!currentKeyList?.length) {
                     Toast.warning({
                       content: I18n.t('datasets_metadata_no_data_hint'),

@@ -965,6 +965,7 @@
   "datasets_metadata_filter": "元数据过滤",
   "datasets_metadata_filter_desc": "通过设置的元数据，对系统内信息进行更加细化的筛选与检索控制。",
   "datasets_metadata_no_data_hint": "该数据库没有元数据相关配置，无法添加条件，请前往知识库配置元数据后再添加",
+  "datasets_metadata_enable_hint": "请先启用元数据过滤",
   "datasets_metadata_type": "类型",
   "datasets_metadata_condition": "条件",
   "datasets_metadata_operation": "操作",
