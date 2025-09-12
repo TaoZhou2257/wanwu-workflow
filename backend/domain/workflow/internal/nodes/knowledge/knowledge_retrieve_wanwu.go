@@ -6,6 +6,7 @@ package knowledge
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	http_client "github.com/coze-dev/coze-studio/backend/pkg/http-client"
@@ -25,12 +26,15 @@ import (
 )
 
 const (
-	successCode = 0
-	wanWuOutput = "output"
+	successCode    = 0
+	wanWuOutput    = "output"
+	metaTypeString = "string"
+	metaTypeNumber = "number"
+	metaTypeTime   = "time"
 )
 
 type WanWuRetrieveConfig struct {
-	KnowledgeIDs   []string
+	KnowledgeInfos []*RetrieveKnowledgeInfo
 	RetrieveParams *RetrieveParams
 }
 
@@ -48,23 +52,57 @@ type RetrieveParams struct {
 }
 
 type HitParams struct {
-	UserId                string        `json:"userId"`
-	Question              string        `json:"question" validate:"required"`
-	KnowledgeBase         []string      `json:"knowledgeBase" validate:"required"`
-	Threshold             float64       `json:"threshold"`
-	TopK                  int64         `json:"topK"`
-	RerankModelId         string        `json:"rerank_model_id"`         // rerankId
-	RerankMod             string        `json:"rerank_mod"`              // rerank_model:重排序模式，weighted_score：权重搜索
-	RetrieveMethod        string        `json:"retrieve_method"`         // hybrid_search:混合搜索， semantic_search:向量搜索， full_text_search：文本搜索
-	Weight                *WeightParams `json:"weights"`                 // 权重搜索下的权重配置
-	RewriteQuery          bool          `json:"rewrite_query"`           // 查询重写
-	ReturnMeta            bool          `json:"return_meta"`             // 展示角标
-	TermWeightCoefficient *float64      `json:"term_weight_coefficient"` // 展示角标
+	UserId                string                 `json:"userId"`
+	Question              string                 `json:"question" validate:"required"`
+	KnowledgeBase         []string               `json:"knowledgeBase" validate:"required"`
+	Threshold             float64                `json:"threshold"`
+	TopK                  int64                  `json:"topK"`
+	RerankModelId         string                 `json:"rerank_model_id"`               // rerankId
+	RerankMod             string                 `json:"rerank_mod"`                    // rerank_model:重排序模式，weighted_score：权重搜索
+	RetrieveMethod        string                 `json:"retrieve_method"`               // hybrid_search:混合搜索， semantic_search:向量搜索， full_text_search：文本搜索
+	Weight                *WeightParams          `json:"weights"`                       // 权重搜索下的权重配置
+	RewriteQuery          bool                   `json:"rewrite_query"`                 // 查询重写
+	ReturnMeta            bool                   `json:"return_meta"`                   // 展示角标
+	TermWeightCoefficient *float64               `json:"term_weight_coefficient"`       // 展示角标
+	MetaFilter            bool                   `json:"metadata_filtering"`            // 元数据过滤开关
+	MetaFilterConditions  []*MetadataFilterParam `json:"metadata_filtering_conditions"` // 元数据过滤条件
+}
+
+type MetadataFilterParam struct {
+	FilterKnowledgeName string                `json:"filtering_kb_name"`
+	LogicalOperator     string                `json:"logical_operator"`
+	MetaList            []*MetadataFilterItem `json:"conditions"` // 元数据过滤列表
+}
+
+type MetadataFilterItem struct {
+	MetaName           string      `json:"meta_name"`           // 元数据名称
+	MetaType           string      `json:"meta_type"`           // 元数据类型
+	ComparisonOperator string      `json:"comparison_operator"` // 比较运算符
+	Value              interface{} `json:"value,omitempty"`     // 用于过滤的条件值
 }
 
 type WeightParams struct {
 	VectorWeight float64 `json:"vector_weight"` //语义权重
 	TextWeight   float64 `json:"text_weight"`   //关键字权重
+}
+
+type RetrieveKnowledgeInfo struct {
+	DatasetId            string                `json:"dataset_id"`
+	Name                 string                `json:"name"`
+	MetaDataFilterParams *MetaDataFilterParams `json:"metaDataFilterParams"`
+}
+
+type MetaDataFilterParams struct {
+	FilterEnable     bool                `json:"filterEnable"`
+	FilterLogicType  string              `json:"filterLogicType"`
+	MetaFilterParams []*MetaFilterParams `json:"metaFilterParams"`
+}
+
+type MetaFilterParams struct {
+	Condition string `json:"condition"`
+	Key       string `json:"key"`
+	Type      string `json:"type"`
+	Value     string `json:"value"`
 }
 
 func (r *WanWuRetrieveConfig) Adapt(_ context.Context, n *vo.Node, _ ...nodes.AdaptOption) (*schema.NodeSchema, error) {
@@ -77,13 +115,16 @@ func (r *WanWuRetrieveConfig) Adapt(_ context.Context, n *vo.Node, _ ...nodes.Ad
 
 	inputs := n.Data.Inputs
 	datasetListInfoParam := inputs.DatasetParam[0]
-	datasetIDs := datasetListInfoParam.Input.Value.Content.([]any)
-	knowledgeIDs := make([]string, 0, len(datasetIDs))
-	for _, id := range datasetIDs {
-		k := cast.ToString(id)
-		knowledgeIDs = append(knowledgeIDs, k)
+	knowledgeInfos := datasetListInfoParam.Input.Value.Content.([]any)
+	knowledgeInfoList := make([]*RetrieveKnowledgeInfo, 0, len(knowledgeInfos))
+	for _, knowledgeInfo := range knowledgeInfos {
+		retrieveKnowledgeInfo, err := buildRetrieveKnowledgeInfo(knowledgeInfo)
+		if err != nil {
+			return nil, err
+		}
+		knowledgeInfoList = append(knowledgeInfoList, retrieveKnowledgeInfo)
 	}
-	r.KnowledgeIDs = knowledgeIDs
+	r.KnowledgeInfos = knowledgeInfoList
 
 	retrieveParams := &RetrieveParams{}
 
@@ -179,7 +220,7 @@ func (r *WanWuRetrieveConfig) Adapt(_ context.Context, n *vo.Node, _ ...nodes.Ad
 }
 
 func (r *WanWuRetrieveConfig) Build(_ context.Context, _ *schema.NodeSchema, _ ...schema.BuildOption) (any, error) {
-	if len(r.KnowledgeIDs) == 0 {
+	if len(r.KnowledgeInfos) == 0 {
 		return nil, errors.New("knowledge ids are required")
 	}
 
@@ -188,13 +229,13 @@ func (r *WanWuRetrieveConfig) Build(_ context.Context, _ *schema.NodeSchema, _ .
 	}
 
 	return &WanWuRetrieve{
-		knowledgeIDs:   r.KnowledgeIDs,
+		knowledgeInfos: r.KnowledgeInfos,
 		retrieveParams: r.RetrieveParams,
 	}, nil
 }
 
 type WanWuRetrieve struct {
-	knowledgeIDs   []string
+	knowledgeInfos []*RetrieveKnowledgeInfo
 	retrieveParams *RetrieveParams
 }
 
@@ -234,9 +275,13 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 	if retrieveParams.RerankKeywordPrioritySwitch {
 		termWeightCoefficient = &retrieveParams.RerankKeywordPriority
 	}
+	params, err := buildMetaDataFilterParams(kr.knowledgeInfos)
+	if err != nil {
+		return nil, err
+	}
 	req := &HitParams{
 		Question:              query,
-		KnowledgeBase:         kr.knowledgeIDs,
+		KnowledgeBase:         buildKnowledgeNameList(kr.knowledgeInfos),
 		TopK:                  retrieveParams.TopK,
 		Threshold:             retrieveParams.Threshold,
 		RerankModelId:         buildRerankId(priorityMatch, retrieveParams.RerankModelId),
@@ -247,6 +292,8 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 		UserId:                userIdStr,
 		ReturnMeta:            true,
 		TermWeightCoefficient: termWeightCoefficient,
+		MetaFilter:            len(params) > 0,
+		MetaFilterConditions:  params,
 	}
 
 	response, err := ragKnowledgeSearch(ctx, req)
@@ -306,7 +353,7 @@ func buildRetrieveMethod(matchType string) string {
 		return "semantic_search"
 	case "text":
 		return "full_text_search"
-	case "mix_priority", "mix_rerank":
+	case "mix_rerank", "mix_priority":
 		return "hybrid_search"
 	}
 	return ""
@@ -329,4 +376,100 @@ func buildWeight(priorityType int, semanticsPriority float64, keywordPriority fl
 		VectorWeight: semanticsPriority,
 		TextWeight:   keywordPriority,
 	}
+}
+
+// buildRetrieveKnowledgeInfo 经过一次序列化反序列化，效率一般
+func buildRetrieveKnowledgeInfo(knowledgeInfo any) (*RetrieveKnowledgeInfo, error) {
+	retrieveKnowledgeInfo := &RetrieveKnowledgeInfo{}
+	k := cast.ToString(knowledgeInfo)
+	if len(k) > 0 {
+		retrieveKnowledgeInfo.Name = k
+		return retrieveKnowledgeInfo, nil
+	}
+	//通过序列化反序列化处理
+	marshal, err := json.Marshal(knowledgeInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(marshal, retrieveKnowledgeInfo)
+	if err != nil {
+		return nil, err
+	}
+	metaDataFilterParams := retrieveKnowledgeInfo.MetaDataFilterParams
+	if metaDataFilterParams != nil && metaDataFilterParams.FilterEnable &&
+		len(metaDataFilterParams.MetaFilterParams) > 0 {
+		for _, param := range metaDataFilterParams.MetaFilterParams {
+			if param.Condition != "empty" && param.Value == "" {
+				return nil, errors.New("metaDataFilterParams condition is not empty and value should not be empty")
+			}
+		}
+	}
+	return retrieveKnowledgeInfo, nil
+}
+
+// buildKnowledgeNameList 构造知识库名称
+func buildKnowledgeNameList(knowledgeInfos []*RetrieveKnowledgeInfo) []string {
+	if len(knowledgeInfos) == 0 {
+		return make([]string, 0)
+	}
+	var nameList []string
+	for _, info := range knowledgeInfos {
+		nameList = append(nameList, info.Name)
+	}
+	return nameList
+}
+
+// buildMetaDataFilterParams 构造元数据过滤参数
+func buildMetaDataFilterParams(knowledgeInfos []*RetrieveKnowledgeInfo) ([]*MetadataFilterParam, error) {
+	var ragMetaDataFilterParams []*MetadataFilterParam
+	for _, k := range knowledgeInfos {
+		if k.MetaDataFilterParams == nil || !k.MetaDataFilterParams.FilterEnable ||
+			len(k.MetaDataFilterParams.MetaFilterParams) == 0 {
+			continue
+		}
+		item, err := buildMetadataFilterItem(k.MetaDataFilterParams.MetaFilterParams)
+		if err != nil {
+			logs.Errorf("buildMetaDataFilterParams error %v", err)
+			return nil, err
+		}
+		ragMetaDataFilterParams = append(ragMetaDataFilterParams, &MetadataFilterParam{
+			FilterKnowledgeName: k.Name,
+			LogicalOperator:     k.MetaDataFilterParams.FilterLogicType,
+			MetaList:            item,
+		})
+	}
+	return ragMetaDataFilterParams, nil
+}
+
+// buildMetadataFilterItem 构造元数据过滤项
+func buildMetadataFilterItem(metaFilterParams []*MetaFilterParams) ([]*MetadataFilterItem, error) {
+	var ragMetaDataFilterItem []*MetadataFilterItem
+	for _, k := range metaFilterParams {
+		data, err := buildValueData(k.Type, k.Value, k.Condition)
+		if err != nil {
+			logs.Errorf("buildMetadataFilterItem error %v", err)
+			return nil, err
+		}
+		ragMetaDataFilterItem = append(ragMetaDataFilterItem, &MetadataFilterItem{
+			ComparisonOperator: k.Condition,
+			MetaName:           k.Key,
+			MetaType:           k.Type,
+			Value:              data,
+		})
+	}
+	return ragMetaDataFilterItem, nil
+}
+
+// buildValueData 进行值转换
+func buildValueData(valueType string, value string, condition string) (interface{}, error) {
+	if condition == "empty" {
+		return nil, nil
+	}
+	switch valueType {
+	case metaTypeNumber:
+	case metaTypeTime:
+		return strconv.ParseInt(value, 10, 64)
+	}
+	return value, nil
 }
