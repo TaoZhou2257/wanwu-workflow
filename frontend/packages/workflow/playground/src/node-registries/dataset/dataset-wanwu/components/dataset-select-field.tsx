@@ -16,7 +16,7 @@
 
 import React from 'react';
 
-import { DatasetSelect as BaseDatasetSelect } from '@/form-extensions/components/dataset-select';
+import { DatasetSelect as BaseDatasetSelect } from '@/form-extensions/components/dataset-select-wanwu';
 import { useField, withField } from '@/form';
 
 const DatasetSelect = () => {
@@ -24,8 +24,8 @@ const DatasetSelect = () => {
 
   return (
     <BaseDatasetSelect
-      value={value as string[]}
-      onChange={v => {
+      value={value as any[]}
+      onChange={(v: any) => {
         onChange(v);
         onBlur?.();
       }}

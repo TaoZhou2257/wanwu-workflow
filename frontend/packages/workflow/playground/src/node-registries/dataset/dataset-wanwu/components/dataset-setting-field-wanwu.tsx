@@ -23,11 +23,11 @@ import { useField, useWatch, withField } from '@/form';
 
 const DatasetSetting = () => {
   const { value, onChange, onBlur, readonly } = useField<DataSetInfo>();
-  const selectDataSet = useWatch<string[]>(
+  const selectDataSet = useWatch<any[]>(
     'inputs.datasetParameters.datasetParam',
   );
 
-  const { dataSets, isReady } = useDataSetInfos({ ids: selectDataSet });
+  const { dataSets, isReady } = useDataSetInfos({ ids: selectDataSet.map(item => item.dataset_id) });
 
   return (
     <BaseDatasetSetting

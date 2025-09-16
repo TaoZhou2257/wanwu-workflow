@@ -31,7 +31,6 @@ import cs from 'classnames';
 import {
   useInfiniteScroll,
   useUpdateEffect,
-  useDocumentVisibility,
 } from 'ahooks';
 import { FilterKnowledgeType } from '@coze-data/utils';
 import { DataNamespace, dataReporter } from '@coze-data/reporter';
@@ -72,7 +71,7 @@ const DEFAULT_PAGE_SIZE = 20;
 
 const getDatasetList = async (
   props: {
-    query?: string;
+    name?: string;
     search_type?: OrderField;
     space_id: string;
     scope_type?: DatasetScopeType;
@@ -81,7 +80,7 @@ const getDatasetList = async (
   },
   pageIndex = 1,
 ) => {
-  const { data = {} } = await KnowledgeApi.ListSelectDataset();
+  const { data = {} } = await KnowledgeApi.ListSelectDataset(props);
   const knowledgeList = data?.knowledgeList || []
   const dataset_list = knowledgeList.map(((item: any) => ({...item, dataset_id: item.name})))
 
@@ -154,6 +153,7 @@ export type DatasetFilterType = 'scope-type' | 'search-type' | 'query-input';
 
 export interface DatasetFilterProps {
   hideHeader?: boolean;
+  visible?: boolean;
   children:
     | ((action: DatasetFilterAction) => React.ReactNode)
     | React.ReactNode;
@@ -187,6 +187,7 @@ const defaultKnowledgeTypeFallback = (param: FilterKnowledgeType[]) => {
 
 const useKnowledgeFilter = ({
   hideHeader,
+  visible,
   children,
   showFilters,
   headerClassName,
@@ -238,7 +239,7 @@ const useKnowledgeFilter = ({
         return getDatasetList(
           {
             space_id: id || '',
-            query,
+            name: query,
             search_type: searchType,
             scope_type: isPersonal ? DatasetScopeType.ScopeSelf : scopeType,
             format_type:
@@ -256,11 +257,7 @@ const useKnowledgeFilter = ({
       },
       {
         manual: true,
-        isNoMore: newData =>
-          Boolean(
-            !newData?.total ||
-              (newData.nextPageIndex - 1) * DEFAULT_PAGE_SIZE >= newData.total,
-          ),
+        isNoMore: newData => true,
         onError: error => {
           dataReporter.errorEvent(DataNamespace.KNOWLEDGE, {
             eventName: REPORT_EVENTS.KnowledgeGetDataSetList,
@@ -276,12 +273,11 @@ const useKnowledgeFilter = ({
     handleResetFilter();
   }, [id]);
 
-  const documentVisibility = useDocumentVisibility();
   useEffect(() => {
-    if (documentVisibility === 'visible') {
-      reload();
+    if (visible) {
+      handleQueryChange()
     }
-  }, [documentVisibility]);
+  }, [visible]);
 
   const handleResetFilter = () => {
     setQuery(undefined);
@@ -345,11 +341,18 @@ const useKnowledgeFilter = ({
   const renderSearch = useMemo(
     () => () =>
       (
-        <Input
+        /*<Input
           autoFocus
           key="query-input"
           placeholder={I18n.t('db2_014')}
           onChange={debounce(handleQueryChange, 500)}
+        />*/
+        <UISearch
+          className="mr-[10px] mt-[-5px]"
+          key="query-input"
+          loading={loading}
+          placeholder={I18n.t('db2_014')}
+          onSearch={debounce(handleQueryChange, 500)}
         />
       ),
     [],

@@ -14,14 +14,5 @@
  * limitations under the License.
  */
 
-import { InputParameters, Outputs, KnowledgeWanwu } from '../../fields';
-
-export function DatasetWanwuContent() {
-  return (
-    <>
-      <InputParameters />
-      <Outputs />
-      <KnowledgeWanwu />
-    </>
-  );
-}
+export { LibrarySelect } from './library-select';
+export { type Library } from './types';

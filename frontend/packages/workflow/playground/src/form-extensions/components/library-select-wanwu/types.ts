@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-import { InputParameters, Outputs, KnowledgeWanwu } from '../../fields';
-
-export function DatasetWanwuContent() {
-  return (
-    <>
-      <InputParameters />
-      <Outputs />
-      <KnowledgeWanwu />
-    </>
-  );
+import { type ReactNode } from 'react';
+export interface Library {
+  id: string;
+  iconUrl?: string;
+  name?: string;
+  nameExtra?: string | ReactNode;
+  description?: string;
+  isInvalid?: boolean;
 }

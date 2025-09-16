@@ -47,7 +47,7 @@ export interface DataSetModalContentProps {
   canCreate?: boolean;
   defaultType?: FilterKnowledgeType;
   knowledgeTypeConfigList?: FilterKnowledgeType[];
-
+  visible?: boolean;
   projectID?: string;
   showFilters?: DatasetFilterType[];
   hideHeader?: boolean;
@@ -70,6 +70,7 @@ const useKnowledgeListModalContent = ({
   projectID,
   showFilters = ['scope-type', 'search-type', 'query-input'],
   hideHeader,
+  visible,
   createKnowledgeModal,
 }: DataSetModalContentProps) => {
   const botId = useBotInfoStore(state => state.botId);
@@ -77,6 +78,7 @@ const useKnowledgeListModalContent = ({
   const { renderContentFilter, renderSearch, renderCreateBtn, renderFilters } =
     useKnowledgeFilter({
       hideHeader,
+      visible,
       showFilters,
       scene: Scene.MODAL,
       headerClassName: classNames(

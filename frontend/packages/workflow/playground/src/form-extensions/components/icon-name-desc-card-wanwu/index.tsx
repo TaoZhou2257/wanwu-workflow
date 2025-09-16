@@ -14,14 +14,5 @@
  * limitations under the License.
  */
 
-import { InputParameters, Outputs, KnowledgeWanwu } from '../../fields';
-
-export function DatasetWanwuContent() {
-  return (
-    <>
-      <InputParameters />
-      <Outputs />
-      <KnowledgeWanwu />
-    </>
-  );
-}
+export { IconNameDescCard } from './card';
+export { TooltipAction } from './tooltip-action';

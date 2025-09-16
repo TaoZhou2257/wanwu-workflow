@@ -18,6 +18,19 @@ import { nanoid } from 'nanoid';
 import { isNil, set } from 'lodash-es';
 import { BlockInput, ViewVariableType } from '@coze-workflow/base';
 
+const formatKnowledgeList = (knowledgeList) => {
+  return knowledgeList.map(item => {
+    if (typeof item === 'string') {
+      return {
+        name: item,
+        dataset_id: item
+      }
+    } else {
+      return item
+    }
+  })
+}
+
 export function transformOnInit(value) {
   // New drag-in node initialization
   if (!value) {
@@ -74,8 +87,9 @@ export function transformOnInit(value) {
     },
     {},
   );
-  formData.inputs.datasetParameters.datasetParam = datasetParam[0]?.input.value
-    .content as string[];
+  // compatible with old versions of knowledge base data structures
+  const newKnowledgeList = formatKnowledgeList(datasetParam[0]?.input.value.content || [])
+  formData.inputs.datasetParameters.datasetParam = newKnowledgeList as string[];
   // In the case of initial creation/stock data, the topK and threshold are empty, and the initial default value is processed in the dataset-settings component
   formData.inputs.datasetParameters.datasetSetting = {
     topK: datasetParam.find(item => item.name === 'topK')?.input.value
@@ -109,6 +123,7 @@ export function transformOnInit(value) {
   return formData;
 }
 
+
 export function transformOnSubmit(value) {
   const { nodeMeta, inputs, outputs } = value;
   const { inputParameters = { Query: { type: 'ref' } }, datasetParameters } =
@@ -131,6 +146,8 @@ export function transformOnSubmit(value) {
     })) || [],
   );
 
+  // compatible with old versions of knowledge base data structures
+  const newDatasetParam = formatKnowledgeList(datasetParam)
   set(actualData.inputs, 'datasetParam', [
     {
       name: 'knowledgeList',
@@ -141,7 +158,7 @@ export function transformOnSubmit(value) {
         },
         value: {
           type: 'literal',
-          content: datasetParam || [],
+          content: newDatasetParam || [],
         },
       },
     },
