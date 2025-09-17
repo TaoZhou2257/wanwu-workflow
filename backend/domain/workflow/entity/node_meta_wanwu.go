@@ -2,11 +2,11 @@ package entity
 
 // Wanwu Node Type Definition
 const (
-	NodeTypeWanwuIntentDetector     NodeType = "WanwuIntentDetector"
 	NodeTypeWanWuKnowledgeRetriever NodeType = "WanWuKnowledgeRetriever"
 	NodeTypeWanWuFileGenerator      NodeType = "WanWuFileGenerator"
 	NodeTypeWanWuFileParser         NodeType = "WanWuFileParser"
 	NodeTypeWanWuMCPTool            NodeType = "WanWuMCPTool"
+	NodeTypeWanWuGUI                NodeType = "WanWuGUI"
 )
 
 // Wanwu NodeTypeMetas Init
@@ -110,24 +110,22 @@ func init() {
 		EnUSDescription: "Used to call MCP tools.",
 	}
 
-	// 只用于示例，并不开放（Disable = true）
-	NodeTypeMetas[NodeTypeWanwuIntentDetector] = &NodeTypeMeta{
-		Disabled:     true,
-		ID:           1022,
-		Key:          NodeTypeWanwuIntentDetector,
-		DisplayKey:   "Intent",
-		Name:         "意图识别",
-		Category:     "logic",
-		Desc:         "用于用户输入的意图识别，并将其与预设意图选项进行匹配。",
-		Color:        "#00B2B2",
-		IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Intent-v2.jpg",
+	NodeTypeMetas[NodeTypeWanWuGUI] = &NodeTypeMeta{
+		ID:           1010,
+		Key:          NodeTypeWanWuGUI,
+		DisplayKey:   "GUI",
+		Name:         "GUI智能体",
+		Category:     "utilities",
+		Desc:         "通过视觉技术解析用户图形界面上的图像信息，并模拟人类操作行为来执行相应任务，与计算机系统进行交互的智能体。",
+		Color:        "#FF811A",
+		IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Plugin-v2.jpg",
 		SupportBatch: false,
 		ExecutableMeta: ExecutableMeta{
-			PreFillZero:     true,
-			PostFillNil:     true,
-			MayUseChatModel: true,
+			PreFillZero: true,
+			PostFillNil: true,
 		},
-		EnUSName:        "Intent recognition",
-		EnUSDescription: "Used for recognizing the intent in user input and matching it with preset intent options.",
+		EnUSName:        "GUI Agent",
+		EnUSDescription: "An intelligent agent that analyzes image information on the user's graphical interface through visual technology and simulates human operational behaviors to perform corresponding tasks, interacting with computer systems.",
 	}
+
 }

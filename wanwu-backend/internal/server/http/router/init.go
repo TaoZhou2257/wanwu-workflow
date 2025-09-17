@@ -13,10 +13,10 @@ import (
 
 func Register(r *hertz_server.Hertz) {
 	// TODO auto generated
-	
+
 	// FIXME 这里实际对应的是 ./configs/static/api/static 而非 ./configs/static ??
-	r.Static("/api/static", "./configs/static") 
-	
+	r.Static("/api/static", "./configs/static")
+
 	root := r.Group("/", rootMw()...)
 	{
 		_api := root.Group("/api", _apiMw()...)
@@ -51,7 +51,7 @@ func Register(r *hertz_server.Hertz) {
 			_workflow_api.POST("/create", append(_createworkflowMw(), coze.CreateWorkflow)...)
 			_workflow_api.POST("/delete", append(_deleteworkflowMw(), coze.DeleteWorkflow)...)
 			_workflow_api.POST("/delete_strategy", append(_getdeletestrategyMw(), coze.GetDeleteStrategy)...)
-			_workflow_api.POST("/example_workflow_list", append(_getexampleworkflowlistMw(), coze.GetExampleWorkFlowList)...)
+			_workflow_api.POST("/example_workflow_list", append(_getexampleworkflowlistMw(), coze.GetExampleWorkFlowListByWanwu)...)
 			_workflow_api.GET("/get_node_execute_history", append(_getnodeexecutehistoryMw(), coze.GetNodeExecuteHistory)...)
 			_workflow_api.GET("/get_process", append(_getworkflowprocessMw(), coze.GetWorkFlowProcess)...)
 			_workflow_api.POST("/get_trace", append(_gettracesdkMw(), coze.GetTraceSDK)...)

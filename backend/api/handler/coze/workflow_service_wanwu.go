@@ -34,6 +34,27 @@ func GetWorkFlowListByWanwu(ctx context.Context, c *app.RequestContext) {
 	c.JSON(consts.StatusOK, resp)
 }
 
+// GetExampleWorkFlowListByWanwu 参考GetExampleWorkFlowList，目前去掉其中的example
+// @router /api/workflow_api/example_workflow_list [POST]
+func GetExampleWorkFlowListByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req workflow.GetExampleWorkFlowListRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	resp := &workflow.GetExampleWorkFlowListResponse{
+		Data: &workflow.WorkFlowListData{
+			AuthList:     make([]*workflow.ResourceAuthInfo, 0),
+			WorkflowList: make([]*workflow.Workflow, 0),
+		},
+	}
+
+	c.JSON(consts.StatusOK, resp)
+}
+
 // ListWorkFlowOpenAPIV3SchemaByWanwu 获取workflow list openapi v3 schema
 // @router /v1/workflow/list_schema_by_wanwu [POST]
 func ListWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Context, c *app.RequestContext) {
