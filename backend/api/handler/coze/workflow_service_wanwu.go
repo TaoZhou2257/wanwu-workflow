@@ -34,6 +34,25 @@ func GetWorkFlowListByWanwu(ctx context.Context, c *app.RequestContext) {
 	c.JSON(consts.StatusOK, resp)
 }
 
+// GetWorkFlowSelectByWanwu 参考GetWorkFlowList
+// @router /api/workflow_api/workflow_select_by_wanwu
+func GetWorkFlowSelectByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req workflow.GetWorkFlowListRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+	resp, err := appworkflow.SVC.GetWorkFlowSelectByWanwu(ctx, &req)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+
+	c.JSON(consts.StatusOK, resp)
+}
+
 // GetExampleWorkFlowListByWanwu 参考GetExampleWorkFlowList，目前去掉其中的example
 // @router /api/workflow_api/example_workflow_list [POST]
 func GetExampleWorkFlowListByWanwu(ctx context.Context, c *app.RequestContext) {
