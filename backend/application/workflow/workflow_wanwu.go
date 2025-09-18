@@ -211,13 +211,21 @@ func (w *ApplicationService) GetWorkFlowSelectByWanwu(ctx context.Context, req *
 	userID := ctxutil.MustGetUIDFromCtx(ctx)
 	status := req.GetStatus()
 	// 调用ListWorkflowByWanwu需要将status置为nil 查询所有的workflow列表
+	// 设置size大小为99999
 	req.Status = nil
+	sizeValue := int32(99999)
+	req.Size = &sizeValue
 	resp, err := w.ListWorkflowByWanwu(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 	if len(resp.Data.WorkflowList) == 0 {
-		return nil, nil
+		return &workflow.GetWorkFlowListResponse{
+			Data: &workflow.WorkFlowListData{
+				AuthList:     make([]*workflow.ResourceAuthInfo, 0),
+				WorkflowList: make([]*workflow.Workflow, 0),
+			},
+		}, nil
 	}
 	// 调用BFF的CallBack接口获取发布的workflowIDs
 	ret := &cozeWorkflowSelectByWanwuResp{}
@@ -236,7 +244,6 @@ func (w *ApplicationService) GetWorkFlowSelectByWanwu(ctx context.Context, req *
 	} else if resp.StatusCode() >= 300 {
 		return nil, fmt.Errorf("http request failed with status code: %d", resp.StatusCode())
 	}
-
 	// 获取已发布的workflow ID集合
 	publishedWorkflowIDs := make(map[string]bool)
 	for _, wf := range ret.Data.List {
@@ -257,7 +264,6 @@ func (w *ApplicationService) GetWorkFlowSelectByWanwu(ctx context.Context, req *
 			wf.URL, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"), os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
 		}
 	}
-
 	// 过滤AuthList
 	var filteredAuthList []*workflow.ResourceAuthInfo
 	for _, wf := range resp.Data.AuthList {
