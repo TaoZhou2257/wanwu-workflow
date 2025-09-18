@@ -53,7 +53,7 @@ import { type WorkflowFilterRef } from '../sider-wanwu/workflow-filter';
 import { WorkflowModalSider } from '../sider-wanwu';
 import styles from '../index.module.less';
 import { WorkflowModalFilterForDouyin } from '../filter-douyin';
-import { WorkflowModalFilter } from '../filter';
+import { WorkflowModalFilter } from '../filter-wanwu';
 import { WorkflowModalContent } from '../content';
 import { reporter } from '../../utils';
 import { ModalI18nKey, WORKFLOW_MODAL_I18N_KEY_MAP } from './use-i18n-text';
