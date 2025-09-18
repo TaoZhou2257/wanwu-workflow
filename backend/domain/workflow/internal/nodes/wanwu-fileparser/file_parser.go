@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
@@ -75,8 +76,14 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 	if err != nil {
 		return nil, err
 	}
+
+	//循环拼接结果
+	var resultText strings.Builder
+	for _, resp := range response {
+		resultText.WriteString(resp.Text)
+	}
 	result := map[string]any{
-		"text": response[0].Text,
+		"text": resultText.String(),
 	}
 
 	return result, nil
