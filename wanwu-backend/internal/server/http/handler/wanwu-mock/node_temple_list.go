@@ -28,7 +28,7 @@ func NodeTemplateListByWanwu(ctx context.Context, c *app.RequestContext) {
 		httputil.BadRequest(c, err.Error())
 		return
 	}
-	baseUrl := "http://" + os.Getenv("WANWU_EXTERNAL_IP") + ":" + os.Getenv("WANWU_EXTERNAL_PORT")
+	baseUrl := os.Getenv("WANWU_EXTERNAL_SCHEME") + "://" + os.Getenv("WANWU_EXTERNAL_ENDPOINT")
 	for _, template := range resp.Data.TemplateList {
 		for _, cfg := range config.Cfg().Icons {
 			if template.ID == cfg.ID {

@@ -15,7 +15,7 @@ import (
 
 // SetHost 参考SetHostMW
 func SetHost(ctx context.Context, appCtx *app.RequestContext) {
-	ctxcache.Store(ctx, consts.HostKeyInCtx, os.Getenv("WANWU_EXTERNAL_IP")+":"+os.Getenv("WANWU_EXTERNAL_PORT"))
+	ctxcache.Store(ctx, consts.HostKeyInCtx, os.Getenv("WANWU_EXTERNAL_ENDPOINT"))
 	ctxcache.Store(ctx, consts.RequestSchemeKeyInCtx, string(appCtx.GetRequest().Scheme()))
 	appCtx.Next(ctx)
 }

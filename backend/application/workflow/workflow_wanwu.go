@@ -3,13 +3,18 @@ package workflow
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"os"
 	"path"
 	"runtime/debug"
 	"strconv"
+	"strings"
 
 	"github.com/cloudwego/eino/schema"
 	workflowModel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/workflow"
 	"github.com/coze-dev/coze-studio/backend/api/model/playground"
+	pluginAPI "github.com/coze-dev/coze-studio/backend/api/model/plugin_develop"
+	"github.com/coze-dev/coze-studio/backend/api/model/plugin_develop/common"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	"github.com/coze-dev/coze-studio/backend/application/user"
@@ -27,6 +32,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/types/consts"
 	"github.com/coze-dev/coze-studio/backend/types/errno"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/go-resty/resty/v2"
 	xmaps "golang.org/x/exp/maps"
 )
 
@@ -188,6 +194,88 @@ func (w *ApplicationService) ListWorkflowByWanwu(ctx context.Context, req *workf
 	response.Data.Total = total
 
 	return response, nil
+}
+
+func (w *ApplicationService) GetWorkFlowSelectByWanwu(ctx context.Context, req *workflow.GetWorkFlowListRequest) (
+	_ *workflow.GetWorkFlowListResponse, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+	userID := ctxutil.MustGetUIDFromCtx(ctx)
+	status := req.GetStatus()
+	// 调用ListWorkflowByWanwu需要将status置为nil 查询所有的workflow列表
+	req.Status = nil
+	resp, err := w.ListWorkflowByWanwu(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.Data.WorkflowList) == 0 {
+		return nil, nil
+	}
+	// 调用BFF的CallBack接口获取发布的workflowIDs
+	ret := &cozeWorkflowSelectByWanwuResp{}
+	if resp, err := resty.New().
+		R().
+		SetContext(ctx).
+		SetHeader("Content-Type", "application/json").
+		SetHeader("Accept", "application/json").
+		SetQueryParams(map[string]string{
+			"userId": strconv.FormatInt(userID, 10),
+			"orgId":  req.GetSpaceID(),
+		}).
+		SetResult(ret).
+		Get(os.Getenv("WANWU_CALLBACK_WORKFLOW_LIST_URL")); err != nil {
+		return nil, err
+	} else if resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("http request failed with status code: %d", resp.StatusCode())
+	}
+
+	// 获取已发布的workflow ID集合
+	publishedWorkflowIDs := make(map[string]bool)
+	for _, wf := range ret.Data.List {
+		publishedWorkflowIDs[wf.AppId] = true
+	}
+	// 过滤WorkflowList
+	var filteredWorkflows []*workflow.Workflow
+	for _, wf := range resp.Data.WorkflowList {
+		isPublished := publishedWorkflowIDs[wf.WorkflowID]
+		if status == workflow.WorkFlowListStatus_HadPublished && isPublished {
+			filteredWorkflows = append(filteredWorkflows, wf)
+		}
+		if status == workflow.WorkFlowListStatus_UnPublished && !isPublished {
+			wf.PluginID = "0"
+			filteredWorkflows = append(filteredWorkflows, wf)
+		}
+		if wf.URL == "" || strings.Contains(wf.URL, "default_workflow_icon.png") {
+			wf.URL, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"), os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
+		}
+	}
+
+	// 过滤AuthList
+	var filteredAuthList []*workflow.ResourceAuthInfo
+	for _, wf := range resp.Data.AuthList {
+		isPublished := publishedWorkflowIDs[wf.WorkflowID]
+		if status == workflow.WorkFlowListStatus_HadPublished && isPublished {
+			filteredAuthList = append(filteredAuthList, wf)
+		}
+		if status == workflow.WorkFlowListStatus_UnPublished && !isPublished {
+			filteredAuthList = append(filteredAuthList, wf)
+		}
+	}
+	return &workflow.GetWorkFlowListResponse{
+		Data: &workflow.WorkFlowListData{
+			AuthList:     filteredAuthList,
+			WorkflowList: filteredWorkflows,
+			Total:        int64(len(filteredWorkflows)),
+		},
+	}, nil
 }
 
 func (w *ApplicationService) ListWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Context, workflowIDs []string) (
@@ -487,4 +575,111 @@ func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID s
 		Token:     ptr.Of(wfExe.TokenInfo.InputTokens + wfExe.TokenInfo.OutputTokens),
 		Cost:      ptr.Of("0.00000"),
 	}, nil
+}
+
+func (w *ApplicationService) GetPlaygroundPluginListByWanwu(ctx context.Context, req *pluginAPI.GetPlaygroundPluginListRequest) (
+	resp *pluginAPI.GetPlaygroundPluginListResponse, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	currentUser := ctxutil.MustGetUIDFromCtx(ctx)
+	if err = checkUserSpace(ctx, currentUser, req.GetSpaceID()); err != nil {
+		return nil, err
+	}
+
+	var (
+		toolIDs []int64
+		wfs     []*entity.Workflow
+	)
+	if len(req.GetPluginIds()) > 0 {
+		toolIDs, err = slices.TransformWithErrorCheck(req.GetPluginIds(), func(a string) (int64, error) {
+			return strconv.ParseInt(a, 10, 64)
+		})
+		if err != nil {
+			return nil, err
+		}
+		// 修改QType从Draft中查找
+		wfs, _, err = GetWorkflowDomainSVC().MGet(ctx, &vo.MGetPolicy{
+			MetaQuery: vo.MetaQuery{
+				IDs:     toolIDs,
+				SpaceID: ptr.Of(req.GetSpaceID()),
+			},
+			QType: workflowModel.FromDraft,
+		})
+	} else if req.GetPage() > 0 && req.GetSize() > 0 {
+		wfs, _, err = GetWorkflowDomainSVC().MGet(ctx, &vo.MGetPolicy{
+			MetaQuery: vo.MetaQuery{
+				Page: &vo.Page{
+					Size: req.GetSize(),
+					Page: req.GetPage(),
+				},
+				SpaceID:       ptr.Of(req.GetSpaceID()),
+				PublishStatus: ptr.Of(vo.HasPublished),
+			},
+			QType: workflowModel.FromLatestVersion,
+		})
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	pluginInfoList := make([]*common.PluginInfoForPlayground, 0)
+	for _, wf := range wfs {
+		pInfo := &common.PluginInfoForPlayground{
+			ID:           strconv.FormatInt(wf.ID, 10),
+			Name:         wf.Name,
+			PluginIcon:   wf.IconURL,
+			DescForHuman: wf.Desc,
+			Creator: &common.Creator{
+				Self: wf.CreatorID == currentUser,
+			},
+			PluginType: common.PluginType_WORKFLOW,
+			//VersionName: wf.VersionMeta.Version,
+			//CreateTime:  strconv.FormatInt(wf.CreatedAt.Unix(), 10),
+			//UpdateTime:  strconv.FormatInt(wf.VersionCreatedAt.Unix(), 10),
+		}
+
+		pluginApi := &common.PluginApi{
+			APIID:    strconv.FormatInt(wf.ID, 10),
+			Name:     wf.Name,
+			Desc:     wf.Desc,
+			PluginID: strconv.FormatInt(wf.ID, 10),
+		}
+		pluginApi.Parameters, err = slices.TransformWithErrorCheck(wf.InputParams, toPluginParameter)
+		if err != nil {
+			return nil, err
+		}
+
+		pInfo.PluginApis = []*common.PluginApi{pluginApi}
+		pluginInfoList = append(pluginInfoList, pInfo)
+	}
+
+	return &pluginAPI.GetPlaygroundPluginListResponse{
+		Data: &common.GetPlaygroundPluginListData{
+			PluginList: pluginInfoList,
+			Total:      int32(len(pluginInfoList)),
+		},
+	}, nil
+}
+
+// -- internal ---
+type cozeWorkflowSelectByWanwuResp struct {
+	Code int64 `json:"code"`
+	Data struct {
+		List []appId `json:"list"`
+	} `json:"data"`
+	Msg string `json:"msg"`
+}
+
+type appId struct {
+	AppId string `json:"appId"` // 应用id
 }

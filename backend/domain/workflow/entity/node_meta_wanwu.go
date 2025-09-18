@@ -21,7 +21,6 @@ func init() {
 	// wanwu禁用一些节点
 	NodeTypeMetas[NodeTypePlugin].Disabled = true
 	NodeTypeMetas[NodeTypeKnowledgeRetriever].Disabled = true
-	NodeTypeMetas[NodeTypeSubWorkflow].Disabled = true
 	NodeTypeMetas[NodeTypeDatabaseCustomSQL].Disabled = true
 	NodeTypeMetas[NodeTypeQuestionAnswer].Disabled = true
 	NodeTypeMetas[NodeTypeKnowledgeIndexer].Disabled = true
