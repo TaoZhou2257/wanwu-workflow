@@ -20,7 +20,7 @@ import { VariableContent } from '@/node-registries/variable';
 import { TriggerUpsertContent } from '@/node-registries/trigger-upsert';
 import { TriggerReadContent } from '@/node-registries/trigger-read';
 import { TriggerDeleteContent } from '@/node-registries/trigger-delete';
-import { SubWorkflowContent as SubWorkflowContentV2 } from '@/node-registries/sub-workflow';
+import { SubWorkflowContent as SubWorkflowContentV2 } from '@/node-registries/sub-workflow-wanwu';
 import { StartContent } from '@/node-registries/start';
 import { SetVariableContent } from '@/node-registries/set-variable';
 import { PluginContent } from '@/node-registries/plugin';
