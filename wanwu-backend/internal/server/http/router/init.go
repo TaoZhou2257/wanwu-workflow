@@ -41,6 +41,10 @@ func Register(r *hertz_server.Hertz) {
 			}
 		}
 		{
+			_plugin_api := _api.Group("/plugin_api", _plugin_apiMw()...)
+			_plugin_api.POST("/get_playground_plugin_list", append(_getplaygroundpluginlistMw(), coze.GetPlaygroundPluginListByWanwu)...)
+		}
+		{
 			_workflow_api := _api.Group("/workflow_api", _workflow_apiMw()...)
 			_workflow_api.GET("/apiDetail", append(_getapidetailMw(), coze.GetApiDetail)...)
 			_workflow_api.POST("/batch_delete", append(_batchdeleteworkflowMw(), coze.BatchDeleteWorkflow)...)
@@ -93,8 +97,6 @@ func Register(r *hertz_server.Hertz) {
 				_upload1 := _workflow_api.Group("/upload", _upload1Mw()...)
 				_upload1.POST("/auth_token", append(_getworkflowuploadauthtokenMw(), coze.GetWorkflowUploadAuthToken)...)
 			}
-			_plugin_api := _api.Group("/plugin_api", _plugin_apiMw()...)
-			_plugin_api.POST("/get_playground_plugin_list", append(_getplaygroundpluginlistMw(), coze.GetPlaygroundPluginListByWanwu)...)
 
 			// --- wanwu adapt ---
 			_workflow_api.POST("/workflow_list_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowListByWanwu}...)

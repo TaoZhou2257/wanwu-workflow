@@ -49,11 +49,6 @@ func main() {
 	if err := config.LoadConfig(configFile); err != nil {
 		log.Fatalf("init cfg err: %v", err)
 	}
-	for _, icon := range config.Cfg().Icons {
-		if icon.ID == "9" {
-			os.Setenv("WANWU_WORKFLOW_DEFAULT_ICON", icon.Url)
-		}
-	}
 	logs.SetLevel(logs.LevelTrace)
 
 	if err := log.InitLog(config.Cfg().Log.Std, config.Cfg().Log.Level, config.Cfg().Log.Logs...); err != nil {
