@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
+	"os"
+	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -188,4 +191,37 @@ func preprocessWorkflowRequestBodyByWanwu(_ context.Context, c *app.RequestConte
 	}
 
 	return ptr.Of(string(rawData)), nil
+}
+
+// GetWorkflowDetailInfoByWanwu 参考GetWorkflowDetailInfo 替换返回URL
+// @router /api/workflow_api/workflow_detail_info [POST]
+func GetWorkflowDetailInfoByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req workflow.GetWorkflowDetailInfoRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	workflowDetailInfoDataList, err := appworkflow.SVC.GetWorkflowDetailInfo(ctx, &req)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+	for _, workflowData := range workflowDetailInfoDataList.List {
+		if workflowData.Icon == "" || strings.Contains(workflowData.Icon, "default_workflow_icon.png") {
+			// 设置默认图标
+			workflowData.Icon, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"),
+				os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
+		}
+	}
+
+	response := map[string]any{
+		"data":    workflowDetailInfoDataList,
+		"code":    0,
+		"message": "",
+	}
+
+	c.JSON(consts.StatusOK, response)
 }
