@@ -20,6 +20,26 @@ import (
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
 )
 
+const (
+	segmentSize = 500
+	overlapSize = 0.0
+)
+
+var parserChoices = []string{"text"}
+
+var separators = []string{
+	"\n\n",
+	"\n",
+	" ",
+	",",
+	"\u200b", // 零宽空格
+	"\uff0c", // 全角逗号
+	"\u3001", // 顿号
+	"\uff0e", // 全角句号
+	"\u3002", // 句号
+	".",
+	""}
+
 type WanWuRetrieveConfig struct {
 }
 
@@ -50,10 +70,18 @@ type WanWuRetrieve struct {
 }
 
 type FileParserParams struct {
-	UploadFileUrl string `json:"upload_file_url"`
+	FileUrl       string   `json:"url"`
+	ParserChoices []string `json:"parser_choices"`
+	Overlap       float32  `json:"overlap_size" `
+	SegmentSize   int      `json:"sentence_size"`
+	Separators    []string `json:"separators"`
 }
 
 type FileParserResp struct {
+	Docs []*FileParserInfo `json:"docs"`
+}
+
+type FileParserInfo struct {
 	Metadata *FileParserMeta `json:"metadata"`
 	Text     string          `json:"text"`
 }
@@ -69,7 +97,11 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 	}
 
 	req := &FileParserParams{
-		UploadFileUrl: fileUrl,
+		FileUrl:       fileUrl,
+		ParserChoices: parserChoices,
+		Overlap:       overlapSize,
+		SegmentSize:   segmentSize,
+		Separators:    separators,
 	}
 
 	response, err := fileParser(ctx, req)
@@ -90,7 +122,7 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 }
 
 // fileParser 文档解析
-func fileParser(ctx context.Context, fileParserParams *FileParserParams) ([]*FileParserResp, error) {
+func fileParser(ctx context.Context, fileParserParams *FileParserParams) ([]*FileParserInfo, error) {
 	paramsByte, err := sonic.Marshal(fileParserParams)
 	if err != nil {
 		return nil, err
@@ -105,13 +137,13 @@ func fileParser(ctx context.Context, fileParserParams *FileParserParams) ([]*Fil
 	if err != nil {
 		return nil, err
 	}
-	var resp []*FileParserResp
+	var resp FileParserResp
 	if err := sonic.Unmarshal(result, &resp); err != nil {
 		//log.Errorf(err.Error())
 		return nil, err
 	}
-	if len(resp) == 0 {
+	if len(resp.Docs) == 0 {
 		return nil, errors.New("file_parser error")
 	}
-	return resp, nil
+	return resp.Docs, nil
 }
