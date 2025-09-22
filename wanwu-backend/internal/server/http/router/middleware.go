@@ -321,3 +321,12 @@ func _openapirunflowMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _developerMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+func _geticonMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
