@@ -33,7 +33,13 @@ func GetWorkFlowListByWanwu(ctx context.Context, c *app.RequestContext) {
 		internalServerErrorResponse(ctx, c, err)
 		return
 	}
-
+	for _, workflowData := range resp.Data.WorkflowList {
+		if workflowData.URL == "" || strings.Contains(workflowData.URL, "default_workflow_icon.png") {
+			// 设置默认图标
+			workflowData.URL, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"),
+				os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
+		}
+	}
 	c.JSON(consts.StatusOK, resp)
 }
 

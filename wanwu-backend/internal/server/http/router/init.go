@@ -23,6 +23,7 @@ func Register(r *hertz_server.Hertz) {
 		{
 			_bot := _api.Group("/bot", _botMw()...)
 			_bot.POST("/get_type_list", append(_gettypelistMw(), coze.GetTypeList)...)
+			_bot.POST("/upload_file", append(_uploadfileMw(), coze.UploadFile)...)
 		}
 		{
 			_common := _api.Group("/common", _commonMw()...)
