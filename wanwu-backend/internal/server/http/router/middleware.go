@@ -22,6 +22,11 @@ func _gettypelistMw() []app.HandlerFunc {
 	return nil
 }
 
+func _uploadfileMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _commonMw() []app.HandlerFunc {
 	// your code...
 	return nil
