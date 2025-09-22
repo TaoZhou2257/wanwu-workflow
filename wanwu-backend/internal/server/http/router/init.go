@@ -46,11 +46,15 @@ func Register(r *hertz_server.Hertz) {
 			_plugin_api.POST("/get_playground_plugin_list", append(_getplaygroundpluginlistMw(), coze.GetPlaygroundPluginListByWanwu)...)
 		}
 		{
+			_developer := _api.Group("/developer", _developerMw()...)
+			_developer.POST("/get_icon", append(_geticonMw(), coze.GetIconByWanwu)...)
+		}
+		{
 			_workflow_api := _api.Group("/workflow_api", _workflow_apiMw()...)
 			_workflow_api.GET("/apiDetail", append(_getapidetailMw(), coze.GetApiDetail)...)
 			_workflow_api.POST("/batch_delete", append(_batchdeleteworkflowMw(), coze.BatchDeleteWorkflow)...)
 			_workflow_api.POST("/cancel", append(_cancelworkflowMw(), coze.CancelWorkFlow)...)
-			_workflow_api.POST("/canvas", append(_getcanvasinfoMw(), coze.GetCanvasInfo)...)
+			_workflow_api.POST("/canvas", append(_getcanvasinfoMw(), coze.GetCanvasInfoByWanwu)...)
 			_workflow_api.POST("/copy", append(_copyworkflowMw(), coze.CopyWorkflow)...)
 			_workflow_api.POST("/copy_wk_template", append(_copywktemplateapiMw(), coze.CopyWkTemplateApi)...)
 			_workflow_api.POST("/create", append(_createworkflowMw(), coze.CreateWorkflow)...)

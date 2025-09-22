@@ -10,7 +10,9 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/coze-dev/coze-studio/backend/api/model/app/developer_api"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
+	"github.com/coze-dev/coze-studio/backend/application/upload"
 	appworkflow "github.com/coze-dev/coze-studio/backend/application/workflow"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
@@ -230,4 +232,55 @@ func GetWorkflowDetailInfoByWanwu(ctx context.Context, c *app.RequestContext) {
 	}
 
 	c.JSON(consts.StatusOK, response)
+}
+
+// GetIconByWanwu . 参考GetIcon 返回默认图片
+// @router /api/developer/get_icon [POST]
+func GetIconByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req developer_api.GetIconRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	resp, err := upload.SVC.GetIcon(ctx, &req)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+	for _, icon := range resp.Data.IconList {
+		// 设置默认图标
+		icon.URL, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"),
+			os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
+
+	}
+	c.JSON(consts.StatusOK, resp)
+}
+
+// GetCanvasInfoByWanwu 参考GetCanvasInfo 增加返回图标判断
+// @router /api/workflow_api/canvas [POST]
+func GetCanvasInfoByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req workflow.GetCanvasInfoRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	resp, err := appworkflow.SVC.GetCanvasInfo(ctx, &req)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+
+	if resp.Data.Workflow.URL == "" || strings.Contains(resp.Data.Workflow.URL, "default_workflow_icon.png") {
+		// 设置默认图标
+		resp.Data.Workflow.URL, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"),
+			os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
+	}
+
+	c.JSON(consts.StatusOK, resp)
 }
