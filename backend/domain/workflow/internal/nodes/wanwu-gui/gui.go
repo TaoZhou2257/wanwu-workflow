@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
+	"os"
 	"time"
 
 	"github.com/bytedance/sonic"
@@ -102,15 +104,13 @@ type guiReq struct {
 }
 
 func guiRequest(ctx context.Context, modelID string, req *guiReq) (map[string]any, error) {
-	// url, err := url.JoinPath(os.Getenv("WANWU_CALLBACK_LLM_BASE_URL"), modelID, "gui")
-	// if err != nil {
-	// 	return nil, err
-	// }
-	url := "https://maas-gz-api.ai-yuanjing.com/openapi/v1/lmm_gui_agent"
+	url, err := url.JoinPath(os.Getenv("WANWU_CALLBACK_LLM_BASE_URL"), modelID, "gui")
+	if err != nil {
+		return nil, err
+	}
 	resp, err := resty.New().SetTimeout(time.Minute).R().SetContext(ctx).
 		SetHeader("Content-Type", "application/json").
 		SetHeader("Accept", "application/json").
-		SetHeader("Authorization", "Bearer sk-719f5bbbc0134a7aac2a1517b54c0337").
 		SetBody(req).
 		SetDoNotParseResponse(true).Post(url)
 	if err != nil {
