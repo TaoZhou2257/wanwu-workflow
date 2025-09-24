@@ -284,3 +284,50 @@ func GetCanvasInfoByWanwu(ctx context.Context, c *app.RequestContext) {
 
 	c.JSON(consts.StatusOK, resp)
 }
+
+// ImportWorkFlow .
+// @router /api/workflow_api/import [POST]
+func ImportWorkFlow(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req importWorkflowRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+	// create
+	createReq := workflow.CreateWorkflowRequest{
+		SpaceID: req.SpaceID,
+		Name:    req.Name,
+		Desc:    req.Desc,
+		IconURI: "default_icon/default_workflow_icon.png",
+	}
+	resp, err := appworkflow.SVC.CreateWorkflow(ctx, &createReq)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+	// save
+	saveReq := workflow.SaveWorkflowRequest{
+		WorkflowID: resp.Data.WorkflowID,
+		SpaceID:    &req.SpaceID,
+		Schema:     &req.Schema,
+	}
+	_, err = appworkflow.SVC.SaveWorkflow(ctx, &saveReq)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+	c.JSON(consts.StatusOK, resp)
+}
+
+type importWorkflowRequest struct {
+	// Space id, cannot be empty
+	SpaceID string `form:"space_id,required" json:"space_id,required" query:"space_id,required"`
+	// process name
+	Name string `form:"name,required" json:"name,required" query:"name,required"`
+	// Process description, not null
+	Desc string `form:"desc,required" json:"desc,required" query:"desc,required"`
+	// file data
+	Schema string `form:"schema" json:"schema" query:"schema"`
+}
