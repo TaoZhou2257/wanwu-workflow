@@ -107,6 +107,8 @@ func Register(r *hertz_server.Hertz) {
 			_workflow_api.POST("/workflow_list_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowListByWanwu}...)
 			_workflow_api.POST("/workflow_select_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowSelectByWanwu}...)
 			_workflow_api.POST("/import", []app.HandlerFunc{coze.ImportWorkFlow}...)
+			_workflow_api.POST("/export", []app.HandlerFunc{coze.ExportWorkFlow}...)
+
 		}
 	}
 	{
