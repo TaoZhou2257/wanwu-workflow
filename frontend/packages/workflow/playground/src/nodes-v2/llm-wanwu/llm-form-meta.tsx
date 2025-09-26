@@ -273,7 +273,7 @@ const Render = ({ form }: FormRenderProps<FormData>) => {
             </FormCard>
           )}
         </FieldArray>
-        {/*{!isBindDouyin ? <Vision /> : null}*/}
+        {!isBindDouyin ? <Vision /> : null}
         <Field
           name="$$prompt_decorator$$.systemPrompt"
           deps={['$$input_decorator$$.inputParameters']}

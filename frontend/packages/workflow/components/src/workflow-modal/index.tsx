@@ -31,7 +31,7 @@ import {
   WORKFLOW_LIST_STATUS_ALL,
   BotPluginWorkFlowItem,
 } from './type';
-import { useWorkflowModalParts } from './hooks/use-workflow-modal-parts';
+import { useWorkflowModalParts } from './hooks/use-workflow-modal-parts-wanwu';
 import {
   WORKFLOW_MODAL_I18N_KEY_MAP,
   ModalI18nKey,

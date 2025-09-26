@@ -36,5 +36,5 @@ export { DatabaseNodeServiceImpl } from './database-node-service-impl';
 export { TriggerService } from './trigger-service';
 export { PluginNodeService, type PluginNodeStore } from './plugin-node-service';
 
-export { SubWorkflowNodeService } from '@/node-registries/sub-workflow/services';
+export { SubWorkflowNodeService } from '@/node-registries/sub-workflow-wanwu/services';
 export { WorkflowDependencyService } from './workflow-dependency-service';

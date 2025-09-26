@@ -388,7 +388,7 @@ export default class WorkflowApiService<T> {
   }
 
   /**
-   * POST /api/workflow_api/workflow_list
+   * POST /api/workflow_api/workflow_select_by_wanwu
    *
    * 获取流程列表。
    */
@@ -397,7 +397,7 @@ export default class WorkflowApiService<T> {
     options?: T,
   ): Promise<workflow.GetWorkFlowListResponse> {
     const _req = req || {};
-    const url = this.genBaseURL('/api/workflow_api/workflow_list');
+    const url = this.genBaseURL('/api/workflow_api/workflow_select_by_wanwu');
     const method = 'POST';
     const data = {
       page: _req['page'],

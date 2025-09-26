@@ -357,7 +357,7 @@ export const NodeHeader: React.FC<NodeHeaderProps> = ({
                         </span>
                       ) : undefined}
                     </Typography.Paragraph>
-                    <ReferenceNodeOrigin node={node} />
+                    {/*<ReferenceNodeOrigin node={node} />*/}
                     <ReferenceNodeVersion node={node} />
                   </div>
                 ) : (

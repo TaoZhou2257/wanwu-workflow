@@ -53,7 +53,7 @@ const WorkFlowHeader: React.FC = () => {
           }}
         />
 
-        {/*<CozAvatar src={info.url || ''} type="platform" alt="Avatar" />*/}
+        <CozAvatar src={info.url || ''} type="platform" alt="Avatar" />
 
         <WorkflowInfo />
       </div>

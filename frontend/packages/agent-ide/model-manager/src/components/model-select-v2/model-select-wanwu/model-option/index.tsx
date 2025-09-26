@@ -133,7 +133,7 @@ export function ModelOption({
         {/*<ModelOptionAvatar model={model} />*/}
         <div
           className={cls(
-            'h-[46px] py-[12px] w-full',
+            'h-[65px] py-[12px] w-full',
             'flex flex-col overflow-hidden',
             'border-0 border-b border-solid coz-stroke-primary',
             styles['model-info-border'],
@@ -153,7 +153,7 @@ export function ModelOption({
             <Typography.Title fontSize="14px" ellipsis={{ showTooltip: true }}>
               {model.displayName || model.name}
             </Typography.Title>
-           {/* <div className="shrink-0 flex gap-[6px]">
+            {/*<div className="shrink-0 flex gap-[6px]">
               {model.model_status_details?.is_free_model &&
               scene !== BotCreatorScene.DouyinBot ? (
                 <Tag size="mini" color="primary" className="!coz-mg-plus">
@@ -176,6 +176,13 @@ export function ModelOption({
                   ))
                 : null}
             </div>*/}
+          </div>
+          <div className="flex gap-[6px] mt-[5px]">
+            {model.tags && model.tags.map((item: any) => (
+              <Tag size="mini" color="primary" className="!coz-mg-plus">
+                {item.text}
+              </Tag>
+            ))}
           </div>
           {/*<div className="flex items-center text-[12px] leading-[16px] coz-fg-dim overflow-hidden">
             <ModelTag isFirst>
