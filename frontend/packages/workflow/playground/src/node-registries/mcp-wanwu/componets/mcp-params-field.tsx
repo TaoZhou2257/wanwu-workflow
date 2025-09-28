@@ -50,6 +50,7 @@ export const McpParamsField = withFieldArray(({
   const mcpList = data?.inputs?.mcpInfoList || []
   const { properties = {}, required = [] } = mcpList?.[0]?.inputSchema || {}
   const mcpParamsList = Object.keys(properties || {}) || []
+  console.log(mcpList, '-------------------------123')
 
   const removeAll = () => {
     const valueArr = JSON.parse(JSON.stringify(value || []))

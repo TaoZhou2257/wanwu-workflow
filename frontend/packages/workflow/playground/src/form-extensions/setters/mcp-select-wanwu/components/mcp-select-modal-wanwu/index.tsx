@@ -50,7 +50,6 @@ interface SelectMcpModalProps {
   onClose: () => void;
   onAddMcp: (id: string, addCallback?: () => void) => void;
   onRemoveMcp?: (id: string, removeCallback?: () => void) => void;
-  onClickDatabase: (id: string) => void;
   onCreateDatabase?: (id: string, draftId: string) => void;
   enterFrom: string;
   botId?: string;
@@ -169,7 +168,7 @@ export const useSelectMcpModal = ({
             itemKey={item.mcpId}
             key={`${index}mcp-collapse`}
           >
-            <div className="w-[100%] h-[300px] overflow-y-auto">
+            <div className="w-[100%] max-h-[300px] overflow-y-auto">
               {toolList.map((it: any, index: number) => (
                 <McpListItem
                   title={it.name}
