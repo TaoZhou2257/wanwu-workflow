@@ -23,6 +23,7 @@ func Register(r *hertz_server.Hertz) {
 		{
 			_bot := _api.Group("/bot", _botMw()...)
 			_bot.POST("/get_type_list", append(_gettypelistMw(), coze.GetTypeList)...)
+			_bot.POST("/upload_file", append(_uploadfileMw(), coze.UploadFile)...)
 		}
 		{
 			_common := _api.Group("/common", _commonMw()...)
@@ -41,11 +42,19 @@ func Register(r *hertz_server.Hertz) {
 			}
 		}
 		{
+			_plugin_api := _api.Group("/plugin_api", _plugin_apiMw()...)
+			_plugin_api.POST("/get_playground_plugin_list", append(_getplaygroundpluginlistMw(), coze.GetPlaygroundPluginListByWanwu)...)
+		}
+		{
+			_developer := _api.Group("/developer", _developerMw()...)
+			_developer.POST("/get_icon", append(_geticonMw(), coze.GetIconByWanwu)...)
+		}
+		{
 			_workflow_api := _api.Group("/workflow_api", _workflow_apiMw()...)
 			_workflow_api.GET("/apiDetail", append(_getapidetailMw(), coze.GetApiDetail)...)
 			_workflow_api.POST("/batch_delete", append(_batchdeleteworkflowMw(), coze.BatchDeleteWorkflow)...)
 			_workflow_api.POST("/cancel", append(_cancelworkflowMw(), coze.CancelWorkFlow)...)
-			_workflow_api.POST("/canvas", append(_getcanvasinfoMw(), coze.GetCanvasInfo)...)
+			_workflow_api.POST("/canvas", append(_getcanvasinfoMw(), coze.GetCanvasInfoByWanwu)...)
 			_workflow_api.POST("/copy", append(_copyworkflowMw(), coze.CopyWorkflow)...)
 			_workflow_api.POST("/copy_wk_template", append(_copywktemplateapiMw(), coze.CopyWkTemplateApi)...)
 			_workflow_api.POST("/create", append(_createworkflowMw(), coze.CreateWorkflow)...)
@@ -73,7 +82,7 @@ func Register(r *hertz_server.Hertz) {
 			_workflow_api.POST("/update_meta", append(_updateworkflowmetaMw(), coze.UpdateWorkflowMeta)...)
 			_workflow_api.POST("/validate_tree", append(_validatetreeMw(), coze.ValidateTree)...)
 			_workflow_api.POST("/workflow_detail", append(_getworkflowdetailMw(), coze.GetWorkflowDetail)...)
-			_workflow_api.POST("/workflow_detail_info", append(_getworkflowdetailinfoMw(), coze.GetWorkflowDetailInfo)...)
+			_workflow_api.POST("/workflow_detail_info", append(_getworkflowdetailinfoMw(), coze.GetWorkflowDetailInfoByWanwu)...)
 			_workflow_api.POST("/workflow_list", append(_getworkflowlistMw(), coze.GetWorkFlowList)...)
 			_workflow_api.POST("/workflow_references", append(_getworkflowreferencesMw(), coze.GetWorkflowReferences)...)
 			{
@@ -96,6 +105,10 @@ func Register(r *hertz_server.Hertz) {
 
 			// --- wanwu adapt ---
 			_workflow_api.POST("/workflow_list_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowListByWanwu}...)
+			_workflow_api.POST("/workflow_select_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowSelectByWanwu}...)
+			_workflow_api.POST("/import", []app.HandlerFunc{coze.ImportWorkFlow}...)
+			_workflow_api.POST("/export", []app.HandlerFunc{coze.ExportWorkFlow}...)
+
 		}
 	}
 	{

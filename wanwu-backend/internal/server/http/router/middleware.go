@@ -22,6 +22,11 @@ func _gettypelistMw() []app.HandlerFunc {
 	return nil
 }
 
+func _uploadfileMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _commonMw() []app.HandlerFunc {
 	// your code...
 	return nil
@@ -277,6 +282,16 @@ func _getworkflowuploadauthtokenMw() []app.HandlerFunc {
 	return nil
 }
 
+func _plugin_apiMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _getplaygroundpluginlistMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _getexampleworkflowlistMw() []app.HandlerFunc {
 	// your code...
 	return nil
@@ -303,6 +318,15 @@ func _workflowMw() []app.HandlerFunc {
 }
 
 func _openapirunflowMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _developerMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+func _geticonMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }

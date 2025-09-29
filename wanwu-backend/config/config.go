@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/pkg/redis"
 	"github.com/UnicomAI/wanwu/pkg/db"
 	"github.com/UnicomAI/wanwu/pkg/log"
@@ -52,7 +54,18 @@ type IconConfig struct {
 
 func LoadConfig(in string) error {
 	_c = &Config{}
-	return util.LoadConfig(in, _c)
+	if err := util.LoadConfig(in, _c); err != nil {
+		return err
+	}
+	for _, icon := range _c.Icons {
+		if icon.ID == "9" {
+			if err := os.Setenv("WANWU_WORKFLOW_DEFAULT_ICON", icon.Url); err != nil {
+				return err
+			}
+			break
+		}
+	}
+	return nil
 }
 
 func Cfg() *Config {
