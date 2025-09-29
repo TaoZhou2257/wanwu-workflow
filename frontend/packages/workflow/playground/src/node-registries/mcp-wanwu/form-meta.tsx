@@ -28,7 +28,7 @@ export const MCP_WANWU_FORM_META: FormMetaV2<FormData> = {
       const { required = [] } = formValues?.inputs?.mcpInfoList?.[0]?.inputSchema || {}
       const currentKey = name.slice(0, name.lastIndexOf(".input")) || ''
       const currentName = get(formValues, currentKey)?.name || ''
-      return required?.includes(currentName) && !value.content
+      return required?.includes(currentName) && !String(value.content)
         ? I18n.t('workflow_detail_node_error_empty', {}, '参数值不可为空')
         : undefined
     }

@@ -34,6 +34,21 @@ import {
   withFieldArray,
 } from '@/form';
 
+const mcpTypeObj = {
+  "string": ViewVariableType.String,
+  "integer": ViewVariableType.Integer,
+  "number": ViewVariableType.Number,
+  "boolean": ViewVariableType.Boolean,
+  "object": ViewVariableType.Object,
+  "time": ViewVariableType.Time,
+  "arraystring": ViewVariableType.ArrayString,
+  "arrayinteger": ViewVariableType.ArrayInteger,
+  "arraynumber": ViewVariableType.ArrayNumber,
+  "arrayboolean": ViewVariableType.ArrayBoolean,
+  "arrayobject": ViewVariableType.ArrayObject,
+  "arraytime": ViewVariableType.ArrayTime,
+}
+
 interface McpParamsFieldProps {
   disabledTypes?: ViewVariableType[];
   defaultValue?: RefExpression;
@@ -50,7 +65,6 @@ export const McpParamsField = withFieldArray(({
   const mcpList = data?.inputs?.mcpInfoList || []
   const { properties = {}, required = [] } = mcpList?.[0]?.inputSchema || {}
   const mcpParamsList = Object.keys(properties || {}) || []
-  console.log(mcpList, '-------------------------123')
 
   const removeAll = () => {
     const valueArr = JSON.parse(JSON.stringify(value || []))
@@ -118,7 +132,9 @@ export const McpParamsField = withFieldArray(({
             key={name + index}
             label={name}
             required={required.includes(name)}
-            inputType={ViewVariableType.String}
+            inputType={
+              mcpTypeObj[properties[name]?.type + (properties[name]?.items?.type || '')] || ViewVariableType.String
+            }
             disabledTypes={disabledTypes}
             name={`inputs.inputParameters.${index}.input`}
           />
