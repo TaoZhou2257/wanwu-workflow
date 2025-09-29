@@ -21,7 +21,7 @@
     "removeComments": false,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "strict": true,
     "disableReferencedProjectLoad": true,
     "disableSolutionSearching": true,
