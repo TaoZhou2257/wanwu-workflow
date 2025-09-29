@@ -105,7 +105,7 @@ export const defineConfig = (options: Partial<RsbuildConfig>) => {
         auto: true,
       },
       sourceMap: {
-        js: 'source-map',
+        /*js: 'source-map',*/
       },
       overrideBrowserslist,
     },
