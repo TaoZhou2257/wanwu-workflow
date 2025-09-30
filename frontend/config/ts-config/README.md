@@ -217,7 +217,7 @@ For monorepo projects with dependencies:
 {
   "extends": "@coze-arch/ts-config/tsconfig.web.json",
   "compilerOptions": {
-    "sourceMap": true,
+    "sourceMap": false,
     "incremental": true,
     "tsBuildInfoFile": ".tsbuildinfo"
   }
