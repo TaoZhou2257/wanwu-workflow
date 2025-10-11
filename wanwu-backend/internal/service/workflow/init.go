@@ -14,20 +14,20 @@ import (
 	crosssearchImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/search"
 	crossuserImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/user"
 	"github.com/UnicomAI/wanwu/pkg/log"
-	coze_app_infra "github.com/coze-dev/coze-studio/backend/application/base/appinfra"
 	coze_app_modelmgr "github.com/coze-dev/coze-studio/backend/application/modelmgr"
 	coze_app_upload "github.com/coze-dev/coze-studio/backend/application/upload"
 	coze_app_user "github.com/coze-dev/coze-studio/backend/application/user"
 	coze_app_workflow "github.com/coze-dev/coze-studio/backend/application/workflow"
-	coze_crossuser "github.com/coze-dev/coze-studio/backend/crossdomain/contract/user"
-	coze_crosscode "github.com/coze-dev/coze-studio/backend/crossdomain/impl/code"
+	coze_cross_user "github.com/coze-dev/coze-studio/backend/crossdomain/contract/user"
 	coze_workflow "github.com/coze-dev/coze-studio/backend/domain/workflow"
 	coze_workflow_service "github.com/coze-dev/coze-studio/backend/domain/workflow/service"
-	coze_imagex "github.com/coze-dev/coze-studio/backend/infra/contract/imagex"
-	coze_storage "github.com/coze-dev/coze-studio/backend/infra/contract/storage"
-	coze_cache "github.com/coze-dev/coze-studio/backend/infra/impl/cache/redis"
-	coze_checkpoint "github.com/coze-dev/coze-studio/backend/infra/impl/checkpoint"
-	coze_idgen "github.com/coze-dev/coze-studio/backend/infra/impl/idgen"
+	coze_cache "github.com/coze-dev/coze-studio/backend/infra/cache/impl/redis"
+	coze_checkpoint "github.com/coze-dev/coze-studio/backend/infra/checkpoint"
+	coze_code "github.com/coze-dev/coze-studio/backend/infra/coderunner"
+	coze_code_impl "github.com/coze-dev/coze-studio/backend/infra/coderunner/impl"
+	coze_idgen "github.com/coze-dev/coze-studio/backend/infra/idgen/impl/idgen"
+	coze_imagex "github.com/coze-dev/coze-studio/backend/infra/imagex"
+	coze_storage "github.com/coze-dev/coze-studio/backend/infra/storage"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -65,15 +65,20 @@ func Init(ctx context.Context, infra Infra) error {
 	idGen, _ := coze_idgen.New(cache)
 	// check point store
 	cps := coze_checkpoint.NewRedisStore(cache)
+	// code runner
+	coze_code.SetCodeRunner(coze_code_impl.New())
 	// workflow repo
-	workflowRepo := coze_workflow_service.NewWorkflowRepository(idGen, infra.DB, cache, infra.Storage, cps, nil, config.Cfg().Workflow)
+	workflowRepo, err := coze_workflow_service.NewWorkflowRepository(idGen, infra.DB, cache, infra.Storage, cps, nil, config.Cfg().Workflow)
+	if err != nil {
+		return fmt.Errorf("init workflow err: %v", err)
+	}
 	coze_workflow.SetRepository(workflowRepo)
 
 	// domain workflow service
 	_workflowService = coze_workflow_service.NewWorkflowService(workflowRepo)
 
 	// init application upload
-	coze_app_upload.InitService(infra.Storage, cache)
+	coze_app_upload.InitService(&coze_app_upload.UploadComponents{Cache: cache, Oss: infra.Storage, DB: infra.DB, Idgen: idGen})
 	// init application modelmgr
 	_ = coze_app_modelmgr.InitService(crossmodelmgrImpl.DefaultMock(), nil)
 	// init application user
@@ -86,9 +91,7 @@ func Init(ctx context.Context, infra Infra) error {
 	coze_app_workflow.SetEventBus(crosssearchImpl.DefaultResourceEventBusMock())
 
 	// init cross domain user
-	coze_crossuser.SetDefaultSVC(crossuserImpl.DefaultMock())
-	// init cross domain code
-	coze_crosscode.SetCodeRunner(coze_app_infra.InitCodeRunner())
+	coze_cross_user.SetDefaultSVC(crossuserImpl.DefaultMock())
 
 	return nil
 }

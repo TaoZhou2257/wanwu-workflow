@@ -23,7 +23,7 @@ type Config struct {
 	Minio  MinioConfig  `json:"minio" mapstructure:"minio"`
 	Icons  []IconConfig `json:"icons" mapstructure:"icons"`
 
-	Workflow coze_workflow_config.WorkflowConfig `json:"workflow" mapstructure:"workflow"`
+	Workflow *coze_workflow_config.WorkflowConfig `json:"workflow" mapstructure:"workflow"`
 }
 
 type ServerConfig struct {

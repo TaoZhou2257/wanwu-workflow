@@ -28,9 +28,10 @@ import (
 	message "github.com/coze-dev/coze-studio/backend/domain/conversation/message/service"
 	shortcutRepo "github.com/coze-dev/coze-studio/backend/domain/shortcutcmd/repository"
 	"github.com/coze-dev/coze-studio/backend/domain/shortcutcmd/service"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/idgen"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/imagex"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/storage"
+	uploadService "github.com/coze-dev/coze-studio/backend/domain/upload/service"
+	"github.com/coze-dev/coze-studio/backend/infra/idgen"
+	"github.com/coze-dev/coze-studio/backend/infra/imagex"
+	"github.com/coze-dev/coze-studio/backend/infra/storage"
 )
 
 type ServiceComponents struct {
@@ -56,6 +57,7 @@ func InitService(s *ServiceComponents) *ConversationApplicationService {
 
 	arDomainComponents := &agentrun.Components{
 		RunRecordRepo: repository.NewRunRecordRepo(s.DB, s.IDGen),
+		ImagexSVC:     s.ImageX,
 	}
 
 	agentRunDomainSVC := agentrun.NewService(arDomainComponents)
@@ -71,6 +73,9 @@ func InitService(s *ServiceComponents) *ConversationApplicationService {
 	ConversationSVC.ShortcutDomainSVC = shortcutCmdDomainSVC
 
 	ConversationOpenAPISVC.ShortcutDomainSVC = shortcutCmdDomainSVC
+	uploadSVC := uploadService.NewUploadSVC(s.DB, s.IDGen, s.TosClient)
+	ConversationOpenAPISVC.UploaodDomainSVC = uploadSVC
+	OpenapiMessageSVC.UploaodDomainSVC = uploadSVC
 
 	return ConversationSVC
 }

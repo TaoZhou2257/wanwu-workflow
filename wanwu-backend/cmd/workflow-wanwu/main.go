@@ -16,7 +16,7 @@ import (
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/pkg/redis"
 	"github.com/UnicomAI/wanwu/pkg/db"
 	"github.com/UnicomAI/wanwu/pkg/log"
-	coze_minio "github.com/coze-dev/coze-studio/backend/infra/impl/storage/minio"
+	coze_minio "github.com/coze-dev/coze-studio/backend/infra/storage/impl/minio"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/pkg/safego"
 	"github.com/coze-dev/coze-studio/backend/types/consts"
@@ -101,9 +101,9 @@ func asyncStartMinioProxyServer(ctx context.Context) {
 	storageType := getEnv(consts.StorageType, "minio")
 	proxyURL := getEnv(consts.MinIOAPIHost, "http://localhost:9000")
 
-	if storageType == "tos" {
-		proxyURL = getEnv(consts.TOSBucketEndpoint, "https://opencoze.tos-cn-beijing.volces.com")
-	}
+	// if storageType == "tos" {
+	// 	proxyURL = getEnv(consts.TOSBucketEndpoint, "https://opencoze.tos-cn-beijing.volces.com")
+	// }
 
 	if storageType == "s3" {
 		proxyURL = getEnv(consts.S3BucketEndpoint, "")

@@ -31,8 +31,8 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/agent/singleagent/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/agent/singleagent/internal/agentflow"
 	"github.com/coze-dev/coze-studio/backend/domain/agent/singleagent/repository"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/chatmodel"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/modelmgr"
+	"github.com/coze-dev/coze-studio/backend/infra/chatmodel"
+	"github.com/coze-dev/coze-studio/backend/infra/modelmgr"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
 	"github.com/coze-dev/coze-studio/backend/pkg/jsoncache"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/slices"
@@ -111,6 +111,10 @@ func (s *singleAgentImpl) StreamExecute(ctx context.Context, req *entity.Execute
 		ModelMgr:     s.ModelMgr,
 		ModelFactory: s.ModelFactory,
 		CPStore:      s.CPStore,
+
+		CustomVariables: req.CustomVariables,
+
+		ConversationID: req.ConversationID,
 	}
 	rn, err := agentflow.BuildAgent(ctx, conf)
 	if err != nil {

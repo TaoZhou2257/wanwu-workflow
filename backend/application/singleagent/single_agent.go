@@ -22,10 +22,6 @@ import (
 	"strconv"
 	"time"
 
-	shortcutCmd "github.com/coze-dev/coze-studio/backend/domain/shortcutcmd/service"
-	"github.com/coze-dev/coze-studio/backend/pkg/lang/slices"
-	"github.com/coze-dev/coze-studio/backend/types/consts"
-
 	"github.com/bytedance/sonic"
 	"github.com/getkin/kin-openapi/openapi3"
 
@@ -34,35 +30,38 @@ import (
 	"github.com/coze-dev/coze-studio/backend/api/model/app/developer_api"
 	intelligence "github.com/coze-dev/coze-studio/backend/api/model/app/intelligence/common"
 	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/database"
-	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/plugin"
 	"github.com/coze-dev/coze-studio/backend/api/model/data/database/table"
 	"github.com/coze-dev/coze-studio/backend/api/model/playground"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
+	"github.com/coze-dev/coze-studio/backend/crossdomain/contract/agent"
 	crossdatabase "github.com/coze-dev/coze-studio/backend/crossdomain/contract/database"
+	pluginConsts "github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/consts"
 	"github.com/coze-dev/coze-studio/backend/domain/agent/singleagent/entity"
 	singleagent "github.com/coze-dev/coze-studio/backend/domain/agent/singleagent/service"
 	variableEntity "github.com/coze-dev/coze-studio/backend/domain/memory/variables/entity"
-	shortcutEntity "github.com/coze-dev/coze-studio/backend/domain/shortcutcmd/entity"
-
 	searchEntity "github.com/coze-dev/coze-studio/backend/domain/search/entity"
+	shortcutEntity "github.com/coze-dev/coze-studio/backend/domain/shortcutcmd/entity"
+	shortcutCmd "github.com/coze-dev/coze-studio/backend/domain/shortcutcmd/service"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/conv"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
+	"github.com/coze-dev/coze-studio/backend/pkg/lang/slices"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
+	"github.com/coze-dev/coze-studio/backend/types/consts"
 	"github.com/coze-dev/coze-studio/backend/types/errno"
 )
 
 type SingleAgentApplicationService struct {
 	appContext     *ServiceComponents
 	DomainSVC      singleagent.SingleAgent
-	ShortcutCMDSVC shortcutCmd.ShortcutCmd
+	ShortcutCmdSvc shortcutCmd.ShortcutCmd
 }
 
 func newApplicationService(s *ServiceComponents, domain singleagent.SingleAgent) *SingleAgentApplicationService {
 	return &SingleAgentApplicationService{
 		appContext:     s,
 		DomainSVC:      domain,
-		ShortcutCMDSVC: s.ShortcutCMDDomainSVC,
+		ShortcutCmdSvc: s.ShortcutCMDDomainSVC,
 	}
 }
 
@@ -157,7 +156,7 @@ func (s *SingleAgentApplicationService) UpdatePromptDisable(ctx context.Context,
 	}
 
 	if len(draft.Database) == 0 {
-		return nil, fmt.Errorf("agent %d has no database", agentID) // TODO (@fanlv): error code
+		return nil, fmt.Errorf("agent %d has no database", agentID)
 	}
 
 	dbInfos := draft.Database
@@ -171,7 +170,7 @@ func (s *SingleAgentApplicationService) UpdatePromptDisable(ctx context.Context,
 	}
 
 	if !found {
-		return nil, fmt.Errorf("database %d not found in agent %d", req.GetDatabaseID(), agentID) // TODO (@fanlv): error code
+		return nil, fmt.Errorf("database %d not found in agent %d", req.GetDatabaseID(), agentID)
 	}
 
 	draft.Database = dbInfos
@@ -354,7 +353,7 @@ func (s *SingleAgentApplicationService) applyAgentUpdates(target *entity.SingleA
 		target.BackgroundImageInfoList = patch.BackgroundImageInfoList
 	}
 
-	if patch.Agents != nil && len(patch.Agents) > 0 && patch.Agents[0].JumpConfig != nil {
+	if len(patch.Agents) > 0 && patch.Agents[0].JumpConfig != nil {
 		target.JumpConfig = patch.Agents[0].JumpConfig
 	}
 
@@ -369,6 +368,12 @@ func (s *SingleAgentApplicationService) applyAgentUpdates(target *entity.SingleA
 			}
 		}
 		target.Database = patch.DatabaseList
+	}
+	if patch.BotMode != nil {
+		target.BotMode = ptr.From(patch.BotMode)
+	}
+	if patch.LayoutInfo != nil {
+		target.LayoutInfo = patch.LayoutInfo
 	}
 
 	return target, nil
@@ -419,11 +424,12 @@ func (s *SingleAgentApplicationService) singleAgentDraftDo2Vo(ctx context.Contex
 		TaskInfo:                &bot_common.TaskInfo{},
 		CreateTime:              do.CreatedAt / 1000,
 		UpdateTime:              do.UpdatedAt / 1000,
-		BotMode:                 bot_common.BotMode_SingleMode,
+		BotMode:                 do.BotMode,
 		BackgroundImageInfoList: do.BackgroundImageInfoList,
 		Status:                  bot_common.BotStatus_Using,
 		DatabaseList:            do.Database,
 		ShortcutSort:            do.ShortcutCommand,
+		LayoutInfo:              do.LayoutInfo,
 	}
 
 	if do.VariablesMetaID != nil {
@@ -461,10 +467,10 @@ func disabledParam(schemaVal *openapi3.Schema) bool {
 		return false
 	}
 	globalDisable, localDisable := false, false
-	if v, ok := schemaVal.Extensions[plugin.APISchemaExtendLocalDisable]; ok {
+	if v, ok := schemaVal.Extensions[pluginConsts.APISchemaExtendLocalDisable]; ok {
 		localDisable = v.(bool)
 	}
-	if v, ok := schemaVal.Extensions[plugin.APISchemaExtendGlobalDisable]; ok {
+	if v, ok := schemaVal.Extensions[pluginConsts.APISchemaExtendGlobalDisable]; ok {
 		globalDisable = v.(bool)
 	}
 	return globalDisable || localDisable
@@ -606,7 +612,7 @@ func (s *SingleAgentApplicationService) ListAgentPublishHistory(ctx context.Cont
 				Name:      creator.Name,
 				AvatarURL: creator.IconURL,
 				Self:      uid == v.CreatorID,
-				// UserUniqueName: creator. UserUniqueName,//TODO (@fanlv): Change the user domain after it is completed
+				// UserUniqueName: creator. UserUniqueName,
 				// UserLabel TODO
 			},
 			PublishID: &v.PublishID,
@@ -647,16 +653,24 @@ func (s *SingleAgentApplicationService) GetAgentOnlineInfo(ctx context.Context, 
 	if connectorID == 0 {
 		connectorID = ctxutil.GetApiAuthFromCtx(ctx).ConnectorID
 	}
-	agentInfo, err := s.DomainSVC.ObtainAgentByIdentity(ctx, &entity.AgentIdentity{
-		AgentID:     req.BotID,
+
+	return s.getAgentInfo(ctx, req.BotID, connectorID, uid, req.Version)
+}
+
+func (s *SingleAgentApplicationService) getAgentInfo(ctx context.Context, botID int64, connectorID int64, uid int64, version *string) (*bot_common.OpenAPIBotInfo, error) {
+	ae := &entity.AgentIdentity{
+		AgentID:     botID,
 		ConnectorID: connectorID,
-		Version:     ptr.From(req.Version),
-	})
+	}
+	if version != nil {
+		ae.Version = ptr.From(version)
+	}
+	agentInfo, err := s.DomainSVC.ObtainAgentByIdentity(ctx, ae)
 	if err != nil {
 		return nil, err
 	}
 	if agentInfo == nil {
-		logs.CtxErrorf(ctx, "agent(%d) is not exist", req.BotID)
+		logs.CtxErrorf(ctx, "agent(%d) is not exist", botID)
 		return nil, errorx.New(errno.ErrAgentPermissionCode, errorx.KV("msg", "agent not exist"))
 	}
 	if agentInfo.CreatorID != uid {
@@ -685,7 +699,7 @@ func (s *SingleAgentApplicationService) GetAgentOnlineInfo(ctx context.Context, 
 	}
 
 	if len(agentInfo.ShortcutCommand) > 0 {
-		shortcutInfos, err := s.ShortcutCMDSVC.ListCMD(ctx, &shortcutEntity.ListMeta{
+		shortcutInfos, err := s.ShortcutCmdSvc.ListCMD(ctx, &shortcutEntity.ListMeta{
 			ObjectID: agentInfo.AgentID,
 			IsOnline: 1,
 			CommandIDs: slices.Transform(agentInfo.ShortcutCommand, func(s string) int64 {
@@ -715,19 +729,97 @@ func (s *SingleAgentApplicationService) GetAgentOnlineInfo(ctx context.Context, 
 				AgentID:       ptr.Of(si.ObjectID),
 				Command:       si.ShortcutCommand,
 				Components: slices.Transform(si.Components, func(i *playground.Components) *bot_common.ShortcutCommandComponent {
-					return &bot_common.ShortcutCommandComponent{
+					sc := &bot_common.ShortcutCommandComponent{
 						Name:          i.Name,
 						Description:   i.Description,
-						Type:          i.InputType.String(),
+						Type:          getShortcutCommandComponentType(i.InputType),
 						ToolParameter: ptr.Of(i.Parameter),
-						Options:       i.Options,
-						DefaultValue:  ptr.Of(i.DefaultValue.Value),
 						IsHide:        i.Hide,
 					}
+					if i.DefaultValue != nil {
+						sc.DefaultValue = ptr.Of(i.DefaultValue.Value)
+					}
+
+					switch i.InputType {
+					case playground.InputType_Select:
+						sc.Options = i.Options
+					case playground.InputType_MixUpload:
+						options := make([]string, 0, len(i.UploadOptions))
+						for _, uploadOption := range i.UploadOptions {
+							options = append(options, string(getShortcutCommandComponentFileType(uploadOption)))
+						}
+						sc.Options = options
+					case playground.InputType_UploadImage, playground.InputType_UploadDoc, playground.InputType_UploadTable, playground.InputType_UploadAudio,
+						playground.InputType_VIDEO, playground.InputType_ARCHIVE, playground.InputType_CODE, playground.InputType_TXT,
+						playground.InputType_PPT:
+						sc.Options = []string{string(getShortcutCommandComponentFileType(i.InputType))}
+					default:
+					}
+
+					return sc
 				}),
+				Tool: &bot_common.ShortcutCommandToolInfo{
+					Name: si.ToolInfo.ToolName,
+					Type: func() string {
+						if si.ToolType == 1 {
+							return string(agent.ShortcutCommandToolTypePlugin)
+						}
+						if si.ToolType == 2 {
+							return string(agent.ShortcutCommandToolTypeWorkflow)
+						}
+						return ""
+					}(),
+					PluginID:      ptr.Of(si.PluginID),
+					WorkflowID:    ptr.Of(si.WorkFlowID),
+					PluginAPIName: &si.PluginToolName,
+					Params: slices.Transform(si.ToolInfo.ToolParamsList, func(i *playground.ToolParams) *bot_common.ShortcutToolParam {
+						return &bot_common.ShortcutToolParam{
+							Name:             i.Name,
+							Type:             i.Type,
+							DefaultValue:     i.DefaultValue,
+							IsReferComponent: i.ReferComponent,
+							IsRequired:       i.Required,
+							Description:      i.Desc,
+						}
+					}),
+				},
+				SendType: func() *bot_common.ShortcutSendType {
+					if si.SendType == 1 {
+						return ptr.Of(bot_common.ShortcutSendTypePanel)
+					}
+					return ptr.Of(bot_common.ShortcutSendTypeQuery)
+				}(),
+				CardSchema: ptr.Of(si.CardSchema),
 			}
 		})
 
 	}
 	return combineInfo, nil
+}
+
+func (s *SingleAgentApplicationService) OpenGetBotInfo(ctx context.Context, req *bot_open_api.OpenGetBotInfoRequest) (*bot_open_api.OpenGetBotInfoResponse, error) {
+	resp := new(bot_open_api.OpenGetBotInfoResponse)
+
+	uid := ctxutil.MustGetUIDFromApiAuthCtx(ctx)
+
+	connectorID := ptr.From(req.ConnectorID)
+
+	if connectorID == 0 {
+		connectorID = ctxutil.GetApiAuthFromCtx(ctx).ConnectorID
+	}
+	agentInfo, err := s.getAgentInfo(ctx, req.BotID, connectorID, uid, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp.Data = agentInfo
+	return resp, nil
+}
+
+func getShortcutCommandComponentType(inputType playground.InputType) string {
+	componentType := agent.ShortcutCommandComponentTypeMapping[inputType]
+	return string(componentType)
+}
+
+func getShortcutCommandComponentFileType(inputType playground.InputType) string {
+	return string(agent.ShortcutCommandComponentFileTypeMapping[inputType])
 }

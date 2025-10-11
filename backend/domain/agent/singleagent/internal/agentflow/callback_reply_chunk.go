@@ -29,8 +29,9 @@ import (
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
 
-	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/plugin"
 	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/singleagent"
+	"github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/consts"
+	plugin "github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/model"
 	crossworkflow "github.com/coze-dev/coze-studio/backend/crossdomain/contract/workflow"
 	"github.com/coze-dev/coze-studio/backend/domain/agent/singleagent/entity"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/conv"
@@ -259,7 +260,7 @@ func convInterruptEventType(interruptEvent any) singleagent.InterruptEventType {
 	case *crossworkflow.ToolInterruptEvent:
 		interruptEventType = singleagent.InterruptEventType(int64(t.EventType))
 	case *plugin.ToolInterruptEvent:
-		if t.Event == plugin.InterruptEventTypeOfToolNeedOAuth {
+		if t.Event == consts.InterruptEventTypeOfToolNeedOAuth {
 			interruptEventType = singleagent.InterruptEventType_OauthPlugin
 		}
 	}

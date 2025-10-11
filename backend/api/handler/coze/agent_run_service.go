@@ -19,16 +19,18 @@ package coze
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/hertz-contrib/sse"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
 
 	"github.com/coze-dev/coze-studio/backend/api/model/conversation/run"
 
 	"github.com/coze-dev/coze-studio/backend/application/conversation"
-	sseImpl "github.com/coze-dev/coze-studio/backend/infra/impl/sse"
+	sseImpl "github.com/coze-dev/coze-studio/backend/infra/sse/impl/sse"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/types/errno"
@@ -89,6 +91,13 @@ func checkParams(_ context.Context, ar *run.AgentRunRequest) error {
 func ChatV3(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req run.ChatV3Request
+
+	// Pre-process parameters field: convert JSON object to string if needed
+	if err = preprocessChatV3Parameters(c); err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
 	err = c.BindAndValidate(&req)
 	if err != nil {
 		invalidParamRequestResponse(c, err.Error())
@@ -121,5 +130,68 @@ func checkParamsV3(_ context.Context, ar *run.ChatV3Request) error {
 	if ar.BotID == 0 {
 		return errorx.New(errno.ErrConversationInvalidParamCode, errorx.KV("msg", "bot id is required"))
 	}
+	return nil
+}
+
+// CancelChatApi .
+// @router /v3/chat/cancel [POST]
+func CancelChatApi(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req run.CancelChatApiRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	resp, err := conversation.ConversationOpenAPISVC.CancelRun(ctx, &req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	c.JSON(consts.StatusOK, resp)
+}
+
+// preprocessChatV3Parameters handles the conversion of parameters field from JSON object to string
+func preprocessChatV3Parameters(c *app.RequestContext) error {
+	// Get the raw request body
+	body := c.Request.Body()
+	if len(body) == 0 {
+		return nil
+	}
+
+	// Parse the JSON body
+	var requestData map[string]interface{}
+	if err := json.Unmarshal(body, &requestData); err != nil {
+		return nil // If it's not valid JSON, let BindAndValidate handle the error
+	}
+
+	// Check if parameters field exists and is an object
+	if parametersValue, exists := requestData["parameters"]; exists {
+		// If parameters is already a string, no conversion needed
+		if _, isString := parametersValue.(string); isString {
+			return errors.New("parameters field should be an object, not a string")
+		}
+
+		// If parameters is an object, convert it to JSON string
+		if parametersObj, isObject := parametersValue.(map[string]interface{}); isObject {
+			parametersJSON, err := json.Marshal(parametersObj)
+			if err != nil {
+				return err
+			}
+			requestData["parameters"] = string(parametersJSON)
+
+			// Update the request body with the modified data
+			modifiedBody, err := json.Marshal(requestData)
+			if err != nil {
+				return err
+			}
+
+			// Replace the request body
+			c.Request.SetBody(modifiedBody)
+		}
+	}
+
 	return nil
 }

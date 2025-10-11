@@ -22,17 +22,9 @@ import (
 
 	"github.com/coze-dev/coze-studio/backend/api/model/app/bot_common"
 	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/agentrun"
-	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/plugin"
+	"github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/model"
 	crossworkflow "github.com/coze-dev/coze-studio/backend/crossdomain/contract/workflow"
 )
-
-type AgentRuntime struct {
-	AgentVersion     string
-	IsDraft          bool
-	SpaceID          int64
-	ConnectorID      int64
-	PreRetrieveTools []*agentrun.Tool
-}
 
 type EventType string
 
@@ -84,6 +76,8 @@ type SingleAgent struct {
 	JumpConfig              *bot_common.JumpConfig
 	BackgroundImageInfoList []*bot_common.BackgroundImageInfo
 	Database                []*bot_common.Database
+	BotMode                 bot_common.BotMode
+	LayoutInfo              *bot_common.LayoutInfo
 	ShortcutCommand         []string
 }
 
@@ -101,11 +95,13 @@ const (
 )
 
 type InterruptInfo struct {
-	AllToolInterruptData map[string]*plugin.ToolInterruptEvent
+	AllToolInterruptData map[string]*model.ToolInterruptEvent
 	AllWfInterruptData   map[string]*crossworkflow.ToolInterruptEvent
 	ToolCallID           string
 	InterruptType        InterruptEventType
 	InterruptID          string
+
+	ChatflowInterrupt *crossworkflow.StateMessage
 }
 
 type ExecuteRequest struct {
@@ -116,6 +112,10 @@ type ExecuteRequest struct {
 	History      []*schema.Message
 	ResumeInfo   *InterruptInfo
 	PreCallTools []*agentrun.ToolsRetriever
+
+	CustomVariables  map[string]string
+
+	ConversationID int64
 }
 
 type AgentIdentity struct {

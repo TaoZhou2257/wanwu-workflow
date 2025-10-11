@@ -18,7 +18,6 @@ package adaptor
 
 import (
 	"context"
-	"github.com/coze-dev/coze-studio/backend/domain/workflow/config"
 	"io"
 	"net"
 	"net/http"
@@ -27,6 +26,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/coze-dev/coze-studio/backend/domain/workflow/config"
 
 	"github.com/bytedance/mockey"
 	"github.com/cloudwego/eino/schema"
@@ -44,13 +45,13 @@ import (
 	mockmodel "github.com/coze-dev/coze-studio/backend/crossdomain/contract/modelmgr/modelmock"
 	crossplugin "github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin"
 	"github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/pluginmock"
-	"github.com/coze-dev/coze-studio/backend/crossdomain/impl/code"
 	userentity "github.com/coze-dev/coze-studio/backend/domain/user/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/compose"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/execute"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/coderunner"
+	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/plugin"
+	"github.com/coze-dev/coze-studio/backend/infra/coderunner"
 	mockWorkflow "github.com/coze-dev/coze-studio/backend/internal/mock/domain/workflow"
 	mockcode "github.com/coze-dev/coze-studio/backend/internal/mock/domain/workflow/crossdomain/code"
 	"github.com/coze-dev/coze-studio/backend/internal/testutil"
@@ -730,6 +731,20 @@ func TestKnowledgeDeleter(t *testing.T) {
 			UserID: 123,
 		})
 
+		defer mockey.Mock(execute.GetExeCtx).Return(&execute.Context{
+			RootCtx: execute.RootCtx{
+				ExeCfg: workflowModel.ExecuteConfig{
+					InputFileFields: map[string]*workflowModel.FileInfo{
+						"https://p26-bot-workflow-sign.byteimg.com/tos-cn-i-mdko3gqilj/5264fa1295da4a6483cd236b1316c454.pdf~tplv-mdko3gqilj-image.image?rk3s=81d4c505&x-expires=1782379180&x-signature=mlaXPIk9VJjOXu87xGaRmNRg9%2BA%3D": &workflowModel.FileInfo{
+							FileName:      "1706.03762v7.pdf",
+							FileURL:       "https://p26-bot-workflow-sign.byteimg.com/tos-cn-i-mdko3gqilj/5264fa1295da4a6483cd236b1316c454.pdf~tplv-mdko3gqilj-image.image?rk3s=81d4c505&x-expires=1782379180&x-signature=mlaXPIk9VJjOXu87xGaRmNRg9%2BA%3D",
+							FileExtension: ".pdf",
+						},
+					},
+				},
+			},
+		}).Build().UnPatch()
+
 		workflowSC, err := CanvasToWorkflowSchema(ctx, c)
 		assert.NoError(t, err)
 
@@ -752,7 +767,7 @@ func TestCodeAndPluginNodes(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		mockCodeRunner := mockcode.NewMockRunner(ctrl)
-		mockey.Mock(code.GetCodeRunner).Return(mockCodeRunner).Build()
+		mockey.Mock(coderunner.GetCodeRunner).Return(mockCodeRunner).Build()
 
 		mockRepo := mockWorkflow.NewMockRepository(ctrl)
 
@@ -772,8 +787,7 @@ func TestCodeAndPluginNodes(t *testing.T) {
 
 		mockToolService := pluginmock.NewMockPluginService(ctrl)
 		mockey.Mock(crossplugin.DefaultSVC).Return(mockToolService).Build()
-		mockToolService.EXPECT().ExecutePlugin(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any()).Return(map[string]any{
+		mockey.Mock(plugin.ExecutePlugin).Return(map[string]any{
 			"log_id": "20240617191637796DF3F4453E16AF3615",
 			"msg":    "success",
 			"code":   0,
@@ -781,7 +795,7 @@ func TestCodeAndPluginNodes(t *testing.T) {
 				"image_url": "image_url",
 				"prompt":    "小狗在草地上",
 			},
-		}, nil).AnyTimes()
+		}, nil).Build()
 
 		ctx := t.Context()
 		ctx = ctxcache.Init(ctx)

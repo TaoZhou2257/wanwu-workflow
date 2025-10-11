@@ -27,6 +27,8 @@ WORKDIR /app
 # bind-tools for nslookup etc., file for debugging file types
 RUN apk add --no-cache pax-utils python3 python3-dev bind-tools file deno curl
 
+RUN deno run -A jsr:@eyurtsev/pyodide-sandbox -c "print('Hello, World')"
+
 # Install Python build dependencies, create venv, install packages, then remove build deps
 RUN apk add --no-cache --virtual .python-build-deps build-base py3-pip git && \
     python3 -m venv --copies --upgrade-deps /app/.venv && \
@@ -45,9 +47,9 @@ RUN apk add --no-cache --virtual .python-build-deps build-base py3-pip git && \
 COPY --from=builder /app/opencoze /app/opencoze
 
 # Copy Python application scripts
-COPY backend/infra/impl/document/parser/builtin/parse_pdf.py /app/parse_pdf.py
-COPY backend/infra/impl/document/parser/builtin/parse_docx.py /app/parse_docx.py
-COPY backend/infra/impl/coderunner/script/sandbox.py /app/sandbox.py
+COPY backend/infra/document/parser/impl/builtin/parse_pdf.py /app/parse_pdf.py
+COPY backend/infra/document/parser/impl/builtin/parse_docx.py /app/parse_docx.py
+COPY backend/infra/coderunner/impl/script/sandbox.py /app/sandbox.py
 
 
 # Copy static resources
