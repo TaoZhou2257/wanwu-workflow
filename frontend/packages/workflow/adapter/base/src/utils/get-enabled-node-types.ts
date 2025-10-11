@@ -33,6 +33,7 @@ export const getEnabledNodeTypes = (_params: {
     [StandardNodeType.DatasetWanwu]: true,
     [StandardNodeType.McpWanwu]: true,
     [StandardNodeType.FileParseWanwu]: true,
+    [StandardNodeType.MultiFileParseWanwu]: true,
     [StandardNodeType.FileGenerateWanwu]: true,
     [StandardNodeType.JsonParserWanwu]: true,
     [StandardNodeType.GuiAgentWanwu]: true,

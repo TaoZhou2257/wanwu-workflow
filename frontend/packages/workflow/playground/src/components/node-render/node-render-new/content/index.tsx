@@ -30,6 +30,7 @@ import { LoopContent } from '@/node-registries/loop';
 import { JsonStringifyContent } from '@/node-registries/json-stringify';
 import { McpWanwuContent } from '@/node-registries/mcp-wanwu';
 import { FileParseWanwuContent } from '@/node-registries/file-parse-wanwu';
+import { MultiFileParseWanwuContent } from '@/node-registries/multi-file-parse-wanwu';
 import { FileGenerateWanwuContent } from '@/node-registries/file-generate-wanwu';
 import { JsonParserWanwuContent } from '@/node-registries/json-parser-wanwu';
 import { GuiAgentWanwuContent } from '@/node-registries/gui-agent-wanwu';
@@ -67,6 +68,7 @@ const ContentMap = {
   [StandardNodeType.DatasetWanwu]: DatasetWanwuContent,
   [StandardNodeType.McpWanwu]: McpWanwuContent,
   [StandardNodeType.FileParseWanwu]: FileParseWanwuContent,
+  [StandardNodeType.MultiFileParseWanwu]: MultiFileParseWanwuContent,
   [StandardNodeType.FileGenerateWanwu]: FileGenerateWanwuContent,
   [StandardNodeType.JsonParserWanwu]: JsonParserWanwuContent,
   [StandardNodeType.GuiAgentWanwu]: GuiAgentWanwuContent,

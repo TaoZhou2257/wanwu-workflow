@@ -3328,6 +3328,7 @@
   "workflow_detail_error_message": "错误信息：{msg}",
   "workflow_detail_error_missing_id": "缺少 workflow_id",
   "workflow_detail_file_parse_input_tooltip": "输入文档url",
+  "workflow_detail_multi_file_parse_input_tooltip": "输入文档url数组",
   "workflow_detail_knowledge_error_empty": "知识不可为空",
   "workflow_detail_knowledge_input_tooltip": "输入需要从知识中匹配的关键信息",
   "workflow_detail_knowledge_knowledge": "知识库",

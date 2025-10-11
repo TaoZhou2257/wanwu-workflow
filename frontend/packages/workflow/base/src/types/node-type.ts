@@ -22,6 +22,7 @@ export enum StandardNodeType {
   McpWanwu = '1009',
   FileGenerateWanwu = '1007',
   FileParseWanwu = '1008',
+  MultiFileParseWanwu = '1011',
   JsonParserWanwu = '1059',
   GuiAgentWanwu = '1010',
 
