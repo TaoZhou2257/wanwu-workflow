@@ -19,7 +19,7 @@ func ApplyUploadActionByWanwu(ctx context.Context, c *app.RequestContext) {
 	var req upload.ApplyUploadActionRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		invalidParamRequestResponse(c, err.Error())
 		return
 	}
 	resp := new(upload.ApplyUploadActionResponse)

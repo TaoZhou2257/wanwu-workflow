@@ -25,7 +25,6 @@ func init() {
 	NodeTypeMetas[NodeTypeQuestionAnswer].Disabled = true
 	NodeTypeMetas[NodeTypeKnowledgeIndexer].Disabled = true
 	NodeTypeMetas[NodeTypeMessageList].Disabled = true
-	NodeTypeMetas[NodeTypeClearMessage].Disabled = true
 	NodeTypeMetas[NodeTypeCreateConversation].Disabled = true
 	NodeTypeMetas[NodeTypeVariableAssigner].Disabled = true
 	NodeTypeMetas[NodeTypeDatabaseUpdate].Disabled = true
@@ -38,14 +37,14 @@ func init() {
 
 	// wanwu新增节点
 	NodeTypeMetas[NodeTypeWanWuKnowledgeRetriever] = &NodeTypeMeta{
-		ID:           1006,
-		Key:          NodeTypeWanWuKnowledgeRetriever,
-		DisplayKey:   "Dataset",
-		Name:         "知识库检索",
-		Category:     "data",
-		Desc:         "在选定的知识中,根据输入变量召回最匹配的信息,并以列表形式返回",
-		Color:        "#FF811A",
-		IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
+		ID:         1006,
+		Key:        NodeTypeWanWuKnowledgeRetriever,
+		DisplayKey: "Dataset",
+		Name:       "知识库检索",
+		Category:   "data",
+		Desc:       "在选定的知识中,根据输入变量召回最匹配的信息,并以列表形式返回",
+		Color:      "#FF811A",
+		// IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
 		SupportBatch: false,
 		ExecutableMeta: ExecutableMeta{
 			PreFillZero: true,
@@ -56,14 +55,14 @@ func init() {
 	}
 
 	NodeTypeMetas[NodeTypeWanWuFileGenerator] = &NodeTypeMeta{
-		ID:           1007,
-		Key:          NodeTypeWanWuFileGenerator,
-		DisplayKey:   "FileGenerator",
-		Name:         "文档生成",
-		Category:     "document",
-		Desc:         "输入文档的内容、格式和文件名，可以生成文档下载链接",
-		Color:        "#FF811A",
-		IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
+		ID:         1007,
+		Key:        NodeTypeWanWuFileGenerator,
+		DisplayKey: "FileGenerator",
+		Name:       "文档生成",
+		Category:   "document",
+		Desc:       "输入文档的内容、格式和文件名，可以生成文档下载链接",
+		Color:      "#FF811A",
+		// IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
 		SupportBatch: false,
 		ExecutableMeta: ExecutableMeta{
 			PreFillZero: true,
@@ -74,14 +73,14 @@ func init() {
 	}
 
 	NodeTypeMetas[NodeTypeWanWuFileParser] = &NodeTypeMeta{
-		ID:           1008,
-		Key:          NodeTypeWanWuFileParser,
-		DisplayKey:   "FileParser",
-		Name:         "文档解析",
-		Category:     "document",
-		Desc:         "输入txt、pdf、docx、xlsx、csv、pptx等格式文档的URL，可以解析提取出文档的文本内容",
-		Color:        "#FF811A",
-		IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
+		ID:         1008,
+		Key:        NodeTypeWanWuFileParser,
+		DisplayKey: "FileParser",
+		Name:       "文档解析",
+		Category:   "document",
+		Desc:       "输入txt、pdf、docx、xlsx、csv、pptx等格式文档的URL，可以解析提取出文档的文本内容",
+		Color:      "#FF811A",
+		// IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
 		SupportBatch: false,
 		ExecutableMeta: ExecutableMeta{
 			PreFillZero: true,
@@ -92,14 +91,14 @@ func init() {
 	}
 
 	NodeTypeMetas[NodeTypeWanWuMCPTool] = &NodeTypeMeta{
-		ID:           1009,
-		Key:          NodeTypeWanWuMCPTool,
-		DisplayKey:   "MCPTool",
-		Name:         "MCP工具",
-		Category:     "utilities",
-		Desc:         "用于调用MCP服务的工具",
-		Color:        "#FF811A",
-		IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
+		ID:         1009,
+		Key:        NodeTypeWanWuMCPTool,
+		DisplayKey: "MCPTool",
+		Name:       "MCP工具",
+		Category:   "utilities",
+		Desc:       "用于调用MCP服务的工具",
+		Color:      "#FF811A",
+		// IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
 		SupportBatch: false,
 		ExecutableMeta: ExecutableMeta{
 			PreFillZero: true,
@@ -110,14 +109,14 @@ func init() {
 	}
 
 	NodeTypeMetas[NodeTypeWanWuGUI] = &NodeTypeMeta{
-		ID:           1010,
-		Key:          NodeTypeWanWuGUI,
-		DisplayKey:   "GUI",
-		Name:         "GUI智能体",
-		Category:     "utilities",
-		Desc:         "通过视觉技术解析用户图形界面上的图像信息，并模拟人类操作行为来执行相应任务，与计算机系统进行交互的智能体。",
-		Color:        "#FF811A",
-		IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Plugin-v2.jpg",
+		ID:         1010,
+		Key:        NodeTypeWanWuGUI,
+		DisplayKey: "GUI",
+		Name:       "GUI智能体",
+		Category:   "utilities",
+		Desc:       "通过视觉技术解析用户图形界面上的图像信息，并模拟人类操作行为来执行相应任务，与计算机系统进行交互的智能体。",
+		Color:      "#FF811A",
+		// IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Plugin-v2.jpg",
 		SupportBatch: false,
 		ExecutableMeta: ExecutableMeta{
 			PreFillZero: true,

@@ -86,6 +86,10 @@ func (w *ApplicationService) ListWorkflowByWanwu(ctx context.Context, req *workf
 		option.IDs = ids
 	}
 
+	if req.IsSetFlowMode() && req.GetFlowMode() != workflow.WorkflowMode_All {
+		option.Mode = ptr.Of(workflowModel.WorkflowMode(req.GetFlowMode()))
+	}
+
 	status := req.GetStatus()
 	var qType workflowModel.Locator
 	if status == workflow.WorkFlowListStatus_UnPublished {
@@ -143,6 +147,13 @@ func (w *ApplicationService) ListWorkflowByWanwu(ctx context.Context, req *workf
 				ID:   strconv.FormatInt(w.CreatorID, 10),
 				Self: ternary.IFElse[bool](w.CreatorID == ptr.From(ctxutil.GetUIDFromCtx(ctx)), true, false),
 			},
+		}
+
+		if len(req.Checker) > 0 && status == workflow.WorkFlowListStatus_HadPublished {
+			ww.CheckResult, err = GetWorkflowDomainSVC().WorkflowSchemaCheck(ctx, w, req.Checker)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		if qType == workflowModel.FromDraft {

@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"github.com/coze-dev/coze-studio/backend/infra/contract/cache"
+	"github.com/coze-dev/coze-studio/backend/infra/cache"
 	"github.com/redis/go-redis/v9"
 )
 

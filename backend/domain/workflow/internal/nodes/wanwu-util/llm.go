@@ -13,9 +13,9 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/cloudwego/eino-ext/libs/acl/openai"
 	model "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/modelmgr"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/chatmodel"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/modelmgr"
-	chatmodelImpl "github.com/coze-dev/coze-studio/backend/infra/impl/chatmodel"
+	"github.com/coze-dev/coze-studio/backend/infra/chatmodel"
+	chatmodelImpl "github.com/coze-dev/coze-studio/backend/infra/chatmodel/impl/chatmodel"
+	"github.com/coze-dev/coze-studio/backend/infra/modelmgr"
 	"github.com/go-resty/resty/v2"
 )
 

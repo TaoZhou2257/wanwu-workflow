@@ -231,15 +231,12 @@ func (m *minioClient) GetObjectUrl(ctx context.Context, objectKey string, opts .
 		return "", fmt.Errorf("GetObjectUrl failed: %v", err)
 	}
 
-<<<<<<< HEAD:backend/infra/impl/storage/minio/minio.go
-	logs.CtxDebugf(ctx, "[GetObjectUrl] origin presignedURL.String = %s", presignedURL.String())
-	ok, proxyURL := proxy.CheckIfNeedReplaceHostByWanwu(ctx, presignedURL.String())
-	if ok {
-		return proxyURL, nil
-	}
+	// logs.CtxDebugf(ctx, "[GetObjectUrl] origin presignedURL.String = %s", presignedURL.String())
+	// ok, proxyURL := proxy.CheckIfNeedReplaceHostByWanwu(ctx, presignedURL.String())
+	// if ok {
+	// 	return proxyURL, nil
+	// }
 
-=======
->>>>>>> main:backend/infra/storage/impl/minio/minio.go
 	return presignedURL.String(), nil
 }
 
