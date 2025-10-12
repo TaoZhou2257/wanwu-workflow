@@ -20,7 +20,7 @@ log:
       max_age: 30
 
 jwt:
-  signing-key: "zhYZAr7Q7JstuEXQBx5p2MdUtfsC7CY5"
+  signing-key:
 
 db:
   name: mysql # mysql | postgres | tidb | oceanbase

@@ -13,7 +13,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.68.0
 replace github.com/getkin/kin-openapi => github.com/getkin/kin-openapi v0.118.0
 
 require (
-	github.com/UnicomAI/wanwu v0.2.2
+	github.com/UnicomAI/wanwu v0.2.3
 	github.com/cloudwego/hertz v0.10.2
 	github.com/coze-dev/coze-studio/backend v0.0.0-00010101000000-000000000000
 	github.com/hertz-contrib/cors v0.1.0
