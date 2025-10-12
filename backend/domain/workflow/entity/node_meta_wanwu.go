@@ -25,12 +25,20 @@ func init() {
 	NodeTypeMetas[NodeTypeQuestionAnswer].Disabled = true
 	NodeTypeMetas[NodeTypeKnowledgeIndexer].Disabled = true
 	NodeTypeMetas[NodeTypeMessageList].Disabled = true
+	NodeTypeMetas[NodeTypeClearConversationHistory].Disabled = true
 	NodeTypeMetas[NodeTypeCreateConversation].Disabled = true
 	NodeTypeMetas[NodeTypeVariableAssigner].Disabled = true
 	NodeTypeMetas[NodeTypeDatabaseUpdate].Disabled = true
 	NodeTypeMetas[NodeTypeDatabaseQuery].Disabled = true
 	NodeTypeMetas[NodeTypeDatabaseDelete].Disabled = true
 	NodeTypeMetas[NodeTypeDatabaseInsert].Disabled = true
+	NodeTypeMetas[NodeTypeConversationUpdate].Disabled = true
+	NodeTypeMetas[NodeTypeConversationDelete].Disabled = true
+	NodeTypeMetas[NodeTypeConversationList].Disabled = true
+	NodeTypeMetas[NodeTypeConversationHistory].Disabled = true
+	NodeTypeMetas[NodeTypeCreateMessage].Disabled = true
+	NodeTypeMetas[NodeTypeEditMessage].Disabled = true
+	NodeTypeMetas[NodeTypeDeleteMessage].Disabled = true
 	NodeTypeMetas[NodeTypeKnowledgeDeleter].Disabled = true
 	// 和前端约定，反序列化节点ID 59 -> 1059
 	NodeTypeMetas[NodeTypeJsonDeserialization].ID = 1059

@@ -91,18 +91,18 @@ icons:
     url: api/static/icon/icon-Break-v2.jpg
   - id: 20
     url: api/static/icon/icon-LoopSetVariable-v2.jpg
-  - id: 29
-    url: api/static/icon/icon-Continue-v2.jpg
   - id: 21
     url: /api/static/icon/icon-Loop-v2.jpg
   - id: 22
     url: /api/static/icon/icon-Intent-v2.jpg
   - id: 28
     url: /api/static/icon/icon-Batch-v2.jpg
+  - id: 29
+    url: api/static/icon/icon-Continue-v2.jpg
   - id: 30
     url: /api/static/icon/icon-Input-v2.jpg
   - id: 32
-    url: /api/static/icon/VariableMerge-icon.jpg
+    url: /api/static/icon/icon-VariableMerge.jpg
   - id: 45
     url: /api/static/icon/icon-HTTP.png
   - id: 58

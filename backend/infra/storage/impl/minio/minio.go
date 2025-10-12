@@ -30,6 +30,7 @@ import (
 
 	"github.com/coze-dev/coze-studio/backend/infra/storage"
 	"github.com/coze-dev/coze-studio/backend/infra/storage/impl/internal/fileutil"
+	"github.com/coze-dev/coze-studio/backend/infra/storage/impl/internal/proxy"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 )
 
@@ -231,11 +232,11 @@ func (m *minioClient) GetObjectUrl(ctx context.Context, objectKey string, opts .
 		return "", fmt.Errorf("GetObjectUrl failed: %v", err)
 	}
 
-	// logs.CtxDebugf(ctx, "[GetObjectUrl] origin presignedURL.String = %s", presignedURL.String())
-	// ok, proxyURL := proxy.CheckIfNeedReplaceHostByWanwu(ctx, presignedURL.String())
-	// if ok {
-	// 	return proxyURL, nil
-	// }
+	logs.CtxDebugf(ctx, "[GetObjectUrl] origin presignedURL.String = %s", presignedURL.String())
+	ok, proxyURL := proxy.CheckIfNeedReplaceHostByWanwu(ctx, presignedURL.String())
+	if ok {
+		return proxyURL, nil
+	}
 
 	return presignedURL.String(), nil
 }
