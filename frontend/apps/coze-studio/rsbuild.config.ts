@@ -34,6 +34,12 @@ const mergedConfig = defineConfig({
         changeOrigin: true,
       },
       {
+        context: ['/v1'],
+        target: API_PROXY_TARGET,
+        secure: false,
+        changeOrigin: true,
+      },
+      {
         context: ['/user/api/v1'],
         target: API_PROXY_TARGET,
         secure: false,

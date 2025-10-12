@@ -25,11 +25,13 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/coze-dev/coze-studio/backend/infra/contract/chatmodel"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/modelmgr"
-	"github.com/coze-dev/coze-studio/backend/infra/impl/modelmgr/static"
+	"github.com/coze-dev/coze-studio/backend/infra/chatmodel"
+	"github.com/coze-dev/coze-studio/backend/infra/modelmgr"
+	"github.com/coze-dev/coze-studio/backend/infra/modelmgr/impl/static"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 )
+
+// TODO(fanlv) : 模型管理移到 Infra
 
 func initModelMgr() (modelmgr.Manager, error) {
 	wd, err := os.Getwd()

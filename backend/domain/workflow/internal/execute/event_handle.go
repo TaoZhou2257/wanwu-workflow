@@ -35,6 +35,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ternary"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
+	"github.com/coze-dev/coze-studio/backend/types/consts"
 	"github.com/coze-dev/coze-studio/backend/types/errno"
 )
 
@@ -113,7 +114,7 @@ func handleEvent(ctx context.Context, event *Event, repo workflow.Repository,
 
 		if parentNodeID != nil { // root workflow execution has already been created
 			var logID string
-			logID, _ = ctx.Value("log-id").(string)
+			logID, _ = ctx.Value(consts.CtxLogIDKey).(string)
 
 			wfExec := &entity.WorkflowExecution{
 				ID:                  exeID,
@@ -380,7 +381,7 @@ func handleEvent(ctx context.Context, event *Event, repo workflow.Repository,
 		}
 
 		if updatedRows, currentStatus, err = repo.UpdateWorkflowExecution(ctx, wfExec, []entity.WorkflowExecuteStatus{entity.WorkflowRunning,
-			entity.WorkflowInterrupted}); err != nil {
+			entity.WorkflowInterrupted, entity.WorkflowCancel}); err != nil {
 			return noTerminate, fmt.Errorf("failed to save workflow execution when canceled: %v", err)
 		} else if updatedRows == 0 {
 			return noTerminate, fmt.Errorf("failed to update workflow execution to canceled for execution id %d, current status is %v", exeID, currentStatus)
@@ -469,12 +470,15 @@ func handleEvent(ctx context.Context, event *Event, repo workflow.Repository,
 			nodeExec.ErrorLevel = ptr.Of(string(wfe.Level()))
 		}
 
-		if event.outputExtractor != nil {
-			nodeExec.Output = ptr.Of(event.outputExtractor(event.Output))
-			nodeExec.RawOutput = ptr.Of(event.outputExtractor(event.RawOutput))
+		if event.outputStr != nil {
+			nodeExec.Output = event.outputStr
+			nodeExec.RawOutput = event.outputStr
 		} else {
 			nodeExec.Output = ptr.Of(mustMarshalToString(event.Output))
-			nodeExec.RawOutput = ptr.Of(mustMarshalToString(event.RawOutput))
+			nodeExec.RawOutput = event.RawOutput
+			if nodeExec.RawOutput == nil {
+				nodeExec.RawOutput = nodeExec.Output
+			}
 		}
 
 		fcInfos := getFCInfos(ctx, event.NodeKey)
@@ -530,32 +534,13 @@ func handleEvent(ctx context.Context, event *Event, repo workflow.Repository,
 			return noTerminate, fmt.Errorf("failed to save node execution: %v", err)
 		}
 
-		if sw != nil && event.Type == NodeEnd {
-			var content string
-			switch event.NodeType {
-			case entity.NodeTypeOutputEmitter:
-				content = event.Answer
-			case entity.NodeTypeExit:
-				if event.Context.SubWorkflowCtx != nil {
-					// if the exit node belongs to a sub workflow, do not send data message
-					return noTerminate, nil
-				}
-
-				if *event.Context.NodeCtx.TerminatePlan == vo.ReturnVariables {
-					content = mustMarshalToString(event.Output)
-				} else {
-					content = event.Answer
-				}
-			default:
-				return noTerminate, nil
-			}
-
+		if sw != nil && event.Type == NodeEnd && len(event.Answer) > 0 {
 			sw.Send(&entity.Message{
 				DataMessage: &entity.DataMessage{
 					ExecuteID: event.RootExecuteID,
 					Role:      schema.Assistant,
 					Type:      entity.Answer,
-					Content:   content,
+					Content:   event.Answer,
 					NodeID:    string(event.NodeKey),
 					NodeType:  event.NodeType,
 					NodeTitle: event.NodeName,
@@ -572,13 +557,28 @@ func handleEvent(ctx context.Context, event *Event, repo workflow.Repository,
 			return lastNodeDone, nil
 		}
 	case NodeStreamingOutput:
+		if sw != nil && len(event.Answer) > 0 {
+			sw.Send(&entity.Message{
+				DataMessage: &entity.DataMessage{
+					ExecuteID: event.RootExecuteID,
+					Role:      schema.Assistant,
+					Type:      entity.Answer,
+					Content:   event.Answer,
+					NodeID:    string(event.NodeKey),
+					NodeType:  event.NodeType,
+					NodeTitle: event.NodeName,
+					Last:      event.StreamEnd,
+				},
+			}, nil)
+		}
+
 		nodeExec := &entity.NodeExecution{
 			ID:    event.NodeExecuteID,
 			Extra: event.extra,
 		}
 
-		if event.outputExtractor != nil {
-			nodeExec.Output = ptr.Of(event.outputExtractor(event.Output))
+		if event.outputStr != nil {
+			nodeExec.Output = event.outputStr
 		} else {
 			nodeExec.Output = ptr.Of(mustMarshalToString(event.Output))
 		}
@@ -586,35 +586,11 @@ func handleEvent(ctx context.Context, event *Event, repo workflow.Repository,
 		if err = repo.UpdateNodeExecutionStreaming(ctx, nodeExec); err != nil {
 			return noTerminate, fmt.Errorf("failed to save node execution: %v", err)
 		}
-
-		if sw == nil {
-			return noTerminate, nil
-		}
-
-		if event.NodeType == entity.NodeTypeExit {
-			if event.Context.SubWorkflowCtx != nil {
-				return noTerminate, nil
-			}
-		} else if event.NodeType == entity.NodeTypeVariableAggregator {
-			return noTerminate, nil
-		}
-
-		sw.Send(&entity.Message{
-			DataMessage: &entity.DataMessage{
-				ExecuteID: event.RootExecuteID,
-				Role:      schema.Assistant,
-				Type:      entity.Answer,
-				Content:   event.Answer,
-				NodeID:    string(event.NodeKey),
-				NodeType:  event.NodeType,
-				NodeTitle: event.NodeName,
-				Last:      event.StreamEnd,
-			},
-		}, nil)
 	case NodeStreamingInput:
 		nodeExec := &entity.NodeExecution{
 			ID:    event.NodeExecuteID,
 			Input: ptr.Of(mustMarshalToString(event.Input)),
+			Extra: event.extra,
 		}
 		if err = repo.UpdateNodeExecution(ctx, nodeExec); err != nil {
 			return noTerminate, fmt.Errorf("failed to save node execution: %v", err)
@@ -672,7 +648,7 @@ func handleEvent(ctx context.Context, event *Event, repo workflow.Repository,
 				ExecuteID:    event.RootExecuteID,
 				Role:         schema.Assistant,
 				Type:         entity.FunctionCall,
-				FunctionCall: event.functionCall,
+				FunctionCall: event.functionCall.FunctionCallInfo,
 			},
 		}, nil)
 	case ToolResponse:
@@ -704,8 +680,6 @@ func handleEvent(ctx context.Context, event *Event, repo workflow.Repository,
 			},
 		}, nil)
 	case ToolError:
-		// TODO: optimize this log
-		logs.CtxErrorf(ctx, "received tool error event: %v", event)
 	default:
 		panic("unimplemented event type: " + event.Type)
 	}
@@ -715,8 +689,9 @@ func handleEvent(ctx context.Context, event *Event, repo workflow.Repository,
 
 type fcCacheKey struct{}
 type fcInfo struct {
-	input  *entity.FunctionCallInfo
-	output *entity.ToolResponseInfo
+	input          *entity.FunctionCallInfo
+	output         *entity.ToolResponseInfo
+	toolFinishChan chan struct{}
 }
 
 func HandleExecuteEvent(ctx context.Context,
@@ -772,7 +747,8 @@ func HandleExecuteEvent(ctx context.Context,
 			lastNodeIsDone = true
 			if wfSuccessEvent != nil {
 				if err = setRootWorkflowSuccess(ctx, wfSuccessEvent, repo, sw); err != nil {
-					logs.CtxErrorf(ctx, "failed to set root workflow success: %v", err)
+					logs.CtxErrorf(ctx, "failed to set root workflow success for workflow %d: %v",
+						wfSuccessEvent.RootWorkflowBasic.ID, err)
 				}
 				return wfSuccessEvent
 			}
@@ -786,10 +762,12 @@ func HandleExecuteEvent(ctx context.Context,
 		// Add cancellation check timer
 		cancelTicker := time.NewTicker(cancelCheckInterval)
 		defer func() {
-			logs.CtxInfof(ctx, "[handleExecuteEvent] finish, returned event type: %v, workflow id: %d",
+			logs.CtxInfof(ctx, "[handleExecuteEvent] cancellable finish, returned event type: %v, workflow id: %d",
 				event.Type, event.Context.RootWorkflowBasic.ID)
-			cancelTicker.Stop() // Clean up timer
 			waitUntilToolFinish(ctx)
+			logs.CtxInfof(ctx, "[handleExecuteEvent] cancellable wait until tool finished done, workflow id: %d",
+				event.Context.RootWorkflowBasic.ID)
+			cancelTicker.Stop() // Clean up timer
 			if timeoutFn != nil {
 				timeoutFn()
 			}
@@ -825,6 +803,9 @@ func HandleExecuteEvent(ctx context.Context,
 		defer func() {
 			logs.CtxInfof(ctx, "[handleExecuteEvent] finish, returned event type: %v, workflow id: %d",
 				event.Type, event.Context.RootWorkflowBasic.ID)
+			waitUntilToolFinish(ctx)
+			logs.CtxInfof(ctx, "[handleExecuteEvent] wait until tool finished done, workflow id: %d",
+				event.Context.RootWorkflowBasic.ID)
 			if timeoutFn != nil {
 				timeoutFn()
 			}
@@ -859,29 +840,26 @@ func cacheFunctionCall(ctx context.Context, event *Event) {
 		c[event.NodeKey] = make(map[string]*fcInfo)
 	}
 	c[event.NodeKey][event.functionCall.CallID] = &fcInfo{
-		input: event.functionCall,
+		input:          event.functionCall.FunctionCallInfo,
+		toolFinishChan: event.functionCall.toolFinishChan,
 	}
 }
 
 func cacheToolResponse(ctx context.Context, event *Event) {
 	c := ctx.Value(fcCacheKey{}).(map[vo.NodeKey]map[string]*fcInfo)
-	if _, ok := c[event.NodeKey]; !ok {
-		c[event.NodeKey] = make(map[string]*fcInfo)
-	}
-
 	c[event.NodeKey][event.toolResponse.CallID].output = event.toolResponse
 }
 
 func cacheToolStreamingResponse(ctx context.Context, event *Event) {
 	c := ctx.Value(fcCacheKey{}).(map[vo.NodeKey]map[string]*fcInfo)
-	if _, ok := c[event.NodeKey]; !ok {
-		c[event.NodeKey] = make(map[string]*fcInfo)
-	}
 	if c[event.NodeKey][event.toolResponse.CallID].output == nil {
 		c[event.NodeKey][event.toolResponse.CallID].output = event.toolResponse
+	} else {
+		c[event.NodeKey][event.toolResponse.CallID].output.Response += event.toolResponse.Response
 	}
-	c[event.NodeKey][event.toolResponse.CallID].output.Response += event.toolResponse.Response
-	c[event.NodeKey][event.toolResponse.CallID].output.Complete = event.toolResponse.Complete
+
+	logs.CtxInfof(ctx, "receive tool response: %s, callID: %s",
+		event.toolResponse.Response, event.toolResponse.CallID)
 }
 
 func getFCInfos(ctx context.Context, nodeKey vo.NodeKey) map[string]*fcInfo {
@@ -890,29 +868,17 @@ func getFCInfos(ctx context.Context, nodeKey vo.NodeKey) map[string]*fcInfo {
 }
 
 func waitUntilToolFinish(ctx context.Context) {
-	var cnt int
-outer:
-	for {
-		if cnt > 1000 {
-			return
-		}
+	c := ctx.Value(fcCacheKey{}).(map[vo.NodeKey]map[string]*fcInfo)
+	if len(c) == 0 {
+		return
+	}
 
-		c := ctx.Value(fcCacheKey{}).(map[vo.NodeKey]map[string]*fcInfo)
-		if len(c) == 0 {
-			return
-		}
-
-		for _, m := range c {
-			for _, info := range m {
-				if info.output == nil {
-					cnt++
-					continue outer
-				}
-
-				if !info.output.Complete {
-					cnt++
-					continue outer
-				}
+	for _, m := range c {
+		for _, info := range m {
+			if info.toolFinishChan != nil {
+				<-info.toolFinishChan
+				logs.CtxInfof(ctx, "tool finished, callID: %s, pluginID: %v", info.output.CallID,
+					info.input.PluginID)
 			}
 		}
 	}

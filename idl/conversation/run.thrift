@@ -79,6 +79,9 @@ struct AdditionalContent {
      1: required string type
      2: optional string text
      3: optional string file_url
+     4: optional i64 file_id (api.js_conv='true')
+     5: optional string name
+     6: optional i64 size (api.js_conv='true')
 }
 
 struct AgentRunRequest  {
@@ -143,7 +146,6 @@ struct ShortcutCommandDetail {
     2: map<string,string> parameters  // Key = parameter name value = value object_string JSON String after object array serialization
 }
 
-
 struct ChatV3Request {
     1: required i64 BotID (api.body = "bot_id",api.js_conv='true'), //agent_id
     2: optional i64 ConversationID (api.query = "conversation_id", api.js_conv='true'), //conversation_id
@@ -156,6 +158,9 @@ struct ChatV3Request {
     11:optional map<string, string> ExtraParams (api.body = "extra_params") // Pass parameters to plugin/workflow etc downstream
     12:optional i64 ConnectorID (api.body="connector_id", api.js_conv='true') // Manually specify channel id chat. Currently only supports websdk (= 999)
     13:optional ShortcutCommandDetail ShortcutCommand (api.body="shortcut_command") // Specify shortcut instructions
+    14: optional string Parameters (api.body="parameters")          
+
+
 }
 
 struct ChatV3MessageDetail {
@@ -241,4 +246,15 @@ struct ChatV3Response {
     1: optional ChatV3ChatDetail ChatDetail (api.body = "data"),
     2: required i32 Code (api.body = "code"),
     3: required string Msg (api.body = "msg")
+}
+
+struct CancelChatApiRequest {
+    1:   required  i64 ChatID (api.body = "chat_id", agw.key = "chat_id",api.js_conv='true')
+    2:   required  i64 ConversationID (api.body = "conversation_id", agw.key = "conversation_id",api.js_conv='true')
+    255: base.Base Base
+}
+
+struct CancelChatApiResponse {
+    1:   ChatV3ChatDetail ChatV3ChatDetail (agw.key = "data")
+    255: base.BaseResp               BaseResp
 }

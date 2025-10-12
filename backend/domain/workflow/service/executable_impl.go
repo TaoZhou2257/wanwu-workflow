@@ -22,10 +22,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/coze-dev/coze-studio/backend/types/consts"
+
 	einoCompose "github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
 
 	workflowModel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/workflow"
+	workflowapimodel "github.com/coze-dev/coze-studio/backend/api/model/workflow"
+	crossmessage "github.com/coze-dev/coze-studio/backend/crossdomain/contract/message"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
@@ -62,6 +66,8 @@ func (i *impl) SyncExecute(ctx context.Context, config workflowModel.ExecuteConf
 		return nil, "", err
 	}
 
+	config.WorkflowMode = wfEntity.Mode
+
 	isApplicationWorkflow := wfEntity.AppID != nil
 	if isApplicationWorkflow && config.Mode == workflowModel.ExecuteModeRelease {
 		err = i.checkApplicationWorkflowReleaseVersion(ctx, *wfEntity.AppID, config.ConnectorID, config.ID, config.Version)
@@ -80,6 +86,9 @@ func (i *impl) SyncExecute(ctx context.Context, config workflowModel.ExecuteConf
 		return nil, "", fmt.Errorf("failed to convert canvas to workflow schema: %w", err)
 	}
 
+	config.InputFileFields = slices.ToMap(workflowSC.GetAllNodesInputFileFields(ctx), func(e *workflowModel.FileInfo) (string, *workflowModel.FileInfo) {
+		return e.FileURL, e
+	})
 	var wfOpts []compose.WorkflowOption
 	wfOpts = append(wfOpts, compose.WithIDAsName(wfEntity.ID))
 	if s := execute.GetStaticConfig(); s != nil && s.MaxNodeCountPerWorkflow > 0 {
@@ -96,6 +105,8 @@ func (i *impl) SyncExecute(ctx context.Context, config workflowModel.ExecuteConf
 	}
 
 	var cOpts []nodes.ConvertOption
+	inputFileFields := make(map[string]*workflowModel.FileInfo)
+	cOpts = append(cOpts, nodes.WithCollectFileFields(inputFileFields), nodes.WithNotNeedTrimQueryFileName(true))
 	if config.InputFailFast {
 		cOpts = append(cOpts, nodes.FailFast())
 	}
@@ -105,6 +116,10 @@ func (i *impl) SyncExecute(ctx context.Context, config workflowModel.ExecuteConf
 		return nil, "", err
 	} else if ws != nil {
 		logs.CtxWarnf(ctx, "convert inputs warnings: %v", *ws)
+	}
+
+	for k, v := range inputFileFields {
+		config.InputFileFields[k] = v
 	}
 
 	inStr, err := sonic.MarshalString(input)
@@ -207,6 +222,8 @@ func (i *impl) AsyncExecute(ctx context.Context, config workflowModel.ExecuteCon
 		return 0, err
 	}
 
+	config.WorkflowMode = wfEntity.Mode
+
 	isApplicationWorkflow := wfEntity.AppID != nil
 	if isApplicationWorkflow && config.Mode == workflowModel.ExecuteModeRelease {
 		err = i.checkApplicationWorkflowReleaseVersion(ctx, *wfEntity.AppID, config.ConnectorID, config.ID, config.Version)
@@ -224,6 +241,10 @@ func (i *impl) AsyncExecute(ctx context.Context, config workflowModel.ExecuteCon
 	if err != nil {
 		return 0, fmt.Errorf("failed to convert canvas to workflow schema: %w", err)
 	}
+
+	config.InputFileFields = slices.ToMap(workflowSC.GetAllNodesInputFileFields(ctx), func(e *workflowModel.FileInfo) (string, *workflowModel.FileInfo) {
+		return e.FileURL, e
+	})
 
 	var wfOpts []compose.WorkflowOption
 	wfOpts = append(wfOpts, compose.WithIDAsName(wfEntity.ID))
@@ -243,6 +264,8 @@ func (i *impl) AsyncExecute(ctx context.Context, config workflowModel.ExecuteCon
 	config.CommitID = wfEntity.CommitID
 
 	var cOpts []nodes.ConvertOption
+	inputFileFields := make(map[string]*workflowModel.FileInfo)
+	cOpts = append(cOpts, nodes.WithCollectFileFields(inputFileFields), nodes.WithNotNeedTrimQueryFileName(true))
 	if config.InputFailFast {
 		cOpts = append(cOpts, nodes.FailFast())
 	}
@@ -252,6 +275,10 @@ func (i *impl) AsyncExecute(ctx context.Context, config workflowModel.ExecuteCon
 		return 0, err
 	} else if ws != nil {
 		logs.CtxWarnf(ctx, "convert inputs warnings: %v", *ws)
+	}
+
+	for k, v := range inputFileFields {
+		config.InputFileFields[k] = v
 	}
 
 	inStr, err := sonic.MarshalString(input)
@@ -276,6 +303,50 @@ func (i *impl) AsyncExecute(ctx context.Context, config workflowModel.ExecuteCon
 	return executeID, nil
 }
 
+func (i *impl) handleHistory(ctx context.Context, config *workflowModel.ExecuteConfig, input map[string]any, historyRounds int64, shouldFetchConversationByName bool) error {
+	if historyRounds <= 0 {
+		return nil
+	}
+
+	if shouldFetchConversationByName {
+		var cID, sID, bizID int64
+		var err error
+		if config.AppID != nil {
+			bizID = *config.AppID
+		} else if config.AgentID != nil {
+			bizID = *config.AgentID
+		}
+		for k, v := range input {
+			if k == vo.ConversationNameKey {
+				cName, ok := v.(string)
+				if !ok {
+					return errors.New("CONVERSATION_NAME must be string")
+				}
+				cID, sID, err = i.GetOrCreateConversation(ctx, vo.Draft, bizID, consts.CozeConnectorID, config.Operator, cName)
+				if err != nil {
+					return err
+				}
+				config.ConversationID = ptr.Of(cID)
+				config.SectionID = ptr.Of(sID)
+			}
+		}
+	}
+
+	messages, scMessages, err := i.prefetchChatHistory(ctx, *config, historyRounds)
+	if err != nil {
+		logs.CtxErrorf(ctx, "failed to prefetch chat history: %v", err)
+	}
+
+	if len(messages) > 0 {
+		config.ConversationHistory = messages
+	}
+
+	if len(scMessages) > 0 {
+		config.ConversationHistorySchemaMessages = scMessages
+	}
+	return nil
+}
+
 func (i *impl) AsyncExecuteNode(ctx context.Context, nodeID string, config workflowModel.ExecuteConfig, input map[string]any) (int64, error) {
 	var (
 		err      error
@@ -291,6 +362,8 @@ func (i *impl) AsyncExecuteNode(ctx context.Context, nodeID string, config workf
 	if err != nil {
 		return 0, err
 	}
+
+	config.WorkflowMode = wfEntity.Mode
 
 	isApplicationWorkflow := wfEntity.AppID != nil
 	if isApplicationWorkflow && config.Mode == workflowModel.ExecuteModeRelease {
@@ -310,12 +383,27 @@ func (i *impl) AsyncExecuteNode(ctx context.Context, nodeID string, config workf
 		return 0, fmt.Errorf("failed to convert canvas to workflow schema: %w", err)
 	}
 
+	historyRounds := int64(0)
+	if config.WorkflowMode == workflowapimodel.WorkflowMode_ChatFlow {
+		historyRounds = workflowSC.HistoryRounds()
+	}
+	if historyRounds > 0 {
+		if err = i.handleHistory(ctx, &config, input, historyRounds, true); err != nil {
+			return 0, err
+		}
+	}
+	config.InputFileFields = slices.ToMap(workflowSC.GetAllNodesInputFileFields(ctx), func(e *workflowModel.FileInfo) (string, *workflowModel.FileInfo) {
+		return e.FileURL, e
+	})
+
 	wf, err := compose.NewWorkflowFromNode(ctx, workflowSC, vo.NodeKey(nodeID), einoCompose.WithGraphName(fmt.Sprintf("%d", wfEntity.ID)))
 	if err != nil {
 		return 0, fmt.Errorf("failed to create workflow: %w", err)
 	}
 
 	var cOpts []nodes.ConvertOption
+	inputFileFields := make(map[string]*workflowModel.FileInfo)
+	cOpts = append(cOpts, nodes.WithCollectFileFields(inputFileFields), nodes.WithNotNeedTrimQueryFileName(true))
 	if config.InputFailFast {
 		cOpts = append(cOpts, nodes.FailFast())
 	}
@@ -325,6 +413,9 @@ func (i *impl) AsyncExecuteNode(ctx context.Context, nodeID string, config workf
 		return 0, err
 	} else if ws != nil {
 		logs.CtxWarnf(ctx, "convert inputs warnings: %v", *ws)
+	}
+	for k, v := range inputFileFields {
+		config.InputFileFields[k] = v
 	}
 
 	if wfEntity.AppID != nil && config.AppID == nil {
@@ -375,6 +466,8 @@ func (i *impl) StreamExecute(ctx context.Context, config workflowModel.ExecuteCo
 		return nil, err
 	}
 
+	config.WorkflowMode = wfEntity.Mode
+
 	isApplicationWorkflow := wfEntity.AppID != nil
 	if isApplicationWorkflow && config.Mode == workflowModel.ExecuteModeRelease {
 		err = i.checkApplicationWorkflowReleaseVersion(ctx, *wfEntity.AppID, config.ConnectorID, config.ID, config.Version)
@@ -393,7 +486,23 @@ func (i *impl) StreamExecute(ctx context.Context, config workflowModel.ExecuteCo
 		return nil, fmt.Errorf("failed to convert canvas to workflow schema: %w", err)
 	}
 
+	historyRounds := int64(0)
+	if config.WorkflowMode == workflowapimodel.WorkflowMode_ChatFlow {
+		historyRounds = workflowSC.HistoryRounds()
+	}
+
+	if historyRounds > 0 {
+		if err = i.handleHistory(ctx, &config, input, historyRounds, false); err != nil {
+			return nil, err
+		}
+	}
+
+	config.InputFileFields = slices.ToMap(workflowSC.GetAllNodesInputFileFields(ctx), func(e *workflowModel.FileInfo) (string, *workflowModel.FileInfo) {
+		return e.FileURL, e
+	})
+
 	var wfOpts []compose.WorkflowOption
+
 	wfOpts = append(wfOpts, compose.WithIDAsName(wfEntity.ID))
 	if s := execute.GetStaticConfig(); s != nil && s.MaxNodeCountPerWorkflow > 0 {
 		wfOpts = append(wfOpts, compose.WithMaxNodeCount(s.MaxNodeCountPerWorkflow))
@@ -411,6 +520,8 @@ func (i *impl) StreamExecute(ctx context.Context, config workflowModel.ExecuteCo
 	config.CommitID = wfEntity.CommitID
 
 	var cOpts []nodes.ConvertOption
+	inputFileFields := make(map[string]*workflowModel.FileInfo)
+	cOpts = append(cOpts, nodes.WithCollectFileFields(inputFileFields), nodes.WithNotNeedTrimQueryFileName(true))
 	if config.InputFailFast {
 		cOpts = append(cOpts, nodes.FailFast())
 	}
@@ -420,6 +531,9 @@ func (i *impl) StreamExecute(ctx context.Context, config workflowModel.ExecuteCo
 		return nil, err
 	} else if ws != nil {
 		logs.CtxWarnf(ctx, "convert inputs warnings: %v", *ws)
+	}
+	for k, v := range inputFileFields {
+		config.InputFileFields[k] = v
 	}
 
 	inStr, err := sonic.MarshalString(input)
@@ -718,6 +832,7 @@ func (i *impl) AsyncResume(ctx context.Context, req *entity.ResumeRequest, confi
 	config.AppID = wfExe.AppID
 	config.AgentID = wfExe.AgentID
 	config.CommitID = wfExe.CommitID
+	config.WorkflowMode = wfEntity.Mode
 
 	if config.ConnectorID == 0 {
 		config.ConnectorID = wfExe.ConnectorID
@@ -859,6 +974,7 @@ func (i *impl) StreamResume(ctx context.Context, req *entity.ResumeRequest, conf
 	config.AppID = wfExe.AppID
 	config.AgentID = wfExe.AgentID
 	config.CommitID = wfExe.CommitID
+	config.WorkflowMode = wfEntity.Mode
 
 	if config.ConnectorID == 0 {
 		config.ConnectorID = wfExe.ConnectorID
@@ -936,4 +1052,60 @@ func (i *impl) checkApplicationWorkflowReleaseVersion(ctx context.Context, appID
 	}
 
 	return nil
+}
+
+func (i *impl) prefetchChatHistory(ctx context.Context, config workflowModel.ExecuteConfig, historyRounds int64) ([]*crossmessage.WfMessage, []*schema.Message, error) {
+	convID := config.ConversationID
+	agentID := config.AgentID
+	appID := config.AppID
+	userID := config.Operator
+	sectionID := config.SectionID
+	if sectionID == nil {
+		logs.CtxWarnf(ctx, "SectionID is nil, skipping chat history")
+		return nil, nil, nil
+	}
+
+	if convID == nil || *convID == 0 {
+		logs.CtxWarnf(ctx, "ConversationID is 0 or nil, skipping chat history")
+		return nil, nil, nil
+	}
+
+	var bizID int64
+	if appID != nil {
+		bizID = *appID
+	} else if agentID != nil {
+		bizID = *agentID
+	} else {
+		logs.CtxWarnf(ctx, "AppID and AgentID are both nil, skipping chat history")
+		return nil, nil, nil
+	}
+
+	runIdsReq := &crossmessage.GetLatestRunIDsRequest{
+		ConversationID: *convID,
+		BizID:          bizID,
+		UserID:         userID,
+		Rounds:         historyRounds + 1,
+		SectionID:      *sectionID,
+	}
+
+	runIds, err := crossmessage.DefaultSVC().GetLatestRunIDs(ctx, runIdsReq)
+	if err != nil {
+		logs.CtxErrorf(ctx, "failed to get latest run ids: %v", err)
+		return nil, nil, err
+	}
+	if len(runIds) <= 1 {
+		return []*crossmessage.WfMessage{}, []*schema.Message{}, nil
+	}
+	runIds = runIds[1:]
+
+	response, err := crossmessage.DefaultSVC().GetMessagesByRunIDs(ctx, &crossmessage.GetMessagesByRunIDsRequest{
+		ConversationID: *convID,
+		RunIDs:         runIds,
+	})
+	if err != nil {
+		logs.CtxErrorf(ctx, "failed to get messages by run ids: %v", err)
+		return nil, nil, err
+	}
+
+	return response.Messages, response.SchemaMessages, nil
 }

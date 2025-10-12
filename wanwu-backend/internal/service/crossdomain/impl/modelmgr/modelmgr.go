@@ -3,7 +3,7 @@ package modelmgr
 import (
 	"context"
 
-	"github.com/coze-dev/coze-studio/backend/infra/contract/modelmgr"
+	"github.com/coze-dev/coze-studio/backend/infra/modelmgr"
 )
 
 var defaultMock *mock = &mock{}

@@ -24,11 +24,11 @@ import (
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
 
-	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/plugin"
+	"github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/consts"
 	"github.com/coze-dev/coze-studio/backend/domain/plugin/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/plugin/internal/dal/model"
 	"github.com/coze-dev/coze-studio/backend/domain/plugin/internal/dal/query"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/idgen"
+	"github.com/coze-dev/coze-studio/backend/infra/idgen"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/slices"
 )
@@ -57,7 +57,7 @@ func (t toolPO) ToDO() *entity.ToolInfo {
 		SubURL:          &t.SubURL,
 		Method:          ptr.Of(t.Method),
 		Operation:       t.Operation,
-		ActivatedStatus: ptr.Of(plugin.ActivatedStatus(t.ActivatedStatus)),
+		ActivatedStatus: ptr.Of(consts.ActivatedStatus(t.ActivatedStatus)),
 	}
 }
 

@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/coze-dev/coze-studio/backend/infra/contract/cache"
+	"github.com/coze-dev/coze-studio/backend/infra/cache"
 )
 
 type JsonCache[T any] struct {
@@ -74,7 +74,8 @@ func (g *JsonCache[T]) Get(ctx context.Context, k string) (*T, error) {
 }
 
 func (g *JsonCache[T]) Delete(ctx context.Context, k string) error {
-	if err := g.cache.Del(ctx, k).Err(); err != nil {
+	key := g.prefix + k
+	if err := g.cache.Del(ctx, key).Err(); err != nil {
 		return fmt.Errorf("failed to delete key %s: %w", k, err)
 	}
 	return nil

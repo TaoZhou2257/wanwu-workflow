@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	cloudworkflow "github.com/coze-dev/coze-studio/backend/api/model/workflow"
+	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/canvas/adaptor"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/canvas/validate"
@@ -102,17 +102,17 @@ func validateWorkflowTree(ctx context.Context, config vo.ValidateTreeConfig) ([]
 	return issues, nil
 }
 
-func convertToValidationError(issue *validate.Issue) *cloudworkflow.ValidateErrorData {
-	e := &cloudworkflow.ValidateErrorData{}
+func convertToValidationError(issue *validate.Issue) *workflow.ValidateErrorData {
+	e := &workflow.ValidateErrorData{}
 	e.Message = issue.Message
 	if issue.NodeErr != nil {
-		e.Type = cloudworkflow.ValidateErrorType_BotValidateNodeErr
-		e.NodeError = &cloudworkflow.NodeError{
+		e.Type = workflow.ValidateErrorType_BotValidateNodeErr
+		e.NodeError = &workflow.NodeError{
 			NodeID: issue.NodeErr.NodeID,
 		}
 	} else if issue.PathErr != nil {
-		e.Type = cloudworkflow.ValidateErrorType_BotValidatePathErr
-		e.PathError = &cloudworkflow.PathError{
+		e.Type = workflow.ValidateErrorType_BotValidatePathErr
+		e.PathError = &workflow.PathError{
 			Start: issue.PathErr.StartNode,
 			End:   issue.PathErr.EndNode,
 		}
@@ -121,8 +121,8 @@ func convertToValidationError(issue *validate.Issue) *cloudworkflow.ValidateErro
 	return e
 }
 
-func toValidateErrorData(issues []*validate.Issue) []*cloudworkflow.ValidateErrorData {
-	validateErrors := make([]*cloudworkflow.ValidateErrorData, 0, len(issues))
+func toValidateErrorData(issues []*validate.Issue) []*workflow.ValidateErrorData {
+	validateErrors := make([]*workflow.ValidateErrorData, 0, len(issues))
 	for _, issue := range issues {
 		validateErrors = append(validateErrors, convertToValidationError(issue))
 	}
