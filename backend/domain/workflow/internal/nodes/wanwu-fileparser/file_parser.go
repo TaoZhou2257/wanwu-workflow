@@ -95,7 +95,19 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 	if !ok {
 		return nil, errors.New("capital query key is required")
 	}
+	//执行文件解析
+	parser, err := CommonFileParser(ctx, fileUrl)
+	if err != nil {
+		return nil, err
+	}
+	result := map[string]any{
+		"text": parser,
+	}
 
+	return result, nil
+}
+
+func CommonFileParser(ctx context.Context, fileUrl string) (string, error) {
 	req := &FileParserParams{
 		FileUrl:       fileUrl,
 		ParserChoices: parserChoices,
@@ -106,7 +118,7 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 
 	response, err := fileParser(ctx, req)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	//循环拼接结果
@@ -114,11 +126,7 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 	for _, resp := range response {
 		resultText.WriteString(resp.Text)
 	}
-	result := map[string]any{
-		"text": resultText.String(),
-	}
-
-	return result, nil
+	return resultText.String(), nil
 }
 
 // fileParser 文档解析

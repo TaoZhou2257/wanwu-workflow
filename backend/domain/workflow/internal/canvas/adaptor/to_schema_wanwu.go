@@ -33,4 +33,8 @@ func RegisterWanwuAllNodeAdaptors() {
 	nodes.RegisterNodeAdaptor(entity.NodeTypeWanWuGUI, func() nodes.NodeAdaptor {
 		return &wanwu_gui.Config{}
 	})
+
+	nodes.RegisterNodeAdaptor(entity.NodeTypeWanWuMultiFileParser, func() nodes.NodeAdaptor {
+		return &wanwu_fileparser.WanWuMultiFileParserConfig{}
+	})
 }
