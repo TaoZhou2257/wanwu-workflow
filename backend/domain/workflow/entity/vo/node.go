@@ -44,8 +44,14 @@ type Reference struct {
 }
 
 type FieldSource struct {
-	Ref *Reference `json:"ref,omitempty"`
-	Val any        `json:"val,omitempty"`
+	Ref       *Reference `json:"ref,omitempty"`
+	Val       any        `json:"val,omitempty"`
+	FileExtra *FileExtra `json:"file_extra,omitempty"`
+}
+
+type FileExtra struct {
+	FileName  *string  `json:"file_name,omitempty"`
+	FileNames []string `json:"file_names,omitempty"`
 }
 
 type TypeInfo struct {

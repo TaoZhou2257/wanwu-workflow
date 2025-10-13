@@ -18,9 +18,50 @@ services:
     volumes:
       - ./data/mysql:/var/lib/mysql
       - ./volumes/mysql/schema.sql:/docker-entrypoint-initdb.d/init.sql
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
+      - ./atlas/opencoze_latest_schema.hcl:/opencoze_latest_schema.hcl:ro
+    entrypoint:
+      - bash
+      - -c
+      - |
+        /usr/local/bin/docker-entrypoint.sh mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci &
+        MYSQL_PID=$$!
+
+        echo 'Waiting for MySQL to start...'
+        until mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} --silent 2>/dev/null; do
+          echo 'MySQL is starting...'
+          sleep 2
+        done
+
+        echo 'Waiting for workflow_version table to exist...'
+        while true; do
+          if mysql -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} $${MYSQL_DATABASE} -e "SHOW TABLES LIKE 'workflow_version';" 2>/dev/null | grep -q "workflow_version"; then
+            echo 'Found workflow_version table, continuing...'
+            break
+          else
+            echo 'workflow_version table not found, retrying in 2 seconds...'
+            sleep 2
+          fi
+        done
+
+        echo 'MySQL is ready, installing Atlas CLI...'
+
+        if ! command -v atlas >/dev/null 2>&1; then
+          echo 'Installing Atlas CLI...'
+          curl -sSf https://atlasgo.sh | sh -s -- -y --community
+          export PATH=$$PATH:/root/.local/bin
+        else
+          echo 'Atlas CLI already installed'
+        fi
+
+        if [ -f '/opencoze_latest_schema.hcl' ]; then
+          echo 'Running Atlas migrations...'
+          ATLAS_URL="mysql://$${MYSQL_USER}:$${MYSQL_PASSWORD}@localhost:3306/$${MYSQL_DATABASE}"
+          atlas schema apply -u "$ATLAS_URL" --to "file:///opencoze_latest_schema.hcl" --exclude "atlas_schema_revisions,table_*" --auto-approve
+          echo 'Atlas migrations completed successfully'
+        else
+          echo 'No migrations found'
+        fi
+        wait $$MYSQL_PID
     healthcheck:
       test:
         [
@@ -40,7 +81,7 @@ services:
       - coze-network
 
   redis:
-    image: bitnami/redis:8.0
+    image: bitnamilegacy/redis:8.0
     container_name: coze-redis
     restart: always
     user: root
@@ -73,7 +114,7 @@ services:
     networks:
       - coze-network
   elasticsearch:
-    image: bitnami/elasticsearch:8.18.0
+    image: bitnamilegacy/elasticsearch:8.18.0
     container_name: coze-elasticsearch
     restart: always
     user: root
@@ -120,7 +161,7 @@ services:
 
           # Download plugin package locally
           echo 'Copying smartcn plugin...';
-          cp /opt/bitnami/elasticsearch/analysis-smartcn.zip /tmp/analysis-smartcn.zip 
+          cp /opt/bitnami/elasticsearch/analysis-smartcn.zip /tmp/analysis-smartcn.zip
 
           elasticsearch-plugin install file:///tmp/analysis-smartcn.zip
           if [[ "$$?" != "0" ]]; then
@@ -213,7 +254,7 @@ services:
       - coze-network
 
   etcd:
-    image: bitnami/etcd:3.5
+    image: bitnamilegacy/etcd:3.5
     container_name: coze-etcd
     user: root
     restart: always

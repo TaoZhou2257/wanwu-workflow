@@ -35,15 +35,19 @@ import (
 	entity2 "github.com/coze-dev/coze-studio/backend/domain/memory/database/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/memory/database/internal/dal"
 	"github.com/coze-dev/coze-studio/backend/domain/memory/database/repository"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/rdb"
-	rdb2 "github.com/coze-dev/coze-studio/backend/infra/impl/rdb"
-	mock "github.com/coze-dev/coze-studio/backend/internal/mock/infra/contract/idgen"
-	storageMock "github.com/coze-dev/coze-studio/backend/internal/mock/infra/contract/storage"
+	"github.com/coze-dev/coze-studio/backend/infra/rdb"
+	rdb2 "github.com/coze-dev/coze-studio/backend/infra/rdb/impl/rdb"
+	"github.com/coze-dev/coze-studio/backend/infra/sqlparser"
+	sqlparserImpl "github.com/coze-dev/coze-studio/backend/infra/sqlparser/impl/sqlparser"
+	mock "github.com/coze-dev/coze-studio/backend/internal/mock/infra/idgen"
+	storageMock "github.com/coze-dev/coze-studio/backend/internal/mock/infra/storage"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/slices"
 )
 
 func setupTestEnv(t *testing.T) (*gorm.DB, rdb.RDB, *mock.MockIDGenerator, repository.DraftDAO, repository.OnlineDAO, Database) {
+	sqlparser.New = sqlparserImpl.NewSQLParser
+
 	dsn := "root:root@tcp(127.0.0.1:3306)/opencoze?charset=utf8mb4&parseTime=True&loc=Local"
 	if os.Getenv("CI_JOB_NAME") != "" {
 		dsn = strings.ReplaceAll(dsn, "127.0.0.1", "mysql")
@@ -633,6 +637,52 @@ func TestExecuteSQLWithOperations(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, selectINResp)
 	assert.True(t, len(selectINResp.Records) == 2)
+
+	executeSelectWithOrOperationReq := &ExecuteSQLRequest{
+		DatabaseID:      resp.Database.ID,
+		TableType:       table.TableType_OnlineTable,
+		OperateType:     database.OperateType_Select,
+		SelectFieldList: selectFields,
+		Limit:           &limit,
+		UserID:          "1001",
+		SpaceID:         1,
+		OrderByList: []database.OrderBy{
+			{
+				Field:     "id_custom",
+				Direction: table.SortDirection_Desc,
+			},
+		},
+		SQLParams: []*database.SQLParamVal{
+			{
+				Value: ptr.Of("Alice"),
+			},
+			{
+				Value: ptr.Of("100"),
+			},
+		},
+		Condition: &database.ComplexCondition{
+			Conditions: []*database.Condition{
+				{
+					Left:      "name",
+					Operation: database.Operation_EQUAL,
+					Right:     "?",
+				},
+				{
+					Left:      "score",
+					Operation: database.Operation_EQUAL,
+					Right:     "?",
+				},
+			},
+			Logic: database.Logic_Or,
+		},
+	}
+
+	selectWithOrOperationResp, err := dbService.ExecuteSQL(context.Background(), executeSelectWithOrOperationReq)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, selectWithOrOperationResp)
+	assert.Equal(t, string(selectWithOrOperationResp.Records[0]["name"].([]uint8)), "Alice")
+	assert.True(t, len(selectWithOrOperationResp.Records) == 1)
 
 	updateRows := []*database.UpsertRow{
 		{

@@ -24,7 +24,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/message"
 	"github.com/coze-dev/coze-studio/backend/domain/conversation/message/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/conversation/message/internal/dal"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/idgen"
+	"github.com/coze-dev/coze-studio/backend/infra/idgen"
 )
 
 func NewMessageRepo(db *gorm.DB, idGen idgen.IDGenerator) MessageRepo {
@@ -34,10 +34,10 @@ func NewMessageRepo(db *gorm.DB, idGen idgen.IDGenerator) MessageRepo {
 type MessageRepo interface {
 	PreCreate(ctx context.Context, msg *entity.Message) (*entity.Message, error)
 	Create(ctx context.Context, msg *entity.Message) (*entity.Message, error)
-	List(ctx context.Context, conversationID int64, limit int, cursor int64,
-		direction entity.ScrollPageDirection, messageType *message.MessageType) ([]*entity.Message, bool, error)
+	BatchCreate(ctx context.Context, msg []*entity.Message) ([]*entity.Message, error)
+	List(ctx context.Context, listMeta *entity.ListMeta) ([]*entity.Message, bool, error)
 	GetByRunIDs(ctx context.Context, runIDs []int64, orderBy string) ([]*entity.Message, error)
 	Edit(ctx context.Context, msgID int64, message *message.Message) (int64, error)
 	GetByID(ctx context.Context, msgID int64) (*entity.Message, error)
-	Delete(ctx context.Context, msgIDs []int64, runIDs []int64) error
+	Delete(ctx context.Context, delMeta *entity.DeleteMeta) error
 }

@@ -23,8 +23,8 @@ import (
 
 	"github.com/coze-dev/coze-studio/backend/domain/agent/singleagent/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/agent/singleagent/internal/dal"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/cache"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/idgen"
+	"github.com/coze-dev/coze-studio/backend/infra/cache"
+	"github.com/coze-dev/coze-studio/backend/infra/idgen"
 )
 
 func NewSingleAgentRepo(db *gorm.DB, idGen idgen.IDGenerator, cli cache.Cmdable) SingleAgentDraftRepo {
@@ -47,7 +47,6 @@ type SingleAgentDraftRepo interface {
 	Delete(ctx context.Context, spaceID, agentID int64) (err error)
 	Update(ctx context.Context, agentInfo *entity.SingleAgent) (err error)
 	Save(ctx context.Context, agentInfo *entity.SingleAgent) (err error)
-
 	GetDisplayInfo(ctx context.Context, userID, agentID int64) (*entity.AgentDraftDisplayInfo, error)
 	UpdateDisplayInfo(ctx context.Context, userID int64, e *entity.AgentDraftDisplayInfo) error
 }

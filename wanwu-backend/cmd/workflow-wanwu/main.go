@@ -16,7 +16,8 @@ import (
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/pkg/redis"
 	"github.com/UnicomAI/wanwu/pkg/db"
 	"github.com/UnicomAI/wanwu/pkg/log"
-	coze_minio "github.com/coze-dev/coze-studio/backend/infra/impl/storage/minio"
+	coze_cache_impl "github.com/coze-dev/coze-studio/backend/infra/cache/impl/redis"
+	coze_minio "github.com/coze-dev/coze-studio/backend/infra/storage/impl/minio"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/pkg/safego"
 	"github.com/coze-dev/coze-studio/backend/types/consts"
@@ -65,6 +66,7 @@ func main() {
 	if err := redis.InitWorkflow(ctx, config.Cfg().Redis); err != nil {
 		log.Fatalf("init redis err: %v", err)
 	}
+	redisCli := coze_cache_impl.NewWithRedisCli(redis.Workflow())
 
 	// minio
 	minioCli, err := coze_minio.New(ctx, config.Cfg().Minio.Endpoint, config.Cfg().Minio.User, config.Cfg().Minio.Password, config.WorkflowBucket, false)
@@ -79,7 +81,7 @@ func main() {
 	}
 
 	// workflow
-	if err := workflow.Init(ctx, workflow.Infra{DB: dbCli, Cache: redis.Workflow(), Storage: minioCli, ImageX: imageXCli}); err != nil {
+	if err := workflow.Init(ctx, workflow.Infra{DB: dbCli, Cache: redisCli, Storage: minioCli, ImageX: imageXCli}); err != nil {
 		log.Fatalf("init workflow service err: %v", err)
 	}
 
@@ -101,9 +103,9 @@ func asyncStartMinioProxyServer(ctx context.Context) {
 	storageType := getEnv(consts.StorageType, "minio")
 	proxyURL := getEnv(consts.MinIOAPIHost, "http://localhost:9000")
 
-	if storageType == "tos" {
-		proxyURL = getEnv(consts.TOSBucketEndpoint, "https://opencoze.tos-cn-beijing.volces.com")
-	}
+	// if storageType == "tos" {
+	// 	proxyURL = getEnv(consts.TOSBucketEndpoint, "https://opencoze.tos-cn-beijing.volces.com")
+	// }
 
 	if storageType == "s3" {
 		proxyURL = getEnv(consts.S3BucketEndpoint, "")

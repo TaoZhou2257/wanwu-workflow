@@ -60,7 +60,6 @@ import {
   SUB_WORKFLOW_NODE_REGISTRY,
   VARIABLE_NODE_REGISTRY,
   JSON_STRINGIFY_NODE_REGISTRY,
-  // CLI script insert ID (import), do not modify/delete this line comment
 } from '@/node-registries';
 
 import {
@@ -77,7 +76,6 @@ import {
 } from './chat';
 
 export const NODES_V2 = [
-  // The cli script inserts the identifier (registry), do not modify/delete this line comment
   JSON_STRINGIFY_NODE_REGISTRY,
   MCP_WANWU_NODE_REGISTRY,
   FILE_PARSE_WANWU_NODE_REGISTRY,

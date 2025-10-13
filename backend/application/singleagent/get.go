@@ -24,20 +24,19 @@ import (
 
 	"github.com/coze-dev/coze-studio/backend/api/model/app/bot_common"
 	knowledgeModel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/knowledge"
-	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/plugin"
 	workflowModel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/workflow"
 	"github.com/coze-dev/coze-studio/backend/api/model/playground"
 	"github.com/coze-dev/coze-studio/backend/api/model/plugin_develop/common"
-	plugin_develop_common "github.com/coze-dev/coze-studio/backend/api/model/plugin_develop/common"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
+	"github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/consts"
+	"github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/model"
 	"github.com/coze-dev/coze-studio/backend/domain/agent/singleagent/entity"
 	knowledge "github.com/coze-dev/coze-studio/backend/domain/knowledge/service"
 	pluginEntity "github.com/coze-dev/coze-studio/backend/domain/plugin/entity"
-	"github.com/coze-dev/coze-studio/backend/domain/plugin/service"
 	shortcutCMDEntity "github.com/coze-dev/coze-studio/backend/domain/shortcutcmd/entity"
 	workflowEntity "github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/modelmgr"
+	"github.com/coze-dev/coze-studio/backend/infra/modelmgr"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/conv"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
@@ -201,12 +200,12 @@ func (s *SingleAgentApplicationService) fetchKnowledgeDetails(ctx context.Contex
 }
 
 func (s *SingleAgentApplicationService) fetchToolDetails(ctx context.Context, agentInfo *entity.SingleAgent, req *playground.GetDraftBotInfoAgwRequest) ([]*pluginEntity.ToolInfo, error) {
-	return s.appContext.PluginDomainSVC.MGetAgentTools(ctx, &service.MGetAgentToolsRequest{
+	return s.appContext.PluginDomainSVC.MGetAgentTools(ctx, &model.MGetAgentToolsRequest{
 		SpaceID: agentInfo.SpaceID,
 		AgentID: req.GetBotID(),
 		IsDraft: true,
-		VersionAgentTools: slices.Transform(agentInfo.Plugin, func(a *bot_common.PluginInfo) pluginEntity.VersionAgentTool {
-			return pluginEntity.VersionAgentTool{
+		VersionAgentTools: slices.Transform(agentInfo.Plugin, func(a *bot_common.PluginInfo) model.VersionAgentTool {
+			return model.VersionAgentTool{
 				ToolID: a.GetApiId(),
 			}
 		}),
@@ -214,7 +213,7 @@ func (s *SingleAgentApplicationService) fetchToolDetails(ctx context.Context, ag
 }
 
 func (s *SingleAgentApplicationService) fetchPluginDetails(ctx context.Context, agentInfo *entity.SingleAgent, toolInfos []*pluginEntity.ToolInfo) ([]*pluginEntity.PluginInfo, error) {
-	vPlugins := make([]pluginEntity.VersionPlugin, 0, len(agentInfo.Plugin))
+	vPlugins := make([]model.VersionPlugin, 0, len(agentInfo.Plugin))
 	vPluginMap := make(map[string]bool, len(agentInfo.Plugin))
 	for _, v := range toolInfos {
 		k := fmt.Sprintf("%d:%s", v.PluginID, v.GetVersion())
@@ -222,7 +221,7 @@ func (s *SingleAgentApplicationService) fetchPluginDetails(ctx context.Context, 
 			continue
 		}
 		vPluginMap[k] = true
-		vPlugins = append(vPlugins, pluginEntity.VersionPlugin{
+		vPlugins = append(vPlugins, model.VersionPlugin{
 			PluginID: v.PluginID,
 			Version:  v.GetVersion(),
 		})
@@ -331,7 +330,7 @@ func (s *SingleAgentApplicationService) pluginInfoDo2Vo(ctx context.Context, plu
 	})
 }
 
-func parametersDo2Vo(op *plugin.Openapi3Operation) []*playground.PluginParameter {
+func parametersDo2Vo(op *model.Openapi3Operation) []*playground.PluginParameter {
 	var convertReqBody func(paramName string, isRequired bool, sc *openapi3.Schema) *playground.PluginParameter
 	convertReqBody = func(paramName string, isRequired bool, sc *openapi3.Schema) *playground.PluginParameter {
 		if disabledParam(sc) {
@@ -339,7 +338,7 @@ func parametersDo2Vo(op *plugin.Openapi3Operation) []*playground.PluginParameter
 		}
 
 		var assistType *int64
-		if v, ok := sc.Extensions[plugin.APISchemaExtendAssistType]; ok {
+		if v, ok := sc.Extensions[consts.APISchemaExtendAssistType]; ok {
 			if _v, ok := v.(string); ok {
 				assistType = toParameterAssistType(_v)
 			}
@@ -410,7 +409,7 @@ func parametersDo2Vo(op *plugin.Openapi3Operation) []*playground.PluginParameter
 		}
 
 		var assistType *int64
-		if v, ok := schemaVal.Extensions[plugin.APISchemaExtendAssistType]; ok {
+		if v, ok := schemaVal.Extensions[consts.APISchemaExtendAssistType]; ok {
 			if _v, ok := v.(string); ok {
 				assistType = toParameterAssistType(_v)
 			}
@@ -456,27 +455,27 @@ func toParameterAssistType(assistType string) *int64 {
 	if assistType == "" {
 		return nil
 	}
-	switch plugin.APIFileAssistType(assistType) {
-	case plugin.AssistTypeFile:
-		return ptr.Of(int64(plugin_develop_common.AssistParameterType_CODE))
-	case plugin.AssistTypeImage:
-		return ptr.Of(int64(plugin_develop_common.AssistParameterType_IMAGE))
-	case plugin.AssistTypeDoc:
-		return ptr.Of(int64(plugin_develop_common.AssistParameterType_DOC))
-	case plugin.AssistTypePPT:
-		return ptr.Of(int64(plugin_develop_common.AssistParameterType_PPT))
-	case plugin.AssistTypeCode:
-		return ptr.Of(int64(plugin_develop_common.AssistParameterType_CODE))
-	case plugin.AssistTypeExcel:
-		return ptr.Of(int64(plugin_develop_common.AssistParameterType_EXCEL))
-	case plugin.AssistTypeZIP:
-		return ptr.Of(int64(plugin_develop_common.AssistParameterType_ZIP))
-	case plugin.AssistTypeVideo:
-		return ptr.Of(int64(plugin_develop_common.AssistParameterType_VIDEO))
-	case plugin.AssistTypeAudio:
-		return ptr.Of(int64(plugin_develop_common.AssistParameterType_AUDIO))
-	case plugin.AssistTypeTXT:
-		return ptr.Of(int64(plugin_develop_common.AssistParameterType_TXT))
+	switch consts.APIFileAssistType(assistType) {
+	case consts.AssistTypeFile:
+		return ptr.Of(int64(common.AssistParameterType_CODE))
+	case consts.AssistTypeImage:
+		return ptr.Of(int64(common.AssistParameterType_IMAGE))
+	case consts.AssistTypeDoc:
+		return ptr.Of(int64(common.AssistParameterType_DOC))
+	case consts.AssistTypePPT:
+		return ptr.Of(int64(common.AssistParameterType_PPT))
+	case consts.AssistTypeCode:
+		return ptr.Of(int64(common.AssistParameterType_CODE))
+	case consts.AssistTypeExcel:
+		return ptr.Of(int64(common.AssistParameterType_EXCEL))
+	case consts.AssistTypeZIP:
+		return ptr.Of(int64(common.AssistParameterType_ZIP))
+	case consts.AssistTypeVideo:
+		return ptr.Of(int64(common.AssistParameterType_VIDEO))
+	case consts.AssistTypeAudio:
+		return ptr.Of(int64(common.AssistParameterType_AUDIO))
+	case consts.AssistTypeTXT:
+		return ptr.Of(int64(common.AssistParameterType_TXT))
 	default:
 		return nil
 	}

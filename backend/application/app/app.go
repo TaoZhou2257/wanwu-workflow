@@ -34,7 +34,6 @@ import (
 	taskAPI "github.com/coze-dev/coze-studio/backend/api/model/app/intelligence/task"
 	connectorModel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/connector"
 	knowledgeModel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/knowledge"
-	pluginModel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/plugin"
 	"github.com/coze-dev/coze-studio/backend/api/model/data/database/table"
 	"github.com/coze-dev/coze-studio/backend/api/model/data/variable/project_memory"
 	"github.com/coze-dev/coze-studio/backend/api/model/playground"
@@ -46,19 +45,22 @@ import (
 	"github.com/coze-dev/coze-studio/backend/application/memory"
 	"github.com/coze-dev/coze-studio/backend/application/plugin"
 	"github.com/coze-dev/coze-studio/backend/application/workflow"
+	pluginConsts "github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/consts"
 	"github.com/coze-dev/coze-studio/backend/domain/app/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/app/repository"
 	"github.com/coze-dev/coze-studio/backend/domain/app/service"
 	connector "github.com/coze-dev/coze-studio/backend/domain/connector/service"
 	variables "github.com/coze-dev/coze-studio/backend/domain/memory/variables/service"
+	"github.com/coze-dev/coze-studio/backend/domain/plugin/dto"
 	searchEntity "github.com/coze-dev/coze-studio/backend/domain/search/entity"
 	search "github.com/coze-dev/coze-studio/backend/domain/search/service"
 	user "github.com/coze-dev/coze-studio/backend/domain/user/service"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/modelmgr"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/storage"
+	"github.com/coze-dev/coze-studio/backend/infra/modelmgr"
+	"github.com/coze-dev/coze-studio/backend/infra/storage"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/conv"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
+	"github.com/coze-dev/coze-studio/backend/pkg/lang/ternary"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/pkg/safego"
 	"github.com/coze-dev/coze-studio/backend/pkg/taskgroup"
@@ -303,6 +305,11 @@ func (a *APPApplicationService) getAPPPublishConnectorList(ctx context.Context, 
 			if err != nil {
 				return nil, err
 			}
+		case consts.WebSDKConnectorID:
+			info, err = a.packChatSDKConnectorInfo(ctx, c)
+			if err != nil {
+				return nil, err
+			}
 		default:
 			logs.CtxWarnf(ctx, "unsupported connector id '%v'", c.ID)
 			continue
@@ -334,6 +341,22 @@ func (a *APPApplicationService) packAPIConnectorInfo(ctx context.Context, c *con
 
 	info.AllowPublish = false
 	info.NotAllowPublishReason = ptr.Of(noWorkflowText)
+
+	return info, nil
+}
+
+func (a *APPApplicationService) packChatSDKConnectorInfo(ctx context.Context, c *connectorModel.Connector) (*publishAPI.PublishConnectorInfo, error) {
+
+	info := &publishAPI.PublishConnectorInfo{
+		ID:                      c.ID,
+		BindType:                publishAPI.ConnectorBindType_WebSDKBind,
+		ConnectorClassification: publishAPI.ConnectorClassification_APIOrSDK,
+		BindInfo:                map[string]string{},
+		Name:                    c.Name,
+		IconURL:                 c.URL,
+		Description:             c.Desc,
+		AllowPublish:            true,
+	}
 
 	return info, nil
 }
@@ -768,22 +791,22 @@ func pluginCopyDispatchHandler(ctx context.Context, metaInfo *copyMetaInfo, res 
 	}
 }
 
-func copyPlugin(ctx context.Context, metaInfo *copyMetaInfo, res *entity.Resource) (resp *plugin.CopyPluginResponse, err error) {
-	var copyScene pluginModel.CopyScene
+func copyPlugin(ctx context.Context, metaInfo *copyMetaInfo, res *entity.Resource) (resp *dto.CopyPluginResponse, err error) {
+	var copyScene pluginConsts.CopyScene
 	switch metaInfo.scene {
 	case resourceCommon.ResourceCopyScene_CopyProjectResource:
-		copyScene = pluginModel.CopySceneOfDuplicate
+		copyScene = pluginConsts.CopySceneOfDuplicate
 	case resourceCommon.ResourceCopyScene_CopyResourceToLibrary:
-		copyScene = pluginModel.CopySceneOfToLibrary
+		copyScene = pluginConsts.CopySceneOfToLibrary
 	case resourceCommon.ResourceCopyScene_CopyResourceFromLibrary:
-		copyScene = pluginModel.CopySceneOfToAPP
+		copyScene = pluginConsts.CopySceneOfToAPP
 	case resourceCommon.ResourceCopyScene_CopyProject:
-		copyScene = pluginModel.CopySceneOfAPPDuplicate
+		copyScene = pluginConsts.CopySceneOfAPPDuplicate
 	default:
 		return nil, fmt.Errorf("unsupported copy scene '%s'", metaInfo.scene)
 	}
 
-	resp, err = plugin.PluginApplicationSVC.CopyPlugin(ctx, &plugin.CopyPluginRequest{
+	resp, err = plugin.PluginApplicationSVC.CopyPlugin(ctx, &dto.CopyPluginRequest{
 		CopyScene:   copyScene,
 		PluginID:    res.ResID,
 		UserID:      metaInfo.userID,
@@ -1087,6 +1110,91 @@ func (a *APPApplicationService) DraftProjectCopy(ctx context.Context, req *proje
 	}
 
 	return resp, nil
+}
+
+func (a *APPApplicationService) GetOnlineAppData(ctx context.Context, req *projectAPI.GetOnlineAppDataRequest) (resp *projectAPI.GetOnlineAppDataResponse, err error) {
+	uid := ctxutil.GetApiAuthFromCtx(ctx).UserID
+	record, exist, err := a.DomainSVC.GetAPPPublishRecord(ctx, &service.GetAPPPublishRecordRequest{
+		APPID:  req.GetAppID(),
+		Oldest: false,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if !exist {
+		return nil, errorx.Wrapf(err, "GetOnlineAppDataRequest failed, app id=%d, connector id=%v", req.GetAppID(), req.GetConnectorID())
+	}
+
+	if record.APP.OwnerID != uid {
+		return nil, errorx.New(errno.ErrAppPermissionCode, errorx.KV(errno.APPMsgKey, fmt.Sprintf("user %d does not have access to app %d", uid, req.GetAppID())))
+
+	}
+
+	valid := false
+	for _, v := range record.ConnectorPublishRecords {
+		if v.ConnectorID == req.GetConnectorID() {
+			valid = true
+			break
+		}
+	}
+
+	if !valid {
+		return nil, errorx.Wrapf(err, "GetOnlineAppDataRequest failed, invalid connector id, app id=%d, connector id=%v", req.GetAppID(), req.GetConnectorID())
+	}
+
+	app := record.APP
+
+	iconURL, err := a.oss.GetObjectUrl(ctx, app.GetIconURI())
+	if err != nil {
+		logs.CtxWarnf(ctx, "get icon url failed with '%s', err=%v", app.GetIconURI(), err)
+	}
+
+	varMeta, err := a.variablesSVC.GetProjectVariablesMeta(ctx, strconv.FormatInt(app.ID, 10), "")
+	if err != nil {
+		return nil, err
+	}
+	vars := make([]*common.Variable, 0, len(varMeta.Variables))
+	for _, v := range varMeta.Variables {
+		vars = append(vars, &common.Variable{
+			Keyword:      v.Keyword,
+			DefaultValue: v.DefaultValue,
+			Description:  v.Description,
+			Enable:       v.Enable,
+			VariableType: ternary.IFElse(v.VariableType == project_memory.VariableType_KVVariable, common.VariableTypeKVVariable, common.VariableTypeListVariable),
+			Channel: func() common.VariableChannel {
+				switch v.Channel {
+				case project_memory.VariableChannel_APP:
+					return common.VariableChannelAPP
+				case project_memory.VariableChannel_System:
+					return common.VariableChannelSystem
+				case project_memory.VariableChannel_Custom:
+					return common.VariableChannelCustom
+				case project_memory.VariableChannel_Feishu:
+					return common.VariableChannelFeishu
+				case project_memory.VariableChannel_Location:
+					return common.VariableChannelLocation
+				default:
+					return ""
+				}
+
+			}(),
+		})
+	}
+
+	response := &projectAPI.GetOnlineAppDataResponse{
+		Data: &projectAPI.AppData{
+			AppID:       strconv.FormatInt(record.APP.ID, 10),
+			Name:        *app.Name,
+			Description: *app.Desc,
+			Version:     *app.Version,
+			IconURL:     iconURL,
+			Variables:   vars,
+		},
+	}
+
+	return response, nil
+
 }
 
 func (a *APPApplicationService) duplicateDraftAPP(ctx context.Context, userID int64, req *projectAPI.DraftProjectCopyRequest) (newAppID int64, err error) {

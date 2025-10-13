@@ -23,15 +23,15 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/cloudwego/eino/schema"
 	xmaps "golang.org/x/exp/maps"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/coze-dev/coze-studio/backend/api/model/app/bot_common"
 	model "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/knowledge"
-	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/plugin"
-	pluginmodel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/plugin"
 	workflowModel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/workflow"
 	"github.com/coze-dev/coze-studio/backend/api/model/data/database/table"
 	"github.com/coze-dev/coze-studio/backend/api/model/playground"
@@ -45,16 +45,17 @@ import (
 	appplugin "github.com/coze-dev/coze-studio/backend/application/plugin"
 	"github.com/coze-dev/coze-studio/backend/application/user"
 	crossknowledge "github.com/coze-dev/coze-studio/backend/crossdomain/contract/knowledge"
-	crossplugin "github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin"
+	pluginConsts "github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/consts"
 	crossuser "github.com/coze-dev/coze-studio/backend/crossdomain/contract/user"
+	"github.com/coze-dev/coze-studio/backend/domain/plugin/dto"
 	search "github.com/coze-dev/coze-studio/backend/domain/search/entity"
 	domainWorkflow "github.com/coze-dev/coze-studio/backend/domain/workflow"
-	workflowDomain "github.com/coze-dev/coze-studio/backend/domain/workflow"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/idgen"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/imagex"
-	"github.com/coze-dev/coze-studio/backend/infra/contract/storage"
+	"github.com/coze-dev/coze-studio/backend/domain/workflow/plugin"
+	"github.com/coze-dev/coze-studio/backend/infra/idgen"
+	"github.com/coze-dev/coze-studio/backend/infra/imagex"
+	"github.com/coze-dev/coze-studio/backend/infra/storage"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
 	"github.com/coze-dev/coze-studio/backend/pkg/i18n"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/conv"
@@ -70,16 +71,60 @@ import (
 )
 
 type ApplicationService struct {
-	DomainSVC   workflowDomain.Service
+	DomainSVC   domainWorkflow.Service
 	ImageX      imagex.ImageX // we set Imagex here, because Imagex is used as a proxy to get auth token, there is no actual correlation with the workflow domain.
 	TosClient   storage.Storage
 	IDGenerator idgen.IDGenerator
 }
 
-var SVC = &ApplicationService{}
+var (
+	SVC                = &ApplicationService{}
+	nodeIconURLCache   = make(map[string]string)
+	nodeIconURLCacheMu sync.Mutex
+)
 
 func GetWorkflowDomainSVC() domainWorkflow.Service {
 	return SVC.DomainSVC
+}
+
+func (w *ApplicationService) InitNodeIconURLCache(ctx context.Context) error {
+	category2NodeMetaList, _, err := GetWorkflowDomainSVC().ListNodeMeta(ctx, nil)
+	if err != nil {
+		logs.Errorf("failed to list node meta for icon url cache: %v", err)
+		return err
+	}
+
+	eg, gCtx := errgroup.WithContext(ctx)
+	for _, nodeMetaList := range category2NodeMetaList {
+		for _, nodeMeta := range nodeMetaList {
+			eg.Go(func() error {
+				if len(nodeMeta.IconURI) == 0 {
+					// For custom nodes, if IconURI is not set, there will be no icon.
+					logs.Warnf("node '%s' has an empty IconURI, it will have no icon", nodeMeta.Name)
+					return nil
+				}
+				url, err := w.TosClient.GetObjectUrl(gCtx, nodeMeta.IconURI)
+				if err != nil {
+					logs.Warnf("failed to get object url for node %s: %v", nodeMeta.Name, err)
+					return err
+				}
+				nodeTypeStr := entity.IDStrToNodeType(strconv.FormatInt(nodeMeta.ID, 10))
+				if len(nodeTypeStr) > 0 {
+					nodeIconURLCacheMu.Lock()
+					nodeIconURLCache[string(nodeTypeStr)] = url
+					nodeIconURLCacheMu.Unlock()
+				}
+				return nil
+			})
+		}
+	}
+
+	if err := eg.Wait(); err != nil {
+		return err
+	}
+
+	logs.Infof("node icon url cache initialized with %d entries", len(nodeIconURLCache))
+	return nil
 }
 
 func (w *ApplicationService) GetNodeTemplateList(ctx context.Context, req *workflow.NodeTemplateListRequest) (
@@ -120,19 +165,22 @@ func (w *ApplicationService) GetNodeTemplateList(ctx context.Context, req *workf
 			Name: category,
 		}
 		for _, nodeMeta := range nodeMetaList {
+			nodeID := fmt.Sprintf("%d", nodeMeta.ID)
+			nodeType := entity.IDStrToNodeType(nodeID)
+			url := nodeIconURLCache[string(nodeType)]
 			tpl := &workflow.NodeTemplate{
-				ID:           fmt.Sprintf("%d", nodeMeta.ID),
+				ID:           nodeID,
 				Type:         workflow.NodeTemplateType(nodeMeta.ID),
 				Name:         ternary.IFElse(i18n.GetLocale(ctx) == i18n.LocaleEN, nodeMeta.EnUSName, nodeMeta.Name),
 				Desc:         ternary.IFElse(i18n.GetLocale(ctx) == i18n.LocaleEN, nodeMeta.EnUSDescription, nodeMeta.Desc),
-				IconURL:      nodeMeta.IconURL,
+				IconURL:      url,
 				SupportBatch: ternary.IFElse(nodeMeta.SupportBatch, workflow.SupportBatch_SUPPORT, workflow.SupportBatch_NOT_SUPPORT),
-				NodeType:     fmt.Sprintf("%d", nodeMeta.ID),
+				NodeType:     nodeID,
 				Color:        nodeMeta.Color,
 			}
 
 			resp.Data.TemplateList = append(resp.Data.TemplateList, tpl)
-			categoryMap[category].NodeTypeList = append(categoryMap[category].NodeTypeList, fmt.Sprintf("%d", nodeMeta.ID))
+			categoryMap[category].NodeTypeList = append(categoryMap[category].NodeTypeList, nodeID)
 		}
 	}
 
@@ -169,6 +217,21 @@ func (w *ApplicationService) CreateWorkflow(ctx context.Context, req *workflow.C
 	if err := checkUserSpace(ctx, uID, spaceID); err != nil {
 		return nil, err
 	}
+
+	var createConversation bool
+	if req.ProjectID != nil && req.IsSetFlowMode() && req.GetFlowMode() == workflow.WorkflowMode_ChatFlow && req.IsSetCreateConversation() && req.GetCreateConversation() {
+		createConversation = true
+		_, err := GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
+			AppID:   mustParseInt64(req.GetProjectID()),
+			UserID:  uID,
+			SpaceID: spaceID,
+			Name:    req.Name,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	wf := &vo.MetaCreate{
 		CreatorID:        uID,
 		SpaceID:          spaceID,
@@ -179,6 +242,14 @@ func (w *ApplicationService) CreateWorkflow(ctx context.Context, req *workflow.C
 		AppID:            parseInt64(req.ProjectID),
 		Mode:             ternary.IFElse(req.IsSetFlowMode(), req.GetFlowMode(), workflow.WorkflowMode_Workflow),
 		InitCanvasSchema: vo.GetDefaultInitCanvasJsonSchema(i18n.GetLocale(ctx)),
+	}
+	if req.IsSetFlowMode() && req.GetFlowMode() == workflow.WorkflowMode_ChatFlow {
+		conversationName := req.Name
+		if !req.IsSetProjectID() || mustParseInt64(req.GetProjectID()) == 0 || !createConversation {
+			conversationName = "Default"
+		}
+
+		wf.InitCanvasSchema = vo.GetDefaultInitCanvasJsonSchemaChat(i18n.GetLocale(ctx), conversationName)
 	}
 
 	id, err := GetWorkflowDomainSVC().Create(ctx, wf)
@@ -249,10 +320,12 @@ func (w *ApplicationService) UpdateWorkflowMeta(ctx context.Context, req *workfl
 	}
 
 	workflowID := mustParseInt64(req.GetWorkflowID())
-	err = GetWorkflowDomainSVC().UpdateMeta(ctx, workflowID, &vo.MetaUpdate{
-		Name:    req.Name,
-		Desc:    req.Desc,
-		IconURI: req.IconURI,
+
+	err = GetWorkflowDomainSVC().UpdateMeta(ctx, mustParseInt64(req.GetWorkflowID()), &vo.MetaUpdate{
+		Name:         req.Name,
+		Desc:         req.Desc,
+		IconURI:      req.IconURI,
+		WorkflowMode: req.FlowMode,
 	})
 	if err != nil {
 		return nil, err
@@ -726,11 +799,13 @@ func (w *ApplicationService) GetProcess(ctx context.Context, req *workflow.GetWo
 			}
 		}
 
+		iconURL := nodeIconURLCache[string(ie.NodeType)]
+
 		resp.Data.NodeEvents = append(resp.Data.NodeEvents, &workflow.NodeEvent{
 			ID:           strconv.FormatInt(ie.ID, 10),
 			NodeID:       string(ie.NodeKey),
 			NodeTitle:    ie.NodeTitle,
-			NodeIcon:     ie.NodeIcon,
+			NodeIcon:     iconURL,
 			Data:         ie.InterruptData,
 			Type:         ie.EventType,
 			SchemaNodeID: string(ie.NodeKey),
@@ -901,22 +976,22 @@ func (w *ApplicationService) CopyWorkflowFromAppToLibrary(ctx context.Context, w
 		return 0, nil, err
 	}
 
-	pluginMap := make(map[int64]*plugin.PluginEntity)
+	pluginMap := make(map[int64]*vo.PluginEntity)
 	pluginToolMap := make(map[int64]int64)
 
 	if len(ds.PluginIDs) > 0 {
 		for idx := range ds.PluginIDs {
 			id := ds.PluginIDs[idx]
-			response, err := appplugin.PluginApplicationSVC.CopyPlugin(ctx, &appplugin.CopyPluginRequest{
+			response, err := appplugin.PluginApplicationSVC.CopyPlugin(ctx, &dto.CopyPluginRequest{
 				PluginID:  id,
 				UserID:    ctxutil.MustGetUIDFromCtx(ctx),
-				CopyScene: pluginmodel.CopySceneOfToLibrary,
+				CopyScene: pluginConsts.CopySceneOfToLibrary,
 			})
 			if err != nil {
 				return 0, nil, err
 			}
 			pInfo := response.Plugin
-			pluginMap[id] = &plugin.PluginEntity{
+			pluginMap[id] = &vo.PluginEntity{
 				PluginID:      pInfo.ID,
 				PluginVersion: pInfo.Version,
 			}
@@ -1034,9 +1109,9 @@ func (w *ApplicationService) DuplicateWorkflowsByAppID(ctx context.Context, sour
 		}
 	}()
 
-	pluginMap := make(map[int64]*plugin.PluginEntity)
+	pluginMap := make(map[int64]*vo.PluginEntity)
 	for o, n := range externalResource.PluginMap {
-		pluginMap[o] = &plugin.PluginEntity{
+		pluginMap[o] = &vo.PluginEntity{
 			PluginID: n,
 		}
 	}
@@ -1134,7 +1209,7 @@ func (w *ApplicationService) MoveWorkflowFromAppToLibrary(ctx context.Context, w
 		return 0, nil, err
 	}
 
-	pluginMap := make(map[int64]*plugin.PluginEntity)
+	pluginMap := make(map[int64]*vo.PluginEntity)
 	if len(ds.PluginIDs) > 0 {
 		for idx := range ds.PluginIDs {
 			id := ds.PluginIDs[idx]
@@ -1142,7 +1217,7 @@ func (w *ApplicationService) MoveWorkflowFromAppToLibrary(ctx context.Context, w
 			if err != nil {
 				return 0, nil, err
 			}
-			pluginMap[id] = &plugin.PluginEntity{
+			pluginMap[id] = &vo.PluginEntity{
 				PluginID:      pInfo.ID,
 				PluginVersion: pInfo.Version,
 			}
@@ -1298,10 +1373,10 @@ func mergeBatchModeNodes(parent, inner *workflow.NodeResult) *workflow.NodeResul
 type StreamRunEventType string
 
 const (
-	DoneEvent      StreamRunEventType = "done"
-	MessageEvent   StreamRunEventType = "message"
-	ErrEvent       StreamRunEventType = "error"
-	InterruptEvent StreamRunEventType = "interrupt"
+	DoneEvent      StreamRunEventType = "Done"
+	MessageEvent   StreamRunEventType = "Message"
+	ErrEvent       StreamRunEventType = "Error"
+	InterruptEvent StreamRunEventType = "Interrupt"
 )
 
 func convertStreamRunEvent(workflowID int64) func(msg *entity.Message) (res *workflow.OpenAPIStreamRunFlowResponse, err error) {
@@ -2106,6 +2181,10 @@ func (w *ApplicationService) ListWorkflow(ctx context.Context, req *workflow.Get
 		option.IDs = ids
 	}
 
+	if req.IsSetFlowMode() && req.GetFlowMode() != workflow.WorkflowMode_All {
+		option.Mode = ptr.Of(workflowModel.WorkflowMode(req.GetFlowMode()))
+	}
+
 	spaceID, err := strconv.ParseInt(req.GetSpaceID(), 10, 64)
 	if err != nil {
 		return nil, fmt.Errorf("space id is invalid, parse to int64 failed, err: %w", err)
@@ -2155,6 +2234,13 @@ func (w *ApplicationService) ListWorkflow(ctx context.Context, req *workflow.Get
 				ID:   strconv.FormatInt(w.CreatorID, 10),
 				Self: ternary.IFElse[bool](w.CreatorID == ptr.From(ctxutil.GetUIDFromCtx(ctx)), true, false),
 			},
+		}
+
+		if len(req.Checker) > 0 && status == workflow.WorkFlowListStatus_HadPublished {
+			ww.CheckResult, err = GetWorkflowDomainSVC().WorkflowSchemaCheck(ctx, w, req.Checker)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		if qType == workflowModel.FromDraft {
@@ -2564,8 +2650,8 @@ func (w *ApplicationService) GetApiDetail(ctx context.Context, req *workflow.Get
 		return nil, err
 	}
 
-	toolInfoResponse, err := crossplugin.DefaultSVC().GetPluginToolsInfo(ctx, &plugin.ToolsInfoRequest{
-		PluginEntity: plugin.PluginEntity{
+	toolInfoResponse, err := plugin.GetPluginToolsInfo(ctx, &plugin.ToolsInfoRequest{
+		PluginEntity: vo.PluginEntity{
 			PluginID:      pluginID,
 			PluginVersion: req.PluginVersion,
 		},
@@ -2631,7 +2717,6 @@ func (w *ApplicationService) GetLLMNodeFCSettingDetail(ctx context.Context, req 
 	}
 
 	var (
-		pluginSvc           = crossplugin.DefaultSVC()
 		pluginToolsInfoReqs = make(map[int64]*plugin.ToolsInfoRequest)
 		pluginDetailMap     = make(map[string]*workflow.PluginDetail)
 		toolsDetailInfo     = make(map[string]*workflow.APIDetail)
@@ -2655,7 +2740,7 @@ func (w *ApplicationService) GetLLMNodeFCSettingDetail(ctx context.Context, req 
 				r.ToolIDs = append(r.ToolIDs, toolID)
 			} else {
 				pluginToolsInfoReqs[pluginID] = &plugin.ToolsInfoRequest{
-					PluginEntity: plugin.PluginEntity{
+					PluginEntity: vo.PluginEntity{
 						PluginID:      pluginID,
 						PluginVersion: pl.PluginVersion,
 					},
@@ -2666,7 +2751,7 @@ func (w *ApplicationService) GetLLMNodeFCSettingDetail(ctx context.Context, req 
 
 		}
 		for _, r := range pluginToolsInfoReqs {
-			resp, err := pluginSvc.GetPluginToolsInfo(ctx, r)
+			resp, err := plugin.GetPluginToolsInfo(ctx, r)
 			if err != nil {
 				return nil, err
 			}
@@ -2839,7 +2924,6 @@ func (w *ApplicationService) GetLLMNodeFCSettingsMerged(ctx context.Context, req
 	var fcPluginSetting *workflow.FCPluginSetting
 	if req.GetPluginFcSetting() != nil {
 		var (
-			pluginSvc       = crossplugin.DefaultSVC()
 			pluginFcSetting = req.GetPluginFcSetting()
 			isDraft         = pluginFcSetting.GetIsDraft()
 		)
@@ -2855,14 +2939,14 @@ func (w *ApplicationService) GetLLMNodeFCSettingsMerged(ctx context.Context, req
 		}
 
 		pluginReq := &plugin.ToolsInfoRequest{
-			PluginEntity: plugin.PluginEntity{
+			PluginEntity: vo.PluginEntity{
 				PluginID: pluginID,
 			},
 			ToolIDs: []int64{toolID},
 			IsDraft: isDraft,
 		}
 
-		pInfo, err := pluginSvc.GetPluginToolsInfo(ctx, pluginReq)
+		pInfo, err := plugin.GetPluginToolsInfo(ctx, pluginReq)
 		if err != nil {
 			return nil, err
 		}
@@ -3596,7 +3680,25 @@ func toWorkflowAPIParameterAssistType(ty vo.FileSubType) workflow.AssistParamete
 	}
 }
 
+func toVariableSlice(params []*workflow.APIParameter) ([]*vo.Variable, error) {
+	if len(params) == 0 {
+		return nil, nil
+	}
+	res := make([]*vo.Variable, 0, len(params))
+	for _, p := range params {
+		v, err := toVariable(p)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, v)
+	}
+	return res, nil
+}
+
 func toVariable(p *workflow.APIParameter) (*vo.Variable, error) {
+	if p == nil {
+		return nil, nil
+	}
 	v := &vo.Variable{
 		Name:        p.Name,
 		Description: p.Desc,
@@ -3618,38 +3720,33 @@ func toVariable(p *workflow.APIParameter) (*vo.Variable, error) {
 		v.Type = vo.VariableTypeBoolean
 	case workflow.ParameterType_Array:
 		v.Type = vo.VariableTypeList
-		if len(p.SubParameters) == 1 && p.SubType != nil && *p.SubType != workflow.ParameterType_Object {
-			av, err := toVariable(p.SubParameters[0])
+		if p.SubType == nil {
+			return nil, fmt.Errorf("array parameter '%s' is missing a SubType", p.Name)
+		}
+		// The schema of a list variable is a single variable describing the items.
+		itemSchema := &vo.Variable{
+			Type: vo.VariableType(strings.ToLower(p.SubType.String())),
+		}
+		// If the items in the array are objects, describe their structure.
+		if *p.SubType == workflow.ParameterType_Object {
+			itemFields, err := toVariableSlice(p.SubParameters)
 			if err != nil {
 				return nil, err
 			}
-			v.Schema = &av
+			itemSchema.Schema = itemFields
 		} else {
-			subVs := make([]any, 0)
-			for _, ap := range p.SubParameters {
-				av, err := toVariable(ap)
-				if err != nil {
-					return nil, err
-				}
-				subVs = append(subVs, av)
-			}
-			v.Schema = &vo.Variable{
-				Type:   vo.VariableTypeObject,
-				Schema: subVs,
+			if len(p.SubParameters) > 0 && p.SubParameters[0].AssistType != nil {
+				itemSchema.AssistType = vo.AssistType(*p.SubParameters[0].AssistType)
 			}
 		}
+		v.Schema = itemSchema
 	case workflow.ParameterType_Object:
 		v.Type = vo.VariableTypeObject
-		vs := make([]*vo.Variable, 0)
-		for _, v := range p.SubParameters {
-			objV, err := toVariable(v)
-			if err != nil {
-				return nil, err
-			}
-			vs = append(vs, objV)
-
+		subVars, err := toVariableSlice(p.SubParameters)
+		if err != nil {
+			return nil, err
 		}
-		v.Schema = vs
+		v.Schema = subVars
 	default:
 		return nil, fmt.Errorf("unknown workflow api parameter type: %v", p.Type)
 	}
@@ -3735,4 +3832,420 @@ func checkUserSpace(ctx context.Context, uid int64, spaceID int64) error {
 	}
 
 	return nil
+}
+
+func (w *ApplicationService) populateChatFlowRoleFields(role *workflow.ChatFlowRole, targetRole interface{}) error {
+	var avatarUri, audioStr, bgStr, obStr, srStr, uiStr string
+	var err error
+
+	if role.Avatar != nil {
+		avatarUri = role.Avatar.ImageUri
+
+	}
+	if role.AudioConfig != nil {
+		audioStr, err = sonic.MarshalString(*role.AudioConfig)
+		if err != nil {
+			return vo.WrapError(errno.ErrSerializationDeserializationFail, err)
+		}
+	}
+	if role.BackgroundImageInfo != nil {
+		bgStr, err = sonic.MarshalString(*role.BackgroundImageInfo)
+		if err != nil {
+			return vo.WrapError(errno.ErrSerializationDeserializationFail, err)
+		}
+	}
+	if role.OnboardingInfo != nil {
+		obStr, err = sonic.MarshalString(*role.OnboardingInfo)
+		if err != nil {
+			return vo.WrapError(errno.ErrSerializationDeserializationFail, err)
+		}
+	}
+	if role.SuggestReplyInfo != nil {
+		srStr, err = sonic.MarshalString(*role.SuggestReplyInfo)
+		if err != nil {
+			return vo.WrapError(errno.ErrSerializationDeserializationFail, err)
+		}
+	}
+	if role.UserInputConfig != nil {
+		uiStr, err = sonic.MarshalString(*role.UserInputConfig)
+		if err != nil {
+			return vo.WrapError(errno.ErrSerializationDeserializationFail, err)
+		}
+	}
+
+	switch r := targetRole.(type) {
+	case *vo.ChatFlowRoleCreate:
+		if role.Name != nil {
+			r.Name = *role.Name
+		}
+		if role.Description != nil {
+			r.Description = *role.Description
+		}
+		if avatarUri != "" {
+			r.AvatarUri = avatarUri
+		}
+		if audioStr != "" {
+			r.AudioConfig = audioStr
+		}
+		if bgStr != "" {
+			r.BackgroundImageInfo = bgStr
+		}
+		if obStr != "" {
+			r.OnboardingInfo = obStr
+		}
+		if srStr != "" {
+			r.SuggestReplyInfo = srStr
+		}
+		if uiStr != "" {
+			r.UserInputConfig = uiStr
+		}
+	case *vo.ChatFlowRoleUpdate:
+		r.Name = role.Name
+		r.Description = role.Description
+		if avatarUri != "" {
+			r.AvatarUri = ptr.Of(avatarUri)
+		}
+		if audioStr != "" {
+			r.AudioConfig = ptr.Of(audioStr)
+		}
+		if bgStr != "" {
+			r.BackgroundImageInfo = ptr.Of(bgStr)
+		}
+		if obStr != "" {
+			r.OnboardingInfo = ptr.Of(obStr)
+		}
+		if srStr != "" {
+			r.SuggestReplyInfo = ptr.Of(srStr)
+		}
+		if uiStr != "" {
+			r.UserInputConfig = ptr.Of(uiStr)
+		}
+	default:
+		return vo.WrapError(errno.ErrInvalidParameter, fmt.Errorf("invalid type for targetRole: %T", targetRole))
+	}
+
+	return nil
+}
+
+func IsChatFlow(wf *entity.Workflow) bool {
+	if wf == nil || wf.ID == 0 {
+		return false
+	}
+	return wf.Meta.Mode == workflow.WorkflowMode_ChatFlow
+}
+
+func (w *ApplicationService) CreateChatFlowRole(ctx context.Context, req *workflow.CreateChatFlowRoleRequest) (
+	_ *workflow.CreateChatFlowRoleResponse, err error) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrChatFlowRoleOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	uID := ctxutil.MustGetUIDFromCtx(ctx)
+	wf, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{
+		ID:       mustParseInt64(req.GetChatFlowRole().GetWorkflowID()),
+		MetaOnly: true,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	if err = checkUserSpace(ctx, uID, wf.Meta.SpaceID); err != nil {
+		return nil, err
+	}
+
+	role := req.GetChatFlowRole()
+
+	if !IsChatFlow(wf) {
+		logs.CtxWarnf(ctx, "CreateChatFlowRole not chat flow, workflowID: %d", wf.ID)
+		return nil, vo.WrapError(errno.ErrChatFlowRoleOperationFail, fmt.Errorf("workflow %d is not a chat flow", wf.ID))
+	}
+
+	oldRole, err := GetWorkflowDomainSVC().GetChatFlowRole(ctx, mustParseInt64(role.WorkflowID), "")
+	if err != nil {
+		return nil, err
+	}
+
+	var roleID int64
+	if oldRole != nil {
+		role.ID = strconv.FormatInt(oldRole.ID, 10)
+		roleID = oldRole.ID
+	}
+
+	if role.GetID() == "" || role.GetID() == "0" {
+		chatFlowRole := &vo.ChatFlowRoleCreate{
+			WorkflowID: mustParseInt64(role.WorkflowID),
+			CreatorID:  uID,
+		}
+		if err = w.populateChatFlowRoleFields(role, chatFlowRole); err != nil {
+			return nil, err
+		}
+		roleID, err = GetWorkflowDomainSVC().CreateChatFlowRole(ctx, chatFlowRole)
+		if err != nil {
+			return nil, err
+		}
+
+	} else {
+		chatFlowRole := &vo.ChatFlowRoleUpdate{
+			WorkflowID: mustParseInt64(role.WorkflowID),
+		}
+
+		if err = w.populateChatFlowRoleFields(role, chatFlowRole); err != nil {
+			return nil, err
+		}
+
+		err = GetWorkflowDomainSVC().UpdateChatFlowRole(ctx, chatFlowRole.WorkflowID, chatFlowRole)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &workflow.CreateChatFlowRoleResponse{
+		ID: strconv.FormatInt(roleID, 10),
+	}, nil
+}
+
+func (w *ApplicationService) DeleteChatFlowRole(ctx context.Context, req *workflow.DeleteChatFlowRoleRequest) (
+	_ *workflow.DeleteChatFlowRoleResponse, err error) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrChatFlowRoleOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	uID := ctxutil.MustGetUIDFromCtx(ctx)
+	wf, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{
+		ID:       mustParseInt64(req.GetWorkflowID()),
+		MetaOnly: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if err = checkUserSpace(ctx, uID, wf.Meta.SpaceID); err != nil {
+		return nil, err
+	}
+
+	err = GetWorkflowDomainSVC().DeleteChatFlowRole(ctx, mustParseInt64(req.ID), mustParseInt64(req.WorkflowID))
+	if err != nil {
+		return nil, err
+	}
+
+	return &workflow.DeleteChatFlowRoleResponse{}, nil
+}
+
+func (w *ApplicationService) GetChatFlowRole(ctx context.Context, req *workflow.GetChatFlowRoleRequest) (
+	_ *workflow.GetChatFlowRoleResponse, err error) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrChatFlowRoleOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	uID := ctxutil.MustGetUIDFromCtx(ctx)
+	wf, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{
+		ID:       mustParseInt64(req.GetWorkflowID()),
+		MetaOnly: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if err = checkUserSpace(ctx, uID, wf.Meta.SpaceID); err != nil {
+		return nil, err
+	}
+
+	if !IsChatFlow(wf) {
+		logs.CtxWarnf(ctx, "GetChatFlowRole not chat flow, workflowID: %d", wf.ID)
+		return nil, vo.WrapError(errno.ErrChatFlowRoleOperationFail, fmt.Errorf("workflow %d is not a chat flow", wf.ID))
+	}
+
+	var version string
+	if wf.Meta.AppID != nil {
+		if vl, err := GetWorkflowDomainSVC().GetWorkflowVersionsByConnector(ctx, mustParseInt64(req.GetConnectorID()), wf.ID, 1); err != nil {
+			return nil, err
+		} else if len(vl) > 0 {
+			version = vl[0]
+		}
+
+	}
+
+	role, err := GetWorkflowDomainSVC().GetChatFlowRole(ctx, mustParseInt64(req.WorkflowID), version)
+	if err != nil {
+		return nil, err
+	}
+
+	if role == nil {
+		logs.CtxWarnf(ctx, "GetChatFlowRole role nil, workflowID: %d", wf.ID)
+		// Return nil for the error to align with the production behavior,
+		// where the GET API may be called before the CREATE API during chatflow creation.
+		return &workflow.GetChatFlowRoleResponse{}, nil
+	}
+
+	wfRole, err := w.convertChatFlowRole(ctx, role)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get chat flow role config, internal data processing error: %+v", err)
+	}
+
+	return &workflow.GetChatFlowRoleResponse{
+		Role: wfRole,
+	}, nil
+}
+
+func (w *ApplicationService) convertChatFlowRole(ctx context.Context, role *entity.ChatFlowRole) (*workflow.ChatFlowRole, error) {
+	var err error
+	res := &workflow.ChatFlowRole{
+		ID:          strconv.FormatInt(role.ID, 10),
+		WorkflowID:  strconv.FormatInt(role.WorkflowID, 10),
+		Name:        ptr.Of(role.Name),
+		Description: ptr.Of(role.Description),
+	}
+
+	if role.AvatarUri != "" {
+		url, err := w.ImageX.GetResourceURL(ctx, role.AvatarUri)
+		if err != nil {
+			return nil, err
+		}
+		res.Avatar = &workflow.AvatarConfig{
+			ImageUri: role.AvatarUri,
+			ImageUrl: url.URL,
+		}
+	}
+
+	if role.AudioConfig != "" {
+		err = sonic.UnmarshalString(role.AudioConfig, &res.AudioConfig)
+		if err != nil {
+			logs.CtxErrorf(ctx, "GetChatFlowRole AudioConfig UnmarshalString err: %+v", err)
+			return nil, vo.WrapError(errno.ErrSerializationDeserializationFail, err)
+		}
+	}
+
+	if role.OnboardingInfo != "" {
+		err = sonic.UnmarshalString(role.OnboardingInfo, &res.OnboardingInfo)
+		if err != nil {
+			logs.CtxErrorf(ctx, "GetChatFlowRole OnboardingInfo UnmarshalString err: %+v", err)
+			return nil, vo.WrapError(errno.ErrSerializationDeserializationFail, err)
+		}
+	}
+
+	if role.SuggestReplyInfo != "" {
+		err = sonic.UnmarshalString(role.SuggestReplyInfo, &res.SuggestReplyInfo)
+		if err != nil {
+			logs.CtxErrorf(ctx, "GetChatFlowRole SuggestReplyInfo UnmarshalString err: %+v", err)
+			return nil, vo.WrapError(errno.ErrSerializationDeserializationFail, err)
+		}
+	}
+
+	if role.UserInputConfig != "" {
+		err = sonic.UnmarshalString(role.UserInputConfig, &res.UserInputConfig)
+		if err != nil {
+			logs.CtxErrorf(ctx, "GetChatFlowRole UserInputConfig UnmarshalString err: %+v", err)
+			return nil, vo.WrapError(errno.ErrSerializationDeserializationFail, err)
+		}
+	}
+
+	if role.BackgroundImageInfo != "" {
+		res.BackgroundImageInfo = &workflow.BackgroundImageInfo{}
+		err = sonic.UnmarshalString(role.BackgroundImageInfo, res.BackgroundImageInfo)
+		if err != nil {
+			logs.CtxErrorf(ctx, "GetChatFlowRole BackgroundImageInfo UnmarshalString err: %+v", err)
+			return nil, vo.WrapError(errno.ErrSerializationDeserializationFail, err)
+		}
+		if res.BackgroundImageInfo != nil {
+			if res.BackgroundImageInfo.WebBackgroundImage != nil && res.BackgroundImageInfo.WebBackgroundImage.OriginImageUri != nil {
+				url, err := w.ImageX.GetResourceURL(ctx, res.BackgroundImageInfo.WebBackgroundImage.GetOriginImageUri())
+				if err != nil {
+					logs.CtxErrorf(ctx, "get url by uri err, err:%s", err.Error())
+					return nil, err
+				}
+				res.BackgroundImageInfo.WebBackgroundImage.ImageUrl = &url.URL
+			}
+
+			if res.BackgroundImageInfo.MobileBackgroundImage != nil && res.BackgroundImageInfo.MobileBackgroundImage.OriginImageUri != nil {
+				url, err := w.ImageX.GetResourceURL(ctx, res.BackgroundImageInfo.MobileBackgroundImage.GetOriginImageUri())
+				if err != nil {
+					logs.CtxErrorf(ctx, "get url by uri err, err:%s", err.Error())
+					return nil, err
+				}
+				res.BackgroundImageInfo.MobileBackgroundImage.ImageUrl = &url.URL
+			}
+		}
+	}
+
+	return res, nil
+}
+
+func (w *ApplicationService) OpenAPIGetWorkflowInfo(ctx context.Context, req *workflow.OpenAPIGetWorkflowInfoRequest) (
+	_ *workflow.OpenAPIGetWorkflowInfoResponse, err error) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrChatFlowRoleOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	uID := ctxutil.GetApiAuthFromCtx(ctx).UserID
+	wf, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{
+		ID:       mustParseInt64(req.GetWorkflowID()),
+		MetaOnly: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if err = checkUserSpace(ctx, uID, wf.Meta.SpaceID); err != nil {
+		return nil, err
+	}
+
+	if !IsChatFlow(wf) {
+		logs.CtxWarnf(ctx, "GetChatFlowRole not chat flow, workflowID: %d", wf.ID)
+		return nil, vo.WrapError(errno.ErrChatFlowRoleOperationFail, fmt.Errorf("workflow %d is not a chat flow", wf.ID))
+	}
+
+	var version string
+	if wf.Meta.AppID != nil {
+		if vl, err := GetWorkflowDomainSVC().GetWorkflowVersionsByConnector(ctx, mustParseInt64(req.GetConnectorID()), wf.ID, 1); err != nil {
+			return nil, err
+		} else if len(vl) > 0 {
+			version = vl[0]
+		}
+	}
+
+	role, err := GetWorkflowDomainSVC().GetChatFlowRole(ctx, mustParseInt64(req.WorkflowID), version)
+	if err != nil {
+		return nil, err
+	}
+
+	if role == nil {
+		logs.CtxWarnf(ctx, "GetChatFlowRole role nil, workflowID: %d", wf.ID)
+		// Return nil for the error to align with the production behavior,
+		// where the GET API may be called before the CREATE API during chatflow creation.
+		return &workflow.OpenAPIGetWorkflowInfoResponse{}, nil
+	}
+
+	wfRole, err := w.convertChatFlowRole(ctx, role)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get chat flow role config, internal data processing error: %+v", err)
+	}
+
+	return &workflow.OpenAPIGetWorkflowInfoResponse{
+		WorkflowInfo: &workflow.WorkflowInfo{
+			Role: wfRole,
+		},
+	}, nil
 }
