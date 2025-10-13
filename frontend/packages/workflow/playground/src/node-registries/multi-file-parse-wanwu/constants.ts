@@ -8,7 +8,7 @@ export const INPUT_PATH = 'inputs.inputParameters';
 export const OUTPUTS = [
   {
     key: nanoid(),
-    name: 'textList',
+    name: 'text',
     type: ViewVariableType.ArrayString,
   },
 ];
