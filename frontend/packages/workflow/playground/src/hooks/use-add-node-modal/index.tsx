@@ -256,7 +256,6 @@ export const useAddNodeModal = (prevAddNodeRef: {
       const templateIcon = playgroundContext.getNodeTemplateInfoByType(
         StandardNodeType.Api,
       )?.icon;
-      console.log(val, '------------------------------val')
       const nodeJSON = createApiNodeInfo(val, templateIcon);
       const position = {
         clientX: prevAddNodeRef.current.x,
