@@ -1675,6 +1675,18 @@ export interface FCWorkflowSetting {
   workflow_version?: string;
 }
 
+export interface GetToolDetailRequest {
+  toolType?: string;
+  actionName?: string;
+  toolId?: string;
+}
+
+export interface GetToolDetailResponse {
+  code?: Int64;
+  msg?: string;
+  data?: any;
+}
+
 export interface GetApiDetailRequest {
   /** 插件的唯一标识符。用于指定要查询哪个插件下的 API 详情。 */
   pluginID?: string;

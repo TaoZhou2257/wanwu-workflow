@@ -85,7 +85,7 @@ export const PluginModal: React.FC<PluginModalProps> = ({
       header={I18n.t('bot_edit_plugin_select_title')}
       className={classNames(s['plugin-modal'], props.className)}
       sider={sider}
-      extra={!IS_OPEN_SOURCE ? <PluginFeatButton /> : null}
+      /*extra={!IS_OPEN_SOURCE ? <PluginFeatButton /> : null}*/
       filter={filter}
       content={content}
     />

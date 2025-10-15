@@ -29,7 +29,7 @@ export enum StandardNodeType {
   Start = '1',
   End = '2',
   LLM = '3',
-  Api = '4',
+  Api = '1004',
   Code = '5',
   Dataset = '6',
   If = '8',

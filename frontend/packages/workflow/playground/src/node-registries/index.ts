@@ -50,7 +50,7 @@ export { SET_VARIABLE_NODE_REGISTRY } from './set-variable';
 export { BATCH_NODE_REGISTRY } from './batch';
 export { INTENT_NODE_REGISTRY } from './intent';
 export { IF_NODE_REGISTRY } from './if';
-export { PLUGIN_NODE_REGISTRY } from './plugin';
+export { PLUGIN_NODE_REGISTRY } from './plugin-wanwu';
 export { SUB_WORKFLOW_NODE_REGISTRY } from './sub-workflow-wanwu';
 export { VARIABLE_NODE_REGISTRY } from './variable';
 export { JSON_STRINGIFY_NODE_REGISTRY } from './json-stringify';

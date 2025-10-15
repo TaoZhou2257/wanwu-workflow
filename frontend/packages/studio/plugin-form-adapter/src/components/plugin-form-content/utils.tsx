@@ -173,7 +173,7 @@ export const usePluginSchame = (): UsePluginSchameReturnValue => {
   const [defaultRuntime, setDefaultRuntime] = useState('1');
 
   const getOption = async () => {
-    const res = await PluginDevelopApi.GetOAuthSchema();
+    const res = {} //await PluginDevelopApi.GetOAuthSchema();
     const authOptions = [
       {
         label: I18n.t('create_plugin_modal_Authorization_no'),
@@ -196,7 +196,7 @@ export const usePluginSchame = (): UsePluginSchameReturnValue => {
         label: I18n.t('create_plugin_modal_Authorization_oauth'),
         value: 3,
         key: 'OAuth',
-        children: safeJSONParse(res.oauth_schema),
+        children: [] //safeJSONParse(res.oauth_schema),
       },
     ];
     setAuthOption(authOptions);

@@ -23,7 +23,7 @@ import { StandardNodeType } from '@coze-workflow/base';
 export const SETTING_ON_ERROR_V2_NODES = [
   StandardNodeType.Code,
   StandardNodeType.LLM,
-  StandardNodeType.Api,
+  /*StandardNodeType.Api,*/
   StandardNodeType.Database,
   StandardNodeType.ImageGenerate,
   StandardNodeType.DatabaseCreate,

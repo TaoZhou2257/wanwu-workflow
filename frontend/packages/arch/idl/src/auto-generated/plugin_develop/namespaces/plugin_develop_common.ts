@@ -862,7 +862,7 @@ export interface PluginInfoForPlayground {
   /** description_for_human */
   desc_for_human?: string;
   plugin_icon?: string;
-  plugin_type?: PluginType;
+  plugin_type?: string; //PluginType;
   status?: PluginStatus;
   auth?: number;
   client_id?: string;

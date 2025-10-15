@@ -588,6 +588,17 @@ export interface GetProductListData {
   total?: number;
 }
 
+export interface ListSelectRequest {
+  toolType?: string;
+  name?: string;
+}
+
+export interface ListSelectResponse {
+  code?: number;
+  data?: any;
+  msg?: string;
+}
+
 export interface GetProductListRequest {
   entity_type?: product_common.ProductEntityType;
   category_id?: string;
@@ -896,7 +907,7 @@ export interface PluginExtraInfo {
   space_id?: string;
   material_id?: string;
   connectors?: Array<PluginConnectorInfo>;
-  plugin_type?: product_common.PluginType;
+  plugin_type?: string; //product_common.PluginType;
 }
 
 export interface PluginToolExample {
@@ -1010,6 +1021,13 @@ export interface ProductDataIndicator {
 }
 
 export interface ProductInfo {
+  toolName?: string;
+  toolId?: string;
+  toolType?: string;
+  desc?: string;
+  actions?: any;
+  apiKey?: string;
+  iconUrl?: string;
   meta_info: ProductMetaInfo;
   user_behavior?: UserBehaviorInfo;
   commercial_setting?: product_common.CommercialSetting;
@@ -1031,6 +1049,8 @@ export interface ProductMaterial {
 
 export interface ProductMetaInfo {
   id?: string;
+  type?: string;
+  apiKey?: string;
   /** 商品/模板名称 */
   name?: string;
   /** 素材 ID，由 entity_type 来决定是 bot/plugin 的ID */

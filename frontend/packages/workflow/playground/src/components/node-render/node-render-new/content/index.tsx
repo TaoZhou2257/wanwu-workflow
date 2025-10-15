@@ -23,7 +23,7 @@ import { TriggerDeleteContent } from '@/node-registries/trigger-delete';
 import { SubWorkflowContent as SubWorkflowContentV2 } from '@/node-registries/sub-workflow-wanwu';
 import { StartContent } from '@/node-registries/start';
 import { SetVariableContent } from '@/node-registries/set-variable';
-import { PluginContent } from '@/node-registries/plugin';
+import { PluginContent } from '@/node-registries/plugin-wanwu';
 import { OutputContent } from '@/node-registries/output';
 import { LtmContent } from '@/node-registries/ltm';
 import { LoopContent } from '@/node-registries/loop';

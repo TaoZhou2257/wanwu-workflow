@@ -32,6 +32,7 @@ import * as resource_common from './namespaces/resource_common';
 import * as trace from './namespaces/trace';
 import * as trigger from './namespaces/trigger';
 import * as workflow from './namespaces/workflow';
+import {GetToolDetailRequest} from "./namespaces/workflow";
 
 export {
   agent_provider,
@@ -930,6 +931,26 @@ export default class WorkflowApiService<T> {
       project_id: _req['project_id'],
       plugin_version: _req['plugin_version'],
       Base: _req['Base'],
+    };
+    return this.request({ url, method, params }, options);
+  }
+
+  /**
+   * GET /user/api/v1/workflow/tool/action
+   *
+   * 获取workflow引用的工具action详情
+   */
+  GetToolActionDetail(
+    req?: workflow.GetToolDetailRequest,
+    options?: T,
+  ): Promise<workflow.GetToolDetailResponse> {
+    const _req = req || {};
+    const url = this.genBaseURL('/user/api/v1/workflow/tool/action');
+    const method = 'GET';
+    const params = {
+      toolType: _req['toolType'],
+      actionName: _req['actionName'],
+      toolId: _req['toolId'],
     };
     return this.request({ url, method, params }, options);
   }
