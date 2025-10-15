@@ -32,7 +32,6 @@ import * as resource_common from './namespaces/resource_common';
 import * as trace from './namespaces/trace';
 import * as trigger from './namespaces/trigger';
 import * as workflow from './namespaces/workflow';
-import {GetToolDetailRequest} from "./namespaces/workflow";
 
 export {
   agent_provider,

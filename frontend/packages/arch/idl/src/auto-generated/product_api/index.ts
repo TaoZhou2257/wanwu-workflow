@@ -28,7 +28,6 @@ import * as product from './namespaces/product';
 import * as product_audit_callback from './namespaces/product_audit_callback';
 import * as product_common from './namespaces/product_common';
 import * as public_api from './namespaces/public_api';
-import {ListSelectRequest} from "./namespaces/public_api";
 
 export {
   admin_api,
