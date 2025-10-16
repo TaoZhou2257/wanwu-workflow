@@ -75,10 +75,12 @@ export const FormRender = ({ form }: FormRenderProps<ApiNodeFormData>) => {
       {/*<BatchModeField name={BATCH_MODE_PATH} />
 
       <Batch batchModeName={BATCH_MODE_PATH} name={'inputs.batch'} />*/}
-      <ApiKeyField
-        defaultValue={indentifier?.apiKey}
-        onChangeValue={setApiKey}
-      />
+      {indentifier?.toolType === 'builtin' && (
+        <ApiKeyField
+          defaultValue={indentifier?.apiKey}
+          onChangeValue={setApiKey}
+        />
+      )}
 
       <InputsKVField
         name={INPUT_PARAMS_PATH}
