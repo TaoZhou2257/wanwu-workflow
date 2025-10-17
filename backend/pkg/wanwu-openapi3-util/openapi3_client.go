@@ -125,16 +125,16 @@ func executeRequest(
 		}
 	}
 
-	// query
-	fullPath := specPath
-	if params != nil {
-		fullPath = buildPathWithQuery(fullPath, params.QueryParams)
-	}
-
 	// base + path
-	fullURL, err := url.JoinPath(baseURL, fullPath)
+	fullPath, err := url.JoinPath(baseURL, specPath)
 	if err != nil {
 		return nil, err
+	}
+
+	// query
+	fullURL := fullPath
+	if params != nil {
+		fullURL = buildPathWithQuery(fullURL, params.QueryParams)
 	}
 
 	// body
@@ -168,7 +168,7 @@ func executeRequest(
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("execute method(%v) path(%v) http status(%v)", method, path, resp.StatusCode)
+		return nil, fmt.Errorf("execute method(%v) url(%v) http status(%v)", method, fullURL, resp.StatusCode)
 	}
 
 	respBody, err := io.ReadAll(resp.Body)
