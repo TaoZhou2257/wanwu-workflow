@@ -747,7 +747,7 @@ func parseBlockInputRef(content any) (*vo.BlockInputReference, error) {
 	return p, nil
 }
 
-var validateNameRegex = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+var validateNameRegex = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_-]*$`)
 
 func validateInputParameterName(name string) bool {
 	return validateNameRegex.Match([]byte(name))
