@@ -26,7 +26,7 @@ type RequestParams struct {
 	PathParams   map[string]string
 	HeaderParams map[string]string
 	QueryParams  map[string]interface{}
-	BodyData     map[string]interface{}
+	BodyParams   map[string]interface{}
 }
 
 func NewClient(ctx context.Context, schema []byte) (*Client, error) {
@@ -115,31 +115,32 @@ func executeRequest(
 	params *RequestParams,
 ) (interface{}, error) {
 
+	// path
+	specPath := path
+	var err error
+	if params != nil {
+		specPath, err = buildPathWithParams(specPath, params.PathParams)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// query
+	fullPath := specPath
+	if params != nil {
+		fullPath = buildPathWithQuery(fullPath, params.QueryParams)
+	}
+
 	// base + path
-	fullPath, err := url.JoinPath(baseURL, path)
+	fullURL, err := url.JoinPath(baseURL, fullPath)
 	if err != nil {
 		return nil, err
 	}
 
-	// full path
-	if params != nil {
-		specPath, err := buildPathWithParams(fullPath, params.PathParams)
-		if err != nil {
-			return nil, err
-		}
-		fullPath = specPath
-	}
-
-	// query
-	fullURL := fullPath
-	if params != nil {
-		fullURL = buildPathWithQuery(fullPath, params.QueryParams)
-	}
-
 	// body
 	var body io.Reader
-	if params != nil && params.BodyData != nil {
-		jsonData, err := json.Marshal(params.BodyData)
+	if params != nil && params.BodyParams != nil {
+		jsonData, err := json.Marshal(params.BodyParams)
 		if err != nil {
 			return nil, err
 		}
@@ -187,7 +188,7 @@ func buildPathWithParams(path string, pathParams map[string]string) (string, err
 
 	// 替换路径参数
 	for paramName, paramValue := range pathParams {
-		placeholder := "%7B" + paramName + "%7D"
+		placeholder := "{" + paramName + "}"
 		if !strings.Contains(specPath, placeholder) {
 			return "", fmt.Errorf("path parameter(%v) not found in path(%v)", paramName, path)
 		}

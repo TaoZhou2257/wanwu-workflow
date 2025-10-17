@@ -20,7 +20,7 @@ import (
 	coze_app_workflow "github.com/coze-dev/coze-studio/backend/application/workflow"
 	coze_cross_upload "github.com/coze-dev/coze-studio/backend/crossdomain/contract/upload"
 	coze_cross_user "github.com/coze-dev/coze-studio/backend/crossdomain/contract/user"
-	crossuploadImpl "github.com/coze-dev/coze-studio/backend/crossdomain/impl/upload"
+	coze_cross_upload_impl "github.com/coze-dev/coze-studio/backend/crossdomain/impl/upload"
 	coze_workflow "github.com/coze-dev/coze-studio/backend/domain/workflow"
 	coze_workflow_service "github.com/coze-dev/coze-studio/backend/domain/workflow/service"
 	coze_cache "github.com/coze-dev/coze-studio/backend/infra/cache"
@@ -88,7 +88,7 @@ func Init(ctx context.Context, infra Infra) error {
 
 	// init cross domain user
 	coze_cross_user.SetDefaultSVC(crossuserImpl.DefaultMock())
-	coze_cross_upload.SetDefaultWanwuSVC(crossuploadImpl.NewWanwuUploader(infra.Storage))
+	coze_cross_upload.SetDefaultWanwuSVC(coze_cross_upload_impl.NewWanwuUploader(infra.Storage))
 
 	return nil
 }

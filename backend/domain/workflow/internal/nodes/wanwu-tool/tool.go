@@ -15,22 +15,23 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/canvas/convert"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/schema"
-	openapi3_util "github.com/coze-dev/coze-studio/backend/pkg/openapi3-util" // 根据实际路径调整
+	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
+	openapi3_util "github.com/coze-dev/coze-studio/backend/pkg/wanwu-openapi3-util" // 根据实际路径调整
 	"github.com/go-resty/resty/v2"
 )
 
 type Config struct {
 	APISchema string
-	ApiKey    string
 	ActionID  string
+	ApiAuth   *customToolApiAuthWebRequest
 }
 
 func (c *Config) Adapt(_ context.Context, n *vo.Node, _ ...nodes.AdaptOption) (*schema.NodeSchema, error) {
 	var err error
 	inputs := n.Data.Inputs
 	toolInfo := inputs.WanwuToolParam
-	c.APISchema, c.ApiKey, err = toolRequest(toolInfo.ToolID, toolInfo.ToolType, toolInfo.ApiKey)
+	c.APISchema, c.ApiAuth, err = toolRequest(toolInfo.ToolID, toolInfo.ToolType, toolInfo.ApiKey)
 	if err != nil {
 		return nil, fmt.Errorf("tool request err: %v", err)
 	}
@@ -63,7 +64,7 @@ func (c *Config) Build(ctx context.Context, ns *schema.NodeSchema, _ ...schema.B
 	tool := &WanWuToolInfo{
 		client:   client,
 		actionId: c.ActionID,
-		apiKey:   c.ApiKey,
+		apiAuth:  c.ApiAuth,
 	}
 	return tool, nil
 }
@@ -71,20 +72,69 @@ func (c *Config) Build(ctx context.Context, ns *schema.NodeSchema, _ ...schema.B
 type WanWuToolInfo struct {
 	client   *openapi3_util.Client
 	actionId string
-	apiKey   string
+	apiAuth  *customToolApiAuthWebRequest
 }
 
-// ParsedParams 解析后的参数
-type ParsedParams struct {
-	PathParams   map[string]string
-	QueryParams  map[string]interface{}
-	HeaderParams map[string]string
-	BodyParams   map[string]interface{}
+func (i *WanWuToolInfo) Invoke(ctx context.Context, in map[string]any) (map[string]any, error) {
+	// 解析输入参数
+	params := parseInputParams(in)
+
+	// 设置认证头
+	if i.apiAuth != nil {
+		if params.HeaderParams == nil {
+			params.HeaderParams = make(map[string]string)
+		}
+		if i.apiAuth.Type != "None" {
+			if i.apiAuth.AuthType == "Custom" {
+				if i.apiAuth.CustomHeaderName != "" {
+					params.HeaderParams[i.apiAuth.CustomHeaderName] = i.apiAuth.APIKey
+				}
+			} else {
+				params.HeaderParams["Authorization"] = "Bearer " + i.apiAuth.APIKey
+			}
+		}
+	}
+
+	// 构建请求参数
+	requestParams := &openapi3_util.RequestParams{
+		PathParams:   params.PathParams,
+		QueryParams:  params.QueryParams,
+		HeaderParams: params.HeaderParams,
+		BodyParams:   params.BodyParams,
+	}
+
+	jsonData, err := json.Marshal(requestParams)
+	if err != nil {
+		return nil, fmt.Errorf("params marshal err: %v", err)
+	}
+	logs.Debugf("workflow tool node invoke action(%v) params: %v", i.actionId, string(jsonData))
+
+	result, err := i.client.DoRequestByOperationID(ctx, i.actionId, requestParams)
+	if err != nil {
+		return nil, fmt.Errorf("api request failed: %v", err)
+	}
+
+	// 转换结果为 map[string]any
+	var ret map[string]any
+	switch v := result.(type) {
+	case map[string]any:
+		ret = v
+	case string:
+		// 如果是字符串，尝试解析为 JSON
+		if err := sonic.Unmarshal([]byte(v), &ret); err != nil {
+			// 如果解析失败，作为普通字符串返回
+			ret = map[string]any{"result": v}
+		}
+	default:
+		// 其他类型直接包装
+		ret = map[string]any{"result": v}
+	}
+
+	return ret, nil
 }
 
-// parseInputParams 解析输入参数，按照位置分类
-func parseInputParams(input map[string]any) *ParsedParams {
-	params := &ParsedParams{
+func parseInputParams(input map[string]any) *openapi3_util.RequestParams {
+	params := &openapi3_util.RequestParams{
 		PathParams:   make(map[string]string),
 		QueryParams:  make(map[string]interface{}),
 		HeaderParams: make(map[string]string),
@@ -120,68 +170,13 @@ func parseInputParams(input map[string]any) *ParsedParams {
 	return params
 }
 
-func (i *WanWuToolInfo) Invoke(ctx context.Context, in map[string]any) (map[string]any, error) {
-	// 解析输入参数
-	params := parseInputParams(in)
-
-	// 设置认证头
-	if i.apiKey != "" {
-		if params.HeaderParams == nil {
-			params.HeaderParams = make(map[string]string)
-		}
-		// 内置工具默认使用 Bearer 认证
-		if !strings.HasPrefix(strings.ToLower(i.apiKey), "bearer ") {
-			params.HeaderParams["Authorization"] = "Bearer " + i.apiKey
-		} else {
-			params.HeaderParams["Authorization"] = i.apiKey
-		}
-	}
-
-	// 构建请求参数
-	requestParams := &openapi3_util.RequestParams{
-		PathParams:   params.PathParams,
-		QueryParams:  params.QueryParams,
-		HeaderParams: params.HeaderParams,
-		BodyData:     params.BodyParams,
-	}
-	jsonData, err := json.MarshalIndent(requestParams, "", "  ")
-	if err != nil {
-		fmt.Println("Error:", err)
-	} else {
-		fmt.Println(string(jsonData))
-	}
-	// 使用新的客户端执行请求
-	result, err := i.client.DoRequestByOperationID(ctx, i.actionId, requestParams)
-	if err != nil {
-		return nil, fmt.Errorf("api request failed: %v", err)
-	}
-
-	// 转换结果为 map[string]any
-	var ret map[string]any
-	switch v := result.(type) {
-	case map[string]any:
-		ret = v
-	case string:
-		// 如果是字符串，尝试解析为 JSON
-		if err := sonic.Unmarshal([]byte(v), &ret); err != nil {
-			// 如果解析失败，作为普通字符串返回
-			ret = map[string]any{"result": v}
-		}
-	default:
-		// 其他类型直接包装
-		ret = map[string]any{"result": v}
-	}
-
-	return ret, nil
-}
-
 // 原有的 toolRequest 函数保持不变
-func toolRequest(toolId, toolType, userApiKey string) (string, string, error) {
+func toolRequest(toolId, toolType, userApiKey string) (string, *customToolApiAuthWebRequest, error) {
 	switch toolType {
 	case "custom":
 		url, err := url.JoinPath(os.Getenv("WANWU_CALLBACK_CUSTOM_TOOL_URL"))
 		if err != nil {
-			return "", "", err
+			return "", nil, err
 		}
 		var res response
 		var ret customToolDetail
@@ -191,35 +186,23 @@ func toolRequest(toolId, toolType, userApiKey string) (string, string, error) {
 			SetQueryParam("customToolId", toolId).
 			SetResult(&res).Get(url)
 		if err != nil {
-			return "", "", fmt.Errorf("request %v err: %v", url, err)
+			return "", nil, fmt.Errorf("request %v err: %v", url, err)
 		}
 		if resp.StatusCode() >= 300 {
-			return "", "", fmt.Errorf("request %v http status %v msg: %v", url, resp.StatusCode(), resp.String())
+			return "", nil, fmt.Errorf("request %v http status %v msg: %v", url, resp.StatusCode(), resp.String())
 		}
 		marshal, err := sonic.Marshal(res.Data)
 		if err != nil {
-			return "", "", fmt.Errorf("request %v marshal response body: %v", url, err)
+			return "", nil, fmt.Errorf("request %v marshal response body: %v", url, err)
 		}
 		if err = sonic.Unmarshal(marshal, &ret); err != nil {
-			return "", "", fmt.Errorf("request %v unmarshal response body: %v", url, err)
+			return "", nil, fmt.Errorf("request %v unmarshal response body: %v", url, err)
 		}
-
-		// 处理自定义工具的认证信息
-		var apiKey string
-		if ret.ApiAuth.Type == "APIKey" {
-			if ret.ApiAuth.AuthType == "bearer" {
-				apiKey = "Bearer " + ret.ApiAuth.APIKey
-			} else if ret.ApiAuth.AuthType == "custom" && ret.ApiAuth.CustomHeaderName != "" {
-				apiKey = ret.ApiAuth.CustomHeaderName + " " + ret.ApiAuth.APIKey
-			} else {
-				apiKey = ret.ApiAuth.APIKey
-			}
-		}
-		return ret.Schema, apiKey, nil
+		return ret.Schema, &ret.ApiAuth, nil
 	case "builtin":
 		url, err := url.JoinPath(os.Getenv("WANWU_CALLBACK_SQUARE_TOOL_URL"))
 		if err != nil {
-			return "", "", err
+			return "", nil, err
 		}
 		var res response
 		var ret toolSquareDetail
@@ -229,27 +212,26 @@ func toolRequest(toolId, toolType, userApiKey string) (string, string, error) {
 			SetQueryParam("toolSquareId", toolId).
 			SetResult(&res).Get(url)
 		if err != nil {
-			return "", "", fmt.Errorf("request %v err: %v", url, err)
+			return "", nil, fmt.Errorf("request %v err: %v", url, err)
 		}
 		if resp.StatusCode() >= 300 {
-			return "", "", fmt.Errorf("request %v http status %v msg: %v", url, resp.StatusCode(), resp.String())
+			return "", nil, fmt.Errorf("request %v http status %v msg: %v", url, resp.StatusCode(), resp.String())
 		}
 		marshal, err := sonic.Marshal(res.Data)
 		if err != nil {
-			return "", "", fmt.Errorf("request %v marshal response body: %v", url, err)
+			return "", nil, fmt.Errorf("request %v marshal response body: %v", url, err)
 		}
 		if err = sonic.Unmarshal(marshal, &ret); err != nil {
-			return "", "", fmt.Errorf("request %v unmarshal response body: %v", url, err)
+			return "", nil, fmt.Errorf("request %v unmarshal response body: %v", url, err)
 		}
-
-		// 内置工具使用用户提供的 API Key，并默认使用 Bearer 认证
-		apiKey := userApiKey
-		if apiKey != "" && !strings.HasPrefix(strings.ToLower(apiKey), "bearer ") {
-			apiKey = "Bearer " + apiKey
+		apiAuth := &customToolApiAuthWebRequest{Type: "None"}
+		if userApiKey != "" {
+			apiAuth.Type = "API Key"
+			apiAuth.APIKey = userApiKey
 		}
-		return ret.Schema, apiKey, nil
+		return ret.Schema, apiAuth, nil
 	}
-	return "", "", errors.New("unsupported tool type")
+	return "", nil, errors.New("unsupported tool type")
 }
 
 // 原有的结构体保持不变
@@ -260,10 +242,10 @@ type response struct {
 }
 
 type customToolApiAuthWebRequest struct {
-	Type             string `json:"type"`             // 认证类型: None 或 APIKey
+	Type             string `json:"type"`             // 认证类型: None 或 'API Key'
 	APIKey           string `json:"apiKey"`           // apiKey
+	AuthType         string `json:"authType"`         // Auth类型: Custom 或空
 	CustomHeaderName string `json:"customHeaderName"` // 自定义头名
-	AuthType         string `json:"authType"`         // Auth类型
 }
 
 type customToolApiResponse struct {
