@@ -88,10 +88,10 @@ export const PLUGIN_NODE_REGISTRY: WorkflowNodeRegistry<NodeTestMeta> = {
     return pluginService.getApiError(identifier);
   },
 
-  getHeaderExtraOperation: (formValues: ApiNodeFormData) => {
+  /*getHeaderExtraOperation: (formValues: ApiNodeFormData) => {
     const identifier = getApiNodeIdentifier(formValues?.inputs?.apiParam ?? []);
     return createPluginLink(identifier);
-  },
+  },*/
 
   onDispose: (nodeJson, context: WorkflowPlaygroundContext) => {
     if (!nodeJson) {
