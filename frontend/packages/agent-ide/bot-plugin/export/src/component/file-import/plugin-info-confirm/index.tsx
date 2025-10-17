@@ -113,9 +113,9 @@ export const PluginInfoConfirm: React.FC<PluginInfoConfirmProps> = props => {
 
   useEffect(() => {
     (async () => {
-      const res = await DeveloperApi.GetOAuthSchema();
+      /*const res = await DeveloperApi.GetOAuthSchema();
       const authOptions = getAuthOptions(res?.oauth_schema);
-      setAuthOption(authOptions);
+      setAuthOption(authOptions);*/
     })();
   }, []);
 

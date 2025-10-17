@@ -45,6 +45,6 @@ export {
   formatCacheKey,
   fetchPlugin,
   type PluginContentListItem,
-} from './service/fetch-plugin';
+} from './service/fetch-plugin-wanwu';
 
-export { PluginPanel, type PluginPanelProps } from './components/plugin-panel';
+export { PluginPanel, type PluginPanelProps } from './components/plugin-panel-wanwu';

@@ -24,6 +24,8 @@ interface PluginApi {
   plugin_name: string;
   api_id: string;
   plugin_id: string;
+  plugin_type?: string;
+  apiKey?: string;
   plugin_icon: string;
   desc: string;
   plugin_product_status: number;
@@ -35,7 +37,7 @@ export const createApiNodeInfo = (
   apiParams: Partial<PluginApi> | undefined,
   templateIcon?: string,
 ): ApiNodeDataDTO => {
-  const { name, plugin_name, api_id, plugin_id, desc, version_ts } =
+  const { name, plugin_name, plugin_type, apiKey, api_id, plugin_id, desc, version_ts } =
     apiParams || {};
 
   return {
@@ -50,11 +52,13 @@ export const createApiNodeInfo = (
         apiParam: [
           BlockInput.create('apiID', api_id),
           BlockInput.create('apiName', name),
+          BlockInput.create('toolType', plugin_type),
+          BlockInput.create('apiKey', apiKey),
           BlockInput.create('pluginID', plugin_id),
           BlockInput.create('pluginName', plugin_name),
-          BlockInput.create('pluginVersion', version_ts || ''),
+          /*BlockInput.create('pluginVersion', version_ts || ''),
           BlockInput.create('tips', ''),
-          BlockInput.create('outDocLink', ''),
+          BlockInput.create('outDocLink', ''),*/
         ],
       },
     },

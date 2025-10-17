@@ -934,6 +934,26 @@ export default class WorkflowApiService<T> {
     return this.request({ url, method, params }, options);
   }
 
+  /**
+   * GET /user/api/v1/workflow/tool/action
+   *
+   * 获取workflow引用的工具action详情
+   */
+  GetToolActionDetail(
+    req?: workflow.GetToolDetailRequest,
+    options?: T,
+  ): Promise<workflow.GetToolDetailResponse> {
+    const _req = req || {};
+    const url = this.genBaseURL('/user/api/v1/workflow/tool/action');
+    const method = 'GET';
+    const params = {
+      toolType: _req['toolType'],
+      actionName: _req['actionName'],
+      toolId: _req['toolId'],
+    };
+    return this.request({ url, method, params }, options);
+  }
+
   /** GET /api/workflow_api/bots_ide_token */
   GetBotsIDEToken(
     req?: workflow.GetBotsIDETokenRequest,

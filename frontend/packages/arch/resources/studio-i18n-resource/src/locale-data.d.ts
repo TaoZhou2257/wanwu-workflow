@@ -8645,6 +8645,8 @@ export type I18nKeysNoOptionsType =
   | 'explore_bot_category_test'
   | 'explore_featured'
   | 'explore_tools'
+  | 'builtin_tools'
+  | 'custom_tools'
   | 'failed'
   | 'failed_to_establish_connection'
   | 'failed_to_get_channel_list'

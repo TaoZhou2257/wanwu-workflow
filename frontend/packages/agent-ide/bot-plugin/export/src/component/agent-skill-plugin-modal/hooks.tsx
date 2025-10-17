@@ -41,8 +41,8 @@ import {
 } from '@coze-agent-ide/plugin-shared';
 import { PluginModalFilter } from '@coze-agent-ide/plugin-modal-adapter';
 
-import { PluginModalSider } from './sider';
-import { PluginModalContent } from './content';
+import { PluginModalSider } from './sider-wanwu';
+import { PluginModalContent } from './content-wanwu';
 
 export interface UsePluginModalPartsProp extends PluginModalModeProps {
   pluginApiList: PluginApi[];
@@ -104,7 +104,7 @@ export const usePluginModalParts = ({
     search: '',
     page: DEFAULT_PAGE,
     // Project IDE plugins only show my plugins
-    type: initQuery?.type ?? getInitType(from, spaceType),
+    type: 'builtin', //initQuery?.type ?? getInitType(from, spaceType),
     orderBy: OrderBy.CreateTime,
     orderByPublic: SortType.Heat,
     orderByFavorite: SortType.Newest,

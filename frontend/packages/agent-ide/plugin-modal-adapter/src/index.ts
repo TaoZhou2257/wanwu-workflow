@@ -17,9 +17,9 @@
 export {
   type PluginFilterProps,
   PluginFilter,
-} from './components/plugin-modal/plugin-filter';
+} from './components/plugin-modal-wanwu/plugin-filter';
 export {
   PluginModalFilter,
   type PluginModalFilterProp,
-} from './components/plugin-modal/filter';
+} from './components/plugin-modal-wanwu/filter';
 export { PluginPanel, type PluginPanelProps } from './components/plugin-panel';

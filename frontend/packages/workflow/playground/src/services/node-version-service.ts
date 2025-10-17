@@ -27,7 +27,7 @@ import { Modal } from '@coze-arch/coze-design';
 
 import { WorkflowPlaygroundContext } from '@/workflow-playground-context';
 import { isNodeV2 } from '@/nodes-v2';
-import { type ApiNodeFormData } from '@/node-registries/plugin/types';
+import { type ApiNodeFormData } from '@/node-registries/plugin-wanwu/types';
 import { WorkflowGlobalStateEntity } from '@/entities';
 
 interface NodeWithVersion {

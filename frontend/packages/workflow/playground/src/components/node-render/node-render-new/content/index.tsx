@@ -23,13 +23,14 @@ import { TriggerDeleteContent } from '@/node-registries/trigger-delete';
 import { SubWorkflowContent as SubWorkflowContentV2 } from '@/node-registries/sub-workflow-wanwu';
 import { StartContent } from '@/node-registries/start';
 import { SetVariableContent } from '@/node-registries/set-variable';
-import { PluginContent } from '@/node-registries/plugin';
+import { PluginContent } from '@/node-registries/plugin-wanwu';
 import { OutputContent } from '@/node-registries/output';
 import { LtmContent } from '@/node-registries/ltm';
 import { LoopContent } from '@/node-registries/loop';
 import { JsonStringifyContent } from '@/node-registries/json-stringify';
 import { McpWanwuContent } from '@/node-registries/mcp-wanwu';
 import { FileParseWanwuContent } from '@/node-registries/file-parse-wanwu';
+import { MultiFileParseWanwuContent } from '@/node-registries/multi-file-parse-wanwu';
 import { FileGenerateWanwuContent } from '@/node-registries/file-generate-wanwu';
 import { JsonParserWanwuContent } from '@/node-registries/json-parser-wanwu';
 import { GuiAgentWanwuContent } from '@/node-registries/gui-agent-wanwu';
@@ -66,6 +67,7 @@ const ContentMap = {
   [StandardNodeType.DatasetWanwu]: DatasetWanwuContent,
   [StandardNodeType.McpWanwu]: McpWanwuContent,
   [StandardNodeType.FileParseWanwu]: FileParseWanwuContent,
+  [StandardNodeType.MultiFileParseWanwu]: MultiFileParseWanwuContent,
   [StandardNodeType.FileGenerateWanwu]: FileGenerateWanwuContent,
   [StandardNodeType.JsonParserWanwu]: JsonParserWanwuContent,
   [StandardNodeType.GuiAgentWanwu]: GuiAgentWanwuContent,

@@ -42,11 +42,11 @@ export const usePluginCredits = (): { credits: CreditsInfo } => {
   const debounceCheckCredits = debounce(async () => {
     const workflow = await getLatestWorkflowJson();
     logger.info(`workflow node length:${workflow?.nodes?.length}`);
-    const resp = await PluginDevelopApi.GetPluginPricingRulesByWorkflowID({
+    /*const resp = await PluginDevelopApi.GetPluginPricingRulesByWorkflowID({
       space_id: spaceId,
       workflow_id: workflowId,
-    });
-    setCredits(transPricingRules(resp.pricing_rules || []));
+    });*/
+    setCredits(transPricingRules([])); // resp.pricing_rules || []
   }, HIGH_DEBOUNCE_TIME);
 
   useEffect(() => {

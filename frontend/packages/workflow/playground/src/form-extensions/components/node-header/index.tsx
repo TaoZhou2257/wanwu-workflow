@@ -390,9 +390,9 @@ export const NodeHeader: React.FC<NodeHeaderProps> = ({
           }
 
           <div className={styles.operators}>
-            {showMockset ? (
+            {/*{showMockset ? (
               <PluginMockSet node={node} readonly={readonly} />
-            ) : null}
+            ) : null}*/}
 
             {!hideTest ? (
               <div>

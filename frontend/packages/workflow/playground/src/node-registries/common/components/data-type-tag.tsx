@@ -35,6 +35,7 @@ const ViewDataTypeMap = {
   [ViewVariableType.Video]: 'File/Video',
   [ViewVariableType.Svg]: 'File/SVG',
   [ViewVariableType.Voice]: 'File/Voice',
+  [ViewVariableType.ArrayString]: 'String[]',
 };
 
 interface DataTypeTagProps {

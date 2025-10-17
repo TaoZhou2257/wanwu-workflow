@@ -25,6 +25,7 @@ export { DATASET_WANWU_NODE_REGISTRY } from './dataset/dataset-wanwu';
 export { MCP_WANWU_NODE_REGISTRY } from './mcp-wanwu';
 export { FILE_PARSE_WANWU_NODE_REGISTRY } from './file-parse-wanwu';
 export { FILE_GENERATE_WANWU_NODE_REGISTRY } from './file-generate-wanwu';
+export { MULTI_FILE_PARSE_WANWU_NODE_REGISTRY } from './multi-file-parse-wanwu';
 export { GUI_AGENT_WANWU_NODE_REGISTRY } from './gui-agent-wanwu'
 export { JSON_PARSER_WANWU_NODE_REGISTRY } from './json-parser-wanwu';
 export { DATASET_WRITE_NODE_REGISTRY } from './dataset/dataset-write';
@@ -49,7 +50,7 @@ export { SET_VARIABLE_NODE_REGISTRY } from './set-variable';
 export { BATCH_NODE_REGISTRY } from './batch';
 export { INTENT_NODE_REGISTRY } from './intent';
 export { IF_NODE_REGISTRY } from './if';
-export { PLUGIN_NODE_REGISTRY } from './plugin';
+export { PLUGIN_NODE_REGISTRY } from './plugin-wanwu';
 export { SUB_WORKFLOW_NODE_REGISTRY } from './sub-workflow-wanwu';
 export { VARIABLE_NODE_REGISTRY } from './variable';
 export { JSON_STRINGIFY_NODE_REGISTRY } from './json-stringify';

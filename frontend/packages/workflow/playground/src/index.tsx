@@ -52,4 +52,4 @@ export {
   navigateResource,
   LinkNode,
 } from './components/workflow-header/components';
-export { usePluginDetail } from './node-registries/plugin';
+export { usePluginDetail } from './node-registries/plugin-wanwu';

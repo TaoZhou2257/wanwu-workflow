@@ -161,6 +161,21 @@ export default class ProductApiService<T> {
     return this.request({ url, method, params, headers }, options);
   }
 
+  /** GET /user/api/v1/workflow/tool/select */
+  GetToolList(
+    req: public_api.ListSelectRequest,
+    options?: T,
+  ): Promise<public_api.ListSelectResponse> {
+    const _req = req;
+    const url = this.genBaseURL('/user/api/v1/workflow/tool/select');
+    const method = 'GET';
+    const params = {
+      toolType: _req['toolType'],
+      name: _req['name'],
+    };
+    return this.request({ url, method, params }, options);
+  }
+
   /**
    * POST /api/marketplace/product/favorite
    *

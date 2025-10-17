@@ -50,6 +50,7 @@ export interface NodeTemplateInfo {
 export interface ApiNodeIdentifier {
   api_id?: string;
   pluginID: string;
+  toolType?: string;
   apiName: string;
   plugin_version?: string;
 }
