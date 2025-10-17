@@ -127,6 +127,9 @@ type Inputs struct {
 	// WanwuGUIParam wanwu GUI Param
 	WanwuGUIParam *WanWuGUIParam `json:"guiParams,omitempty"`
 
+	// WanwuToolParam wanwu Tool Param
+	WanwuToolParam *WanWuTool `json:"toolParams,omitempty"`
+
 	*OutputEmitter      // exclusive configurations for NodeTypeEmitter and NodeTypeExit in Answer mode
 	*Exit               // exclusive configurations for NodeTypeExit
 	*LLM                // exclusive configurations for NodeTypeLLM

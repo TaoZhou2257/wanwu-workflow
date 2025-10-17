@@ -8,6 +8,7 @@ const (
 	NodeTypeWanWuMultiFileParser    NodeType = "WanWuMultiFileParser"
 	NodeTypeWanWuMCPTool            NodeType = "WanWuMCPTool"
 	NodeTypeWanWuGUI                NodeType = "WanWuGUI"
+	NodeTypeWanWuTool               NodeType = "WanWuTool"
 )
 
 // Wanwu NodeTypeMetas Init
@@ -45,6 +46,24 @@ func init() {
 	NodeTypeMetas[NodeTypeJsonDeserialization].ID = 1059
 
 	// wanwu新增节点
+	NodeTypeMetas[NodeTypeWanWuTool] = &NodeTypeMeta{
+		ID:         1004,
+		Key:        NodeTypeWanWuTool,
+		DisplayKey: "Tool",
+		Name:       "Tool工具",
+		Category:   "utilities",
+		Desc:       "",
+		Color:      "#a5f70cff",
+		//IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Plugin-v2.jpg",
+		SupportBatch: false,
+		ExecutableMeta: ExecutableMeta{
+			PreFillZero: true,
+			PostFillNil: true,
+		},
+		EnUSName:        "Tool",
+		EnUSDescription: "Used to call tools.",
+	}
+
 	NodeTypeMetas[NodeTypeWanWuKnowledgeRetriever] = &NodeTypeMeta{
 		ID:         1006,
 		Key:        NodeTypeWanWuKnowledgeRetriever,
