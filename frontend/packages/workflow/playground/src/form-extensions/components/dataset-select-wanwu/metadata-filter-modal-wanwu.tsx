@@ -18,14 +18,11 @@ import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 
 import { I18n } from '@coze-arch/i18n';
-import { useNodeTestId } from '@coze-workflow/base';
+import { useNodeTestId, ViewVariableType } from '@coze-workflow/base';
 import { UICompositionModal, UICompositionModalMain } from '@coze-arch/bot-semi';
 import {
   Button,
-  CozInputNumber,
-  DatePicker,
   Empty,
-  Input,
   Select,
   Tooltip
 } from '@coze-arch/coze-design';
@@ -33,6 +30,7 @@ import { Checkbox, Toast, UITable } from '@coze-arch/bot-semi';
 import { IconInfo } from '@coze-arch/bot-icons';
 import { IconCozPlus, IconCozTrashCan } from '@coze-arch/coze-design/icons';
 import { IllustrationNoContent } from "@douyinfe/semi-illustrations";
+import { ValueExpressionInput } from '@/nodes-v2/components/value-expression-input';
 
 interface ValueProps {
   dataset_id?: string,
@@ -47,6 +45,11 @@ const filterLogicTypeList = [
 const TIME = 'time'
 const STRING = 'string'
 const NUMBER = 'number'
+const TYPE_OBJ = {
+  [TIME]: ViewVariableType.Time,
+  [NUMBER]: ViewVariableType.Number,
+  [STRING]: ViewVariableType.String
+}
 const conditionList = {
   [TIME]: [
     {key: 'is', value: I18n.t('datasets_metadata_true')},
@@ -136,7 +139,7 @@ export const MetadataFilterModal = ({
   return (
     <div>
       <UICompositionModal
-        type="base-composition"
+        // type="base-composition"
         header={
           <div className="flex items-center">
             <div>{I18n.t('datasets_metadata_filter')}</div>
@@ -292,39 +295,40 @@ export const MetadataFilterModal = ({
                             dataIndex: 'value',
                             render: (value: string, item: any, index: number) => {
                               return (
-                                item.type === TIME ? (
-                                  <DatePicker
-                                    className="w-full"
-                                    type="dateTime"
-                                    value={metaDataValueList[index] ? Number(metaDataValueList[index]) : ''}
-                                    format="yyyy-MM-dd HH:mm:ss"
-                                    onChange={(date, dateString) => {
-                                      if (typeof dateString === 'string') {
-                                        setInputMetaDataValue(index, String(dayjs(dateString).valueOf()))
+                                <ValueExpressionInput
+                                  name={''}
+                                  inputType={TYPE_OBJ[item.type] || ViewVariableType.String}
+                                  value={
+                                    metaDataValueList[index]
+                                      ? metaDataValueList[index]?.type === 'ref'
+                                        ? {
+                                          ...metaDataValueList[index],
+                                          content: {
+                                            keyPath: [
+                                              metaDataValueList[index]?.content?.blockID,
+                                              metaDataValueList[index]?.content?.name
+                                            ]
+                                          }
+                                        }
+                                        : metaDataValueList[index]
+                                      : undefined
+                                  }
+                                  onChange={(v:any) => {
+                                    let newValue:any = {...v}
+                                    const keyPath: any = v?.content?.keyPath
+                                    if (keyPath?.length) {
+                                      newValue.content = {
+                                        source: 'block-output',
+                                        blockID: keyPath[0],
+                                        name: keyPath[1]
                                       }
-                                    }}
-                                    inputStyle={{ width: '100%' }}
-                                  />
-                                ) : (
-                                  item.type === NUMBER ? (
-                                    <CozInputNumber
-                                      className="w-full"
-                                      value={metaDataValueList[index]}
-                                      onChange={v => {
-                                        setInputMetaDataValue(index, String(v))
-                                      }}
-                                    />
-                                  ) : (
-                                    <Input
-                                      className="w-full"
-                                      value={metaDataValueList[index]}
-                                      onChange={(v) => {
-                                        setInputMetaDataValue(index, v)
-                                      }}
-                                    />
-                                  )
-                                )
-                              );
+                                    }
+                                    console.log(newValue, v, keyPath, '----------------------------formatKeyPath')
+                                    setInputMetaDataValue(index, newValue)
+                                  }}
+                                  style={{ height: '32px' }}
+                                />
+                              )
                             },
                           },
                           {
