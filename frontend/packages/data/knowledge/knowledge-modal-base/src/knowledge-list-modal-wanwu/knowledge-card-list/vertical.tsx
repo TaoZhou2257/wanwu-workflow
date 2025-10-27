@@ -199,7 +199,7 @@ export const KnowledgeCardListVertical: FC<DatasetCardListVerticalProps> = ({
               </Typography.Text>
             )}*/}
 
-            <div className="mt-[10px] mb-[-5px]">
+            <div className="mt-[5px] mb-[-5px]">
               {item.orgName && (
                 <UITag className="mr-[5px]" color="grey">
                   {item.orgName}
