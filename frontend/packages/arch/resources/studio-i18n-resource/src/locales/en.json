@@ -917,6 +917,8 @@
   "database_optimize_200": "Online data refers to the data generated when an application is actually running. Please modify it with caution.",
   "dataide001": "Data",
   "dataide002": "Variables",
+  "dataset_share_public": "公开",
+  "dataset_share_private": "私密",
   "dataset-name-empty-tooltip": "Knowledge name cannot be empty",
   "dataset-name-has-wrong-word-tooltip": "The name cannot contain special characters",
   "dataset-setting_recall_title": "Recall",

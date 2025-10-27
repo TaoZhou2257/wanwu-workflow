@@ -6721,6 +6721,8 @@ export type I18nKeysNoOptionsType =
   | 'database_recalls_ltm_title'
   | 'dataide001'
   | 'dataide002'
+  | 'dataset_share_private'
+  | 'dataset_share_public'
   | 'dataide_db_create'
   | 'dataset-name-empty-tooltip'
   | 'dataset-name-has-wrong-word-tooltip'

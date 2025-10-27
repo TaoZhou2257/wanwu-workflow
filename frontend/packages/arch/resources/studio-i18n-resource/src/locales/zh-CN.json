@@ -925,6 +925,8 @@
   "database_optimize_200": "线上数据是应用程序在实际运行时产生的数据，请谨慎修改",
   "dataide001": "数据",
   "dataide002": "变量",
+  "dataset_share_public": "公开",
+  "dataset_share_private": "私密",
   "dataset-name-empty-tooltip": "知识库名称不能为空",
   "dataset-name-has-wrong-word-tooltip": "名称中不能含有特殊字符",
   "dataset-setting_recall_title": "召回",
