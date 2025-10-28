@@ -27,7 +27,10 @@ func ImportWorkFlow(ctx context.Context, c *app.RequestContext) {
 		SpaceID: req.SpaceID,
 		Name:    req.Name,
 		Desc:    req.Desc,
-		IconURI: "default_icon/default_workflow_icon.png",
+	}
+	createReq.IconURI = "default_icon/default_workflow_icon.png"
+	if req.IconUrl != "" {
+		createReq.IconURI = req.IconUrl
 	}
 	resp, err := appworkflow.SVC.CreateWorkflow(ctx, &createReq)
 	if err != nil {
@@ -57,6 +60,8 @@ type importWorkflowRequest struct {
 	Desc string `form:"desc,required" json:"desc" query:"desc,required"`
 	// file data
 	Schema string `form:"schema" json:"schema" query:"schema"`
+	// icon url
+	IconUrl string `form:"icon_url" json:"icon_url" query:"icon_url"`
 }
 
 // ExportWorkFlow .
