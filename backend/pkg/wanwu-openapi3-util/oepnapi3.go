@@ -4,20 +4,28 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
-func LoadFromData(data []byte) (*openapi3.T, error) {
-	return openapi3.NewLoader().LoadFromData(data)
+func LoadFromData(ctx context.Context, data []byte) (*openapi3.T, error) {
+	doc, err := openapi3.NewLoader().LoadFromData(data)
+	if err != nil {
+		return nil, err
+	}
+	if err = ValidateDoc(ctx, doc); err != nil {
+		return nil, err
+	}
+	return doc, err
 }
 
 func ValidateSchema(ctx context.Context, data []byte) error {
-	doc, err := LoadFromData(data)
+	_, err := LoadFromData(ctx, data)
 	if err != nil {
 		return err
 	}
-	return ValidateDoc(ctx, doc)
+	return nil
 }
 
 func ValidateDoc(ctx context.Context, doc *openapi3.T) error {
@@ -37,4 +45,25 @@ func ValidateDoc(ctx context.Context, doc *openapi3.T) error {
 		}
 	}
 	return doc.Validate(ctx)
+}
+
+func FilterSchemaOperations(ctx context.Context, data []byte, operationIDs []string) ([]byte, error) {
+	doc, err := LoadFromData(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	return FilterDocOperations(doc, operationIDs).MarshalJSON()
+}
+
+func FilterDocOperations(doc *openapi3.T, operationIDs []string) *openapi3.T {
+	paths := doc.Paths
+	doc.Paths = nil
+	for path, pathItem := range paths {
+		for method, operation := range pathItem.Operations() {
+			if slices.Contains(operationIDs, operation.OperationID) {
+				doc.AddOperation(path, method, operation)
+			}
+		}
+	}
+	return doc
 }

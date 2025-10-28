@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -23,20 +24,21 @@ type Client struct {
 }
 
 type RequestParams struct {
-	PathParams   map[string]string
 	HeaderParams map[string]string
+	PathParams   map[string]interface{}
 	QueryParams  map[string]interface{}
 	BodyParams   map[string]interface{}
 }
 
 func NewClient(ctx context.Context, schema []byte) (*Client, error) {
-	doc, err := LoadFromData(schema)
+	doc, err := LoadFromData(ctx, schema)
 	if err != nil {
 		return nil, err
 	}
-	if err := ValidateDoc(ctx, doc); err != nil {
-		return nil, err
-	}
+	return NewClientByDoc(doc), nil
+}
+
+func NewClientByDoc(doc *openapi3.T) *Client {
 	return &Client{
 		httpClient: &http.Client{
 			Transport: &http.Transport{
@@ -50,7 +52,7 @@ func NewClient(ctx context.Context, schema []byte) (*Client, error) {
 			Timeout: time.Minute,
 		},
 		doc: doc,
-	}, nil
+	}
 }
 
 func (c *Client) DoRequestByMethodPath(ctx context.Context, method, path string, params *RequestParams) (interface{}, error) {
@@ -99,7 +101,7 @@ func (c *Client) DoRequestByOperationID(ctx context.Context, operationID string,
 		return nil, fmt.Errorf("operationId(%v) not found", operationID)
 	}
 	if len(c.doc.Servers) > 0 {
-		baseURL = c.doc.Servers[0].URL
+		baseURL = c.doc.Servers[rand.Intn(len(c.doc.Servers))].URL
 	} else {
 		return nil, errors.New("get base url empty")
 	}
@@ -183,7 +185,7 @@ func executeRequest(
 	return result, nil
 }
 
-func buildPathWithParams(path string, pathParams map[string]string) (string, error) {
+func buildPathWithParams(path string, pathParams map[string]interface{}) (string, error) {
 	specPath := path
 
 	// 替换路径参数
@@ -192,7 +194,7 @@ func buildPathWithParams(path string, pathParams map[string]string) (string, err
 		if !strings.Contains(specPath, placeholder) {
 			return "", fmt.Errorf("path parameter(%v) not found in path(%v)", paramName, path)
 		}
-		specPath = strings.ReplaceAll(specPath, placeholder, paramValue)
+		specPath = strings.ReplaceAll(specPath, placeholder, fmt.Sprintf("%v", paramValue))
 	}
 
 	return specPath, nil

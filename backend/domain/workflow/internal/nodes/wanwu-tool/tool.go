@@ -17,7 +17,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/schema"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
-	openapi3_util "github.com/coze-dev/coze-studio/backend/pkg/wanwu-openapi3-util" // 根据实际路径调整
+	openapi3_util "github.com/coze-dev/coze-studio/backend/pkg/wanwu-openapi3-util"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -84,7 +84,7 @@ func (i *WanWuToolInfo) Invoke(ctx context.Context, in map[string]any) (map[stri
 		if params.HeaderParams == nil {
 			params.HeaderParams = make(map[string]string)
 		}
-		if i.apiAuth.Type != "None" {
+		if i.apiAuth.Type != "" && i.apiAuth.Type != "None" && i.apiAuth.APIKey != "" {
 			if i.apiAuth.AuthType == "Custom" {
 				if i.apiAuth.CustomHeaderName != "" {
 					params.HeaderParams[i.apiAuth.CustomHeaderName] = i.apiAuth.APIKey
@@ -135,9 +135,9 @@ func (i *WanWuToolInfo) Invoke(ctx context.Context, in map[string]any) (map[stri
 
 func parseInputParams(input map[string]any) *openapi3_util.RequestParams {
 	params := &openapi3_util.RequestParams{
-		PathParams:   make(map[string]string),
-		QueryParams:  make(map[string]interface{}),
 		HeaderParams: make(map[string]string),
+		PathParams:   make(map[string]interface{}),
+		QueryParams:  make(map[string]interface{}),
 		BodyParams:   make(map[string]interface{}),
 	}
 
