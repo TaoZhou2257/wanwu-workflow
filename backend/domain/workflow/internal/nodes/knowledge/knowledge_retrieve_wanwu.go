@@ -387,7 +387,6 @@ func buildRetrieveKnowledgeInfo(knowledgeInfo any) (*RetrieveKnowledgeInfo, erro
 		retrieveKnowledgeInfo.Name = k
 		return retrieveKnowledgeInfo, nil
 	}
-	//通过序列化反序列化处理
 	marshal, err := json.Marshal(knowledgeInfo)
 	if err != nil {
 		return nil, err
@@ -470,11 +469,12 @@ func buildValueData(valueType string, value string, condition string) (interface
 	switch valueType {
 	case metaTypeNumber:
 	case metaTypeTime:
-		valueResult, err := parseToTimestamp(value)
-		if err != nil || valueResult == 0 {
-			return strconv.ParseInt(value, 10, 64)
-		}
-		return valueResult, nil
+		//valueResult, err := parseToTimestamp(value)
+		//if err != nil || valueResult == 0 {
+		//	return strconv.ParseInt(value, 10, 64)
+		//}
+		//return valueResult, nil
+		return strconv.ParseInt(value, 10, 64)
 	}
 	return value, nil
 }
