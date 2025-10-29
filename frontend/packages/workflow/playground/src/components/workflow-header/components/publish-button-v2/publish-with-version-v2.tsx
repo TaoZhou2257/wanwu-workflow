@@ -299,7 +299,6 @@ const PublishForm: React.FC<{
       };
 
       onSubmit(next);
-      window.location.href = window.location.origin + '/aibase/appSpace/workflow'
       cb?.();
 
       trySaveDefaultCase();

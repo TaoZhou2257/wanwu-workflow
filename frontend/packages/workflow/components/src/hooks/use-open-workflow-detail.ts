@@ -40,7 +40,8 @@ export const useOpenWorkflowDetail = () => {
       // query.append('space_id', spaceId ?? '');
       query.append('id', workflowId);
       // query.append('from', 'createSuccess');
-      window.open(`${window.location.origin}/aibase/workflow?${query.toString()}`);
+      // Resolve the issue of redirection after successfully publishing a new workflow in the workflow
+      window.location.href = `${window.location.origin}/aibase/workflow?${query.toString()}` // window.open(`${window.location.origin}/aibase/workflow?${query.toString()}`);
     }
   };
   return openWorkflowDetailPage;
