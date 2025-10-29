@@ -299,7 +299,7 @@ const PublishForm: React.FC<{
       };
 
       onSubmit(next);
-
+      window.location.href = window.location.origin + '/aibase/appSpace/workflow'
       cb?.();
 
       trySaveDefaultCase();
@@ -336,9 +336,7 @@ const PublishForm: React.FC<{
     return (
       <div className={'flex flex-row-reverse mt-12px'}>
         <Button
-          onClick={() => handleSubmit(() => {
-            window.location.href = window.location.origin + '/aibase/appSpace/workflow'
-          })}
+          onClick={() => handleSubmit()}
           data-testid="workflow-publish-button"
         >
           {I18n.t('workflow_detail_title_publish')}
