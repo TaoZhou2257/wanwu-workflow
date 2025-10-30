@@ -104,7 +104,6 @@ export const useSelectMcpModal = ({
       const { data } = await MemoryApi.GetMcpToolSelect(reqParams);
       setToolList(data?.tools || [])
     } catch (err:any) {
-      console.log(err?.response)
       Toast.error({content: err?.response?.data?.msg || 'Server Error'})
       // logger.error(err?.response?.msg || 'Server Error');
     } finally {
