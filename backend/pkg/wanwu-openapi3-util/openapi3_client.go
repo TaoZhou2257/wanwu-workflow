@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	"mime/multipart"
 	"net"
 	"net/http"
 	"net/url"
@@ -57,13 +58,20 @@ func NewClientByDoc(doc *openapi3.T) *Client {
 
 func (c *Client) DoRequestByMethodPath(ctx context.Context, method, path string, params *RequestParams) (interface{}, error) {
 	var exist bool
+	contentType := "application/json"
 	for currPath, pathItem := range c.doc.Paths {
 		if currPath != path {
 			continue
 		}
-		for currMethod := range pathItem.Operations() {
+		for currMethod, operation := range pathItem.Operations() {
 			if currMethod == method {
 				exist = true
+				if operation.RequestBody != nil && operation.RequestBody.Value != nil {
+					for ct := range operation.RequestBody.Value.Content {
+						contentType = ct
+						break
+					}
+				}
 				break
 			}
 		}
@@ -79,17 +87,22 @@ func (c *Client) DoRequestByMethodPath(ctx context.Context, method, path string,
 	if err != nil {
 		return nil, fmt.Errorf("get base url err: %v", err)
 	}
-
-	return executeRequest(ctx, c.httpClient, baseURL, method, path, params)
+	return executeRequest(ctx, c.httpClient, baseURL, method, path, contentType, params)
 }
 
 func (c *Client) DoRequestByOperationID(ctx context.Context, operationID string, params *RequestParams) (interface{}, error) {
-	var method, path, baseURL string
+	var baseURL, method, path, contentType string
 	for currPath, pathItem := range c.doc.Paths {
 		for currMethod, operation := range pathItem.Operations() {
 			if operation.OperationID == operationID {
 				method = currMethod
 				path = currPath
+				if operation.RequestBody != nil && operation.RequestBody.Value != nil {
+					for ct := range operation.RequestBody.Value.Content {
+						contentType = ct
+						break
+					}
+				}
 				break
 			}
 		}
@@ -105,7 +118,7 @@ func (c *Client) DoRequestByOperationID(ctx context.Context, operationID string,
 	} else {
 		return nil, errors.New("get base url empty")
 	}
-	return executeRequest(ctx, c.httpClient, baseURL, method, path, params)
+	return executeRequest(ctx, c.httpClient, baseURL, method, path, contentType, params)
 }
 
 func executeRequest(
@@ -114,6 +127,7 @@ func executeRequest(
 	baseURL string,
 	method string,
 	path string,
+	contentType string,
 	params *RequestParams,
 ) (interface{}, error) {
 
@@ -142,11 +156,36 @@ func executeRequest(
 	// body
 	var body io.Reader
 	if params != nil && params.BodyParams != nil {
-		jsonData, err := json.Marshal(params.BodyParams)
-		if err != nil {
-			return nil, err
+		switch contentType {
+		case "application/x-www-form-urlencoded":
+			formData := url.Values{}
+			for key, value := range params.BodyParams {
+				formData.Add(key, fmt.Sprintf("%v", value))
+			}
+			body = strings.NewReader(formData.Encode())
+		case "multipart/form-data":
+			var buf bytes.Buffer
+			writer := multipart.NewWriter(&buf)
+			for key, value := range params.BodyParams {
+				if err := writer.WriteField(key, fmt.Sprintf("%v", value)); err != nil {
+					_ = writer.Close()
+					return nil, err
+				}
+			}
+			body = &buf
+			contentType = writer.FormDataContentType() // 获取包含boundary的完整Content-Type
+			if err := writer.Close(); err != nil {
+				return nil, err
+			}
+		default:
+			// application/json
+			jsonData, err := json.Marshal(params.BodyParams)
+			if err != nil {
+				return nil, err
+			}
+			body = bytes.NewBuffer(jsonData)
+			contentType = "application/json"
 		}
-		body = bytes.NewBuffer(jsonData)
 	}
 
 	// req
@@ -156,6 +195,9 @@ func executeRequest(
 	}
 
 	// header
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
 	if params != nil {
 		for key, value := range params.HeaderParams {
 			req.Header.Set(key, value)
