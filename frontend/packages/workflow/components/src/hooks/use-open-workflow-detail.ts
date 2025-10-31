@@ -36,11 +36,12 @@ export const useOpenWorkflowDetail = () => {
       ideNavigate(`/workflow/${workflowId}?from=createSuccess`);
     } else {
       const query = new URLSearchParams();
-      botId && query.append('bot_id', botId);
-      query.append('space_id', spaceId ?? '');
+      // botId && query.append('bot_id', botId);
+      // query.append('space_id', spaceId ?? '');
       query.append('id', workflowId);
-      query.append('from', 'createSuccess');
-      window.open(`/aibase/workflow?${query.toString()}`, '_blank');
+      // query.append('from', 'createSuccess');
+      // Resolve the issue of redirection after successfully publishing a new workflow in the workflow
+      window.location.href = `${window.location.origin}/aibase/workflow?${query.toString()}` // window.open(`${window.location.origin}/aibase/workflow?${query.toString()}`);
     }
   };
   return openWorkflowDetailPage;

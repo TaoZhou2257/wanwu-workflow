@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { type FC } from 'react';
+import React, { type FC } from 'react';
 
 import { unix } from 'dayjs';
 import cs from 'classnames';
@@ -165,7 +165,7 @@ export const KnowledgeCardListVertical: FC<DatasetCardListVerticalProps> = ({
 
   return (
     <div className={styles.container}>
-      {list.map(item => (
+      {list.map((item:any) => (
         <div
           className={styles.item}
           key={item.dataset_id || ''}
@@ -199,6 +199,16 @@ export const KnowledgeCardListVertical: FC<DatasetCardListVerticalProps> = ({
               </Typography.Text>
             )}*/}
 
+            <div className="mt-[5px] mb-[-5px]">
+              {item.orgName && (
+                <UITag className="mr-[5px]" color="grey">
+                  {item.orgName}
+                </UITag>
+              )}
+              <UITag color="grey">
+                {item.share ? I18n.t('dataset_share_public') : I18n.t('dataset_share_private')}
+              </UITag>
+            </div>
             <div className={styles['tags-wapper']}>
               {/*<SpaceTags {...item}></SpaceTags>*/}
 

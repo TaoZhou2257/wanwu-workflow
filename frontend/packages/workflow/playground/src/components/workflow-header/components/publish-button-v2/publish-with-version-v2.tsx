@@ -292,14 +292,13 @@ const PublishForm: React.FC<{
     try {
       await formApiRef.current.validate();
       const data = formApiRef.current.getValues();
-      const next: PublishData = {
+      const next: any = {
         publishType: data.publishType,
         appType: "workflow",
         appId: workflowId
       };
 
       onSubmit(next);
-
       cb?.();
 
       trySaveDefaultCase();
@@ -377,6 +376,7 @@ const PublishForm: React.FC<{
           label={I18n.t('workflow_publish_type')}
           options={[
             { label: I18n.t('workflow_publish_type_private'), value: 'private' },
+            { label: I18n.t('workflow_publish_type_org'), value: 'organization' },
             { label: I18n.t('workflow_publish_type_public'), value: 'public' },
           ]}
           initValue={'private'}

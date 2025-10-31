@@ -293,6 +293,7 @@ export const TypedValueExpressionInput = ({
       </div>
       <ValueExpressionInput
         {...props}
+        style={style}
         onChange={handleChange}
         inputType={innerInputType}
         variableTypeConstraints={

@@ -136,7 +136,7 @@ export const MetadataFilterModal = ({
   return (
     <div>
       <UICompositionModal
-        type="base-composition"
+        // type="base-composition"
         header={
           <div className="flex items-center">
             <div>{I18n.t('datasets_metadata_filter')}</div>

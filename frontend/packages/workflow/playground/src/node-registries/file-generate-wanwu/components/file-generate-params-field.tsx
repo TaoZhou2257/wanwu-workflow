@@ -109,10 +109,10 @@ export const FileGenerateParamsField = withFieldArray(({
       <FieldArrayList>
         {value?.map(({name, input}, index) => (
           name === FILE_TYPE ? (
-            <div key={FILE_TYPE + index}>
-              <span className="text-[12px]">fileType</span>
+            <div key={FILE_TYPE + index} className="flex gap-[4px] min-w-0">
+              <span className="text-[12px] items-center gap-[4px] w-[152px]">fileType</span>
               <Select
-                className="float-right w-[186px]"
+                className="last:flex-1 min-w-0"
                 size="small"
                 value={input.content}
                 onChange={(v: unknown) => {
