@@ -24,9 +24,9 @@ import (
 	"github.com/cloudwego/eino/schema"
 
 	"github.com/coze-dev/coze-studio/backend/api/model/app/bot_common"
-	crossplugin "github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin"
-	"github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/consts"
-	"github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/model"
+	crossplugin "github.com/coze-dev/coze-studio/backend/crossdomain/plugin"
+	"github.com/coze-dev/coze-studio/backend/crossdomain/plugin/consts"
+	"github.com/coze-dev/coze-studio/backend/crossdomain/plugin/model"
 	"github.com/coze-dev/coze-studio/backend/domain/agent/singleagent/entity"
 	pluginEntity "github.com/coze-dev/coze-studio/backend/domain/plugin/entity"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
@@ -51,6 +51,8 @@ func newPluginTools(ctx context.Context, conf *toolConfig) ([]tool.InvokableTool
 			return model.VersionAgentTool{
 				ToolID:       a.GetApiId(),
 				AgentVersion: ptr.Of(conf.agentIdentity.Version),
+				PluginFrom:   a.PluginFrom,
+				PluginID:     a.GetPluginId(),
 			}
 		}),
 	}
@@ -73,6 +75,7 @@ func newPluginTools(ctx context.Context, conf *toolConfig) ([]tool.InvokableTool
 			isDraft:     conf.agentIdentity.IsDraft,
 			projectInfo: projectInfo,
 			toolInfo:    ti,
+			pluginFrom:  ti.Source,
 
 			conversationID: conf.conversationID,
 		})
@@ -86,6 +89,8 @@ type pluginInvokableTool struct {
 	isDraft     bool
 	toolInfo    *pluginEntity.ToolInfo
 	projectInfo *model.ProjectInfo
+
+	pluginFrom *bot_common.PluginFrom
 
 	conversationID int64
 }
@@ -117,6 +122,7 @@ func (p *pluginInvokableTool) InvokableRun(ctx context.Context, argumentsInJSON 
 		PluginID:        p.toolInfo.PluginID,
 		ToolID:          p.toolInfo.ID,
 		ExecDraftTool:   false,
+		PluginFrom:      p.pluginFrom,
 		ArgumentsInJson: argumentsInJSON,
 		ExecScene: func() consts.ExecuteScene {
 			if p.isDraft {

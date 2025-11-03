@@ -3,21 +3,20 @@ package workflow
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"os"
 	"path"
 	"runtime/debug"
 	"strconv"
-	"strings"
 
 	"github.com/cloudwego/eino/schema"
-	workflowModel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/workflow"
 	"github.com/coze-dev/coze-studio/backend/api/model/playground"
 	pluginAPI "github.com/coze-dev/coze-studio/backend/api/model/plugin_develop"
 	"github.com/coze-dev/coze-studio/backend/api/model/plugin_develop/common"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	"github.com/coze-dev/coze-studio/backend/application/user"
+	"github.com/coze-dev/coze-studio/backend/bizpkg/debugutil"
+	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
 	user_entity "github.com/coze-dev/coze-studio/backend/domain/user/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
@@ -270,9 +269,6 @@ func (w *ApplicationService) GetWorkFlowSelectByWanwu(ctx context.Context, req *
 		if status == workflow.WorkFlowListStatus_UnPublished && !isPublished {
 			wf.PluginID = "0"
 			filteredWorkflows = append(filteredWorkflows, wf)
-		}
-		if wf.URL == "" || strings.Contains(wf.URL, "default_workflow_icon.png") {
-			wf.URL, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"), os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
 		}
 	}
 	// 过滤AuthList
@@ -552,7 +548,7 @@ func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID s
 
 		return &workflow.OpenAPIRunFlowResponse{
 			ExecuteID: ptr.Of(strconv.FormatInt(exeID, 10)),
-			DebugUrl:  ptr.Of(fmt.Sprintf(workflowModel.DebugURLTpl, exeID, meta.SpaceID, meta.ID)),
+			DebugUrl:  ptr.Of(debugutil.GetWorkflowDebugURL(ctx, meta.ID, meta.SpaceID, exeID)),
 		}, nil
 	}
 
@@ -588,12 +584,13 @@ func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID s
 	return &workflow.OpenAPIRunFlowResponse{
 		Data:      data,
 		ExecuteID: ptr.Of(strconv.FormatInt(wfExe.ID, 10)),
-		DebugUrl:  ptr.Of(fmt.Sprintf(workflowModel.DebugURLTpl, wfExe.ID, wfExe.SpaceID, meta.ID)),
+		DebugUrl:  ptr.Of(debugutil.GetWorkflowDebugURL(ctx, meta.ID, wfExe.SpaceID, wfExe.ID)),
 		Token:     ptr.Of(wfExe.TokenInfo.InputTokens + wfExe.TokenInfo.OutputTokens),
 		Cost:      ptr.Of("0.00000"),
 	}, nil
 }
 
+// GetPlaygroundPluginListByWanwu 参考GetPlaygroundPluginList
 func (w *ApplicationService) GetPlaygroundPluginListByWanwu(ctx context.Context, req *pluginAPI.GetPlaygroundPluginListRequest) (
 	resp *pluginAPI.GetPlaygroundPluginListResponse, err error,
 ) {

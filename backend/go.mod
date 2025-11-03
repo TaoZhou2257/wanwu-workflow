@@ -26,14 +26,14 @@ require (
 	github.com/cloudwego/eino-ext/components/model/claude v0.1.1
 	github.com/cloudwego/eino-ext/components/model/deepseek v0.0.0-20250715055739-0d0e28441a2f
 	github.com/cloudwego/eino-ext/components/model/gemini v0.1.2
-	github.com/cloudwego/eino-ext/components/model/ollama v0.1.0
+	github.com/cloudwego/eino-ext/components/model/ollama v0.1.3
 	github.com/cloudwego/eino-ext/components/model/openai v0.1.1
 	github.com/cloudwego/eino-ext/components/model/qwen v0.0.0-20250612061754-5a3deb091dc5
 	github.com/cloudwego/eino-ext/libs/acl/openai v0.0.0-20250918130948-16e3a249e721
 	github.com/cloudwego/hertz v0.10.2
 	github.com/dimchansky/utfbom v1.1.1
 	github.com/elastic/go-elasticsearch/v7 v7.17.10
-	github.com/elastic/go-elasticsearch/v8 v8.18.0
+	github.com/elastic/go-elasticsearch/v8 v8.19.0
 	github.com/extrame/xls v0.0.1
 	github.com/getkin/kin-openapi v0.118.0
 	github.com/go-resty/resty/v2 v2.16.5
@@ -50,7 +50,7 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/nikolalohinski/gonja v1.5.3 // indirect
 	github.com/nsqio/go-nsq v1.1.0
-	github.com/ollama/ollama v0.9.6
+	github.com/ollama/ollama v0.9.6 // indirect
 	github.com/onsi/gomega v1.35.1
 	github.com/pingcap/tidb/pkg/parser v0.0.0-20250417044355-c5882b1f6c58
 	github.com/pkg/errors v0.9.1
@@ -282,7 +282,10 @@ require (
 	stathat.com/c/consistent v1.0.0 // indirect
 )
 
-require github.com/apache/pulsar-client-go v0.16.0
+require (
+	github.com/apache/pulsar-client-go v0.16.0
+	github.com/eino-contrib/ollama v0.1.0
+)
 
 require (
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
