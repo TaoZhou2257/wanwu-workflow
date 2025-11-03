@@ -307,6 +307,8 @@ export class WorkflowSaveService {
       const userInfo = userStoreService.getUserInfo();
       const locale = userInfo?.locale ?? navigator.language ?? 'en-US';
 
+      console.log(locale, userInfo?.locale, navigator.language, '----------------------')
+
       // load node information
       const [, workflowJSON] = await Promise.all([
         this.context.loadNodeInfos(locale),

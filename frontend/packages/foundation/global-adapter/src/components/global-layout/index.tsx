@@ -45,6 +45,7 @@ export const GlobalLayout: FC = () => {
   useEffect(() => {
     if (userInfo && I18n.language !== transformedCurrentLocale) {
       localStorage.setItem('i18next', transformedCurrentLocale);
+      localStorage.setItem('locale', transformedCurrentLocale === 'zh-CN' ? 'zh' : transformedCurrentLocale);
       I18n.setLang(transformedCurrentLocale);
       // Force an update, otherwise the language switch will not take effect
       update();
