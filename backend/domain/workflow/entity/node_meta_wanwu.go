@@ -26,6 +26,7 @@ func init() {
 	NodeTypeMetas[NodeTypeDatabaseCustomSQL].Disabled = true
 	NodeTypeMetas[NodeTypeQuestionAnswer].Disabled = true
 	NodeTypeMetas[NodeTypeKnowledgeIndexer].Disabled = true
+	NodeTypeMetas[NodeTypeComment].Disabled = true
 	NodeTypeMetas[NodeTypeMessageList].Disabled = true
 	NodeTypeMetas[NodeTypeClearConversationHistory].Disabled = true
 	NodeTypeMetas[NodeTypeCreateConversation].Disabled = true
