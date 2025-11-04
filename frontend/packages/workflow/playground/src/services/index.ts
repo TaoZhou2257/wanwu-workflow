@@ -34,7 +34,7 @@ export { ValueExpressionServiceImpl } from './value-expression-service-impl';
 export { DatabaseNodeService } from './database-node-service';
 export { DatabaseNodeServiceImpl } from './database-node-service-impl';
 export { TriggerService } from './trigger-service';
-export { PluginNodeService, type PluginNodeStore } from './plugin-node-service';
+export { PluginNodeService, type PluginNodeStore } from './plugin-node-service-wanwu';
 
 export { SubWorkflowNodeService } from '@/node-registries/sub-workflow-wanwu/services';
 export { WorkflowDependencyService } from './workflow-dependency-service';
