@@ -12,14 +12,17 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/cloudwego/eino-ext/libs/acl/openai"
-	model "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/modelmgr"
-	"github.com/coze-dev/coze-studio/backend/infra/chatmodel"
-	chatmodelImpl "github.com/coze-dev/coze-studio/backend/infra/chatmodel/impl/chatmodel"
-	"github.com/coze-dev/coze-studio/backend/infra/modelmgr"
+	"github.com/coze-dev/coze-studio/backend/api/model/admin/config"
+	"github.com/coze-dev/coze-studio/backend/api/model/app/developer_api"
+	"github.com/coze-dev/coze-studio/backend/bizpkg/config/modelmgr"
+	"github.com/coze-dev/coze-studio/backend/bizpkg/llm/modelbuilder"
+	chatmodel "github.com/coze-dev/coze-studio/backend/bizpkg/llm/wanwu-chatmodel"
+	chatmodelImpl "github.com/coze-dev/coze-studio/backend/bizpkg/llm/wanwu-chatmodel/impl/chatmodel"
+	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/go-resty/resty/v2"
 )
 
-func CreateChatModel(ctx context.Context, llmParams *model.LLMParams) (chatmodel.ToolCallingChatModel, *modelmgr.Model, error) {
+func CreateChatModel(ctx context.Context, llmParams *vo.LLMParams) (modelbuilder.ToolCallingChatModel, *modelmgr.Model, error) {
 	if llmParams == nil {
 		return nil, nil, errors.New("empty llmParams")
 	}
@@ -39,11 +42,11 @@ func CreateChatModel(ctx context.Context, llmParams *model.LLMParams) (chatmodel
 	}
 	var responseFormatType openai.ChatCompletionResponseFormatType
 	switch llmParams.ResponseFormat {
-	case model.ResponseFormatText:
+	case vo.ResponseFormatText:
 		responseFormatType = openai.ChatCompletionResponseFormatTypeText
-	case model.ResponseFormatMarkdown:
+	case vo.ResponseFormatMarkdown:
 		responseFormatType = openai.ChatCompletionResponseFormatTypeJSONObject
-	case model.ResponseFormatJSON:
+	case vo.ResponseFormatJSON:
 		responseFormatType = openai.ChatCompletionResponseFormatTypeJSONObject
 	default:
 		responseFormatType = openai.ChatCompletionResponseFormatTypeText
@@ -83,20 +86,17 @@ func CreateChatModel(ctx context.Context, llmParams *model.LLMParams) (chatmodel
 	if err = sonic.Unmarshal(b, &ret); err != nil {
 		return nil, nil, fmt.Errorf("request %v read response body: %v", baseUrl, err)
 	}
-	inputModals := []modelmgr.Modal{modelmgr.ModalText}
-	if ret.Data.Config.VisionSupport == "support" {
-		inputModals = append(inputModals, modelmgr.ModalImage)
-	}
+	functionCall := ret.Data.Config.FunctionCall == "toolCall"
+	imageUnerstanding := ret.Data.Config.VisionSupport == "support"
 	modelInfo := &modelmgr.Model{
-		Meta: modelmgr.ModelMeta{
-			Protocol: chatmodel.ProtocolOpenAI,
-			Capability: &modelmgr.Capability{
-				FunctionCall: ret.Data.Config.FunctionCall == "toolCall",
-				InputModal:   inputModals,
+		Model: &config.Model{
+			Capability: &developer_api.ModelAbility{
+				FunctionCall:       &functionCall,
+				ImageUnderstanding: &imageUnerstanding,
 			},
 		},
 	}
-	return m, modelInfo, err
+	return m, modelInfo, nil
 }
 
 type modelResp struct {

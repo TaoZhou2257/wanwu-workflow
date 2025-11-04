@@ -11,7 +11,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/types/consts"
 )
 
-// CheckIfNeedReplaceHostByWanwu 参考CheckIfNeedReplaceHost
+// CheckIfNeedReplaceHostByWanwu
 // 将http://minio-wanwu:9000/abc/def => http://${WANWU_MINIO_PROXY_ENDPOINT}/${WANWU_MINIO_PROXY_PREFIX}/abc/def，需要配合nginx代理
 func CheckIfNeedReplaceHostByWanwu(ctx context.Context, originURLStr string) (ok bool, proxyURL string) {
 	// url parse
