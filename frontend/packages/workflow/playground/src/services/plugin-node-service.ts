@@ -159,11 +159,11 @@ export class PluginNodeService {
       // 2. api detail contains the input and output, version information of the plug-in, the data has real-time sensitivity, and there is no data lag.
       staleTime: STALE_TIME,
       queryFn: async () =>
-        await workflowApi.GetToolActionDetail(
+        await workflowApi.GetApiDetail(
           {
-            toolType: identifier.toolType,
-            actionName: identifier.apiName,
-            toolId: identifier.pluginID,
+            ...identifier,
+            space_id: spaceId,
+            project_id: projectId,
             plugin_from: pluginFrom,
           },
           {
@@ -218,8 +218,7 @@ export class PluginNodeService {
     try {
       this.loading = true;
       const response = await this.fetchData(identifier, pluginFrom);
-      const data: any = response.data || {}
-      apiDetail = {...data, name: data.actionName, icon: data.iconUrl} as ApiNodeDetailDTO;
+      apiDetail = response.data as ApiNodeDetailDTO;
     } catch (error) {
       errorMessage = error.message;
       if (error.code === '702095021') {
