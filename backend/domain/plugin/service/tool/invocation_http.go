@@ -31,13 +31,14 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/tidwall/sjson"
 
-	pluginConsts "github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/consts"
-	"github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/model"
+	pluginConsts "github.com/coze-dev/coze-studio/backend/crossdomain/plugin/consts"
+	"github.com/coze-dev/coze-studio/backend/crossdomain/plugin/model"
 	"github.com/coze-dev/coze-studio/backend/domain/plugin/internal/encoder"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
 	"github.com/coze-dev/coze-studio/backend/pkg/i18n"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/conv"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
+	"github.com/coze-dev/coze-studio/backend/pkg/saasapi"
 	"github.com/coze-dev/coze-studio/backend/types/consts"
 
 	"github.com/coze-dev/coze-studio/backend/types/errno"
@@ -277,6 +278,16 @@ func (h *httpCallImpl) buildRequestBody(ctx context.Context, op *model.Openapi3O
 	}
 
 	return body, contentType, nil
+}
+
+func (h *httpCallImpl) injectCozeSaasAPIToken(ctx context.Context, httpReq *http.Request) (errMsg string, err error) {
+
+	saasapiClient := saasapi.NewCozeAPIClient()
+	if saasapiClient.APIKey == "" {
+		return "", fmt.Errorf("coze saas api token is empty")
+	}
+	httpReq.Header.Set("Authorization", "Bearer "+saasapiClient.APIKey)
+	return "", nil
 }
 
 func (h *httpCallImpl) injectServiceAPIToken(ctx context.Context, httpReq *http.Request, authInfo *model.AuthV2) (errMsg string, err error) {

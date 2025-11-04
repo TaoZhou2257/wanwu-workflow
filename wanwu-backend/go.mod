@@ -8,12 +8,12 @@ replace github.com/coze-dev/coze-studio/backend => ../backend
 // 以下replace与 backend/go.mod 中同步
 replace github.com/apache/thrift => github.com/apache/thrift v0.13.0
 
-replace google.golang.org/grpc => google.golang.org/grpc v1.68.0
+replace google.golang.org/grpc => google.golang.org/grpc v1.71.0
 
 replace github.com/getkin/kin-openapi => github.com/getkin/kin-openapi v0.118.0
 
 require (
-	github.com/UnicomAI/wanwu v0.2.3
+	github.com/UnicomAI/wanwu v0.2.5
 	github.com/cloudwego/hertz v0.10.2
 	github.com/coze-dev/coze-studio/backend v0.0.0-00010101000000-000000000000
 	github.com/hertz-contrib/cors v0.1.0
@@ -26,7 +26,7 @@ require (
 	cloud.google.com/go/auth v0.15.0 // indirect
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/ThinkInAIXYZ/go-mcp v0.2.21 // indirect
+	github.com/ThinkInAIXYZ/go-mcp v0.2.22 // indirect
 	github.com/anthropics/anthropic-sdk-go v1.4.0 // indirect
 	github.com/apache/thrift v0.21.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.36.6 // indirect
@@ -52,11 +52,15 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/cloudwego/eino v0.4.8 // indirect
+	github.com/cloudwego/eino-ext/components/embedding/ark v0.1.0 // indirect
+	github.com/cloudwego/eino-ext/components/embedding/gemini v0.0.0-20250814083140-54b99ff82f8e // indirect
+	github.com/cloudwego/eino-ext/components/embedding/ollama v0.0.0-20250728060543-79ec300857b8 // indirect
+	github.com/cloudwego/eino-ext/components/embedding/openai v0.0.0-20250522060253-ddb617598b09 // indirect
 	github.com/cloudwego/eino-ext/components/model/ark v0.1.15 // indirect
 	github.com/cloudwego/eino-ext/components/model/claude v0.1.1 // indirect
 	github.com/cloudwego/eino-ext/components/model/deepseek v0.0.0-20250715055739-0d0e28441a2f // indirect
 	github.com/cloudwego/eino-ext/components/model/gemini v0.1.2 // indirect
-	github.com/cloudwego/eino-ext/components/model/ollama v0.1.0 // indirect
+	github.com/cloudwego/eino-ext/components/model/ollama v0.1.3 // indirect
 	github.com/cloudwego/eino-ext/components/model/openai v0.1.1 // indirect
 	github.com/cloudwego/eino-ext/components/model/qwen v0.0.0-20250612061754-5a3deb091dc5 // indirect
 	github.com/cloudwego/eino-ext/libs/acl/openai v0.0.0-20250918130948-16e3a249e721 // indirect
@@ -67,7 +71,8 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/eino-contrib/jsonschema v1.0.0 // indirect
-	github.com/elastic/go-elasticsearch/v8 v8.18.0 // indirect
+	github.com/eino-contrib/ollama v0.1.0 // indirect
+	github.com/elastic/go-elasticsearch/v8 v8.19.0 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/extrame/ole2 v0.0.0-20160812065207-d69429661ad7 // indirect
 	github.com/extrame/xls v0.0.1 // indirect

@@ -29,8 +29,7 @@ import (
 	"github.com/cloudwego/eino/schema"
 	"github.com/spf13/cast"
 
-	model "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/modelmgr"
-	crossmessage "github.com/coze-dev/coze-studio/backend/crossdomain/contract/message"
+	crossmessage "github.com/coze-dev/coze-studio/backend/crossdomain/message"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/canvas/convert"
@@ -48,7 +47,7 @@ type Config struct {
 	Intents            []string
 	SystemPrompt       string
 	IsFastMode         bool
-	LLMParams          *model.LLMParams
+	LLMParams          *vo.LLMParams
 	ChatHistorySetting *vo.ChatHistorySetting
 }
 
@@ -85,13 +84,13 @@ func (c *Config) Adapt(_ context.Context, n *vo.Node, _ ...nodes.AdaptOption) (*
 		return nil, err
 	}
 
-	modelLLMParams := &model.LLMParams{}
+	modelLLMParams := &vo.LLMParams{}
 	modelLLMParams.ModelType = int64(intentDetectorConfig.ModelType)
 	modelLLMParams.ModelName = intentDetectorConfig.ModelName
 	modelLLMParams.TopP = intentDetectorConfig.TopP
 	modelLLMParams.Temperature = intentDetectorConfig.Temperature
 	modelLLMParams.MaxTokens = intentDetectorConfig.MaxTokens
-	modelLLMParams.ResponseFormat = model.ResponseFormat(intentDetectorConfig.ResponseFormat)
+	modelLLMParams.ResponseFormat = vo.ResponseFormat(intentDetectorConfig.ResponseFormat)
 	modelLLMParams.SystemPrompt = intentDetectorConfig.SystemPrompt.Value.Content.(string)
 
 	c.LLMParams = modelLLMParams
@@ -128,7 +127,7 @@ func (c *Config) Build(ctx context.Context, _ *schema2.NodeSchema, _ ...schema2.
 	}
 
 	// 替换crossmodelmgr -> chatmodel factory
-	// m, _, err := crossmodelmgr.DefaultSVC().GetModel(ctx, c.LLMParams)
+	// m, _, err := modelbuilder.BuildModelByID(ctx, c.LLMParams.ModelType, c.LLMParams.ToModelBuilderLLMParams())
 	m, _, err := wanwu_util.CreateChatModel(ctx, c.LLMParams)
 	if err != nil {
 		return nil, err

@@ -34,12 +34,13 @@ import (
 	callbacks2 "github.com/cloudwego/eino/utils/callbacks"
 	"golang.org/x/exp/maps"
 
-	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/knowledge"
-	crossmodel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/modelmgr"
-	workflowModel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/workflow"
 	workflow3 "github.com/coze-dev/coze-studio/backend/api/model/workflow"
-	crossknowledge "github.com/coze-dev/coze-studio/backend/crossdomain/contract/knowledge"
-	crossmessage "github.com/coze-dev/coze-studio/backend/crossdomain/contract/message"
+	"github.com/coze-dev/coze-studio/backend/bizpkg/config/modelmgr"
+	"github.com/coze-dev/coze-studio/backend/bizpkg/llm/modelbuilder"
+	crossknowledge "github.com/coze-dev/coze-studio/backend/crossdomain/knowledge"
+	knowledge "github.com/coze-dev/coze-studio/backend/crossdomain/knowledge/model"
+	crossmessage "github.com/coze-dev/coze-studio/backend/crossdomain/message"
+	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
@@ -49,7 +50,6 @@ import (
 	wanwu_util "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-util"
 	schema2 "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/schema"
 	wrapPlugin "github.com/coze-dev/coze-studio/backend/domain/workflow/plugin"
-	"github.com/coze-dev/coze-studio/backend/infra/modelmgr"
 	"github.com/coze-dev/coze-studio/backend/pkg/ctxcache"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/slices"
@@ -165,7 +165,7 @@ type RetrievalStrategy struct {
 }
 
 type KnowledgeRecallConfig struct {
-	ChatModel                model.BaseChatModel
+	ChatModel                modelbuilder.BaseChatModel
 	RetrievalStrategy        *RetrievalStrategy
 	SelectedKnowledgeDetails []*knowledge.KnowledgeDetail
 }
@@ -174,9 +174,9 @@ type Config struct {
 	SystemPrompt                      string
 	UserPrompt                        string
 	OutputFormat                      Format
-	LLMParams                         *crossmodel.LLMParams
+	LLMParams                         *vo.LLMParams
 	FCParam                           *vo.FCParam
-	BackupLLMParams                   *crossmodel.LLMParams
+	BackupLLMParams                   *vo.LLMParams
 	ChatHistorySetting                *vo.ChatHistorySetting
 	AssociateStartNodeUserInputFields map[string]struct{}
 }
@@ -217,11 +217,11 @@ func (c *Config) Adapt(_ context.Context, n *vo.Node, _ ...nodes.AdaptOption) (*
 
 	var resFormat Format
 	switch convertedLLMParam.ResponseFormat {
-	case crossmodel.ResponseFormatText:
+	case vo.ResponseFormatText:
 		resFormat = FormatText
-	case crossmodel.ResponseFormatMarkdown:
+	case vo.ResponseFormatMarkdown:
 		resFormat = FormatMarkdown
-	case crossmodel.ResponseFormatJSON:
+	case vo.ResponseFormatJSON:
 		resFormat = FormatJSON
 	default:
 		return nil, fmt.Errorf("unsupported response format: %d", convertedLLMParam.ResponseFormat)
@@ -298,8 +298,8 @@ func (c *Config) Adapt(_ context.Context, n *vo.Node, _ ...nodes.AdaptOption) (*
 	return ns, nil
 }
 
-func llmParamsToLLMParam(params vo.LLMParam) (*crossmodel.LLMParams, error) {
-	p := &crossmodel.LLMParams{}
+func llmParamsToLLMParam(params vo.LLMParam) (*vo.LLMParams, error) {
+	p := &vo.LLMParams{}
 	for _, param := range params {
 		switch param.Name {
 		case "temperature":
@@ -322,7 +322,7 @@ func llmParamsToLLMParam(params vo.LLMParam) (*crossmodel.LLMParams, error) {
 			if err != nil {
 				return nil, err
 			}
-			p.ResponseFormat = crossmodel.ResponseFormat(int64Val)
+			p.ResponseFormat = vo.ResponseFormat(int64Val)
 		case "modleName":
 			strVal := param.Input.Value.Content.(string)
 			p.ModelName = strVal
@@ -367,8 +367,8 @@ func llmParamsToLLMParam(params vo.LLMParam) (*crossmodel.LLMParams, error) {
 	return p, nil
 }
 
-func simpleLLMParamsToLLMParams(params vo.SimpleLLMParam) (*crossmodel.LLMParams, error) {
-	p := &crossmodel.LLMParams{}
+func simpleLLMParamsToLLMParams(params vo.SimpleLLMParam) (*vo.LLMParams, error) {
+	p := &vo.LLMParams{}
 	p.ModelName = params.ModelName
 	p.ModelType = params.ModelType
 	p.Temperature = &params.Temperature
@@ -386,7 +386,7 @@ func getReasoningContent(message *schema.Message) string {
 func (c *Config) Build(ctx context.Context, ns *schema2.NodeSchema, _ ...schema2.BuildOption) (any, error) {
 	var (
 		err                   error
-		chatModel, fallbackM  model.BaseChatModel
+		chatModel, fallbackM  modelbuilder.BaseChatModel
 		info, fallbackI       *modelmgr.Model
 		modelWithInfo         ModelWithInfo
 		tools                 []tool.BaseTool
@@ -395,7 +395,7 @@ func (c *Config) Build(ctx context.Context, ns *schema2.NodeSchema, _ ...schema2
 	)
 
 	// 替换crossmodelmgr -> chatmodel factory
-	// chatModel, info, err = crossmodelmgr.DefaultSVC().GetModel(ctx, c.LLMParams)
+	// chatModel, info, err = modelbuilder.BuildModelByID(ctx, c.LLMParams.ModelType, c.LLMParams.ToModelBuilderLLMParams())
 	chatModel, info, err = wanwu_util.CreateChatModel(ctx, c.LLMParams)
 	if err != nil {
 		return nil, err
@@ -406,7 +406,7 @@ func (c *Config) Build(ctx context.Context, ns *schema2.NodeSchema, _ ...schema2
 		backupModelParams := c.BackupLLMParams
 		if backupModelParams != nil {
 			// 替换crossmodelmgr -> chatmodel factory
-			// fallbackM, fallbackI, err = crossmodelmgr.DefaultSVC().GetModel(ctx, backupModelParams)
+			// fallbackM, fallbackI, err = modelbuilder.BuildModelByID(ctx, backupModelParams.ModelType, backupModelParams.ToModelBuilderLLMParams())
 			fallbackM, fallbackI, err = wanwu_util.CreateChatModel(ctx, backupModelParams)
 			if err != nil {
 				return nil, err
@@ -495,6 +495,7 @@ func (c *Config) Build(ctx context.Context, ns *schema2.NodeSchema, _ ...schema2
 						PluginEntity: vo.PluginEntity{
 							PluginID:      pid,
 							PluginVersion: ptr.Of(p.PluginVersion),
+							PluginFrom:    p.PluginFrom,
 						},
 						ToolsInvokableInfo: map[int64]*wrapPlugin.ToolsInvokableInfo{
 							toolID: {

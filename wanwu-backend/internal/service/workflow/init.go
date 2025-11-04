@@ -10,17 +10,15 @@ import (
 	"strings"
 
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/config"
-	crossmodelmgrImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/modelmgr"
 	crosssearchImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/search"
 	crossuserImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/user"
 	"github.com/UnicomAI/wanwu/pkg/log"
-	coze_app_modelmgr "github.com/coze-dev/coze-studio/backend/application/modelmgr"
 	coze_app_upload "github.com/coze-dev/coze-studio/backend/application/upload"
 	coze_app_user "github.com/coze-dev/coze-studio/backend/application/user"
 	coze_app_workflow "github.com/coze-dev/coze-studio/backend/application/workflow"
-	coze_cross_upload "github.com/coze-dev/coze-studio/backend/crossdomain/contract/upload"
-	coze_cross_user "github.com/coze-dev/coze-studio/backend/crossdomain/contract/user"
-	coze_cross_upload_impl "github.com/coze-dev/coze-studio/backend/crossdomain/impl/upload"
+	coze_cross_upload "github.com/coze-dev/coze-studio/backend/crossdomain/upload"
+	coze_cross_upload_impl "github.com/coze-dev/coze-studio/backend/crossdomain/upload/impl"
+	coze_cross_user "github.com/coze-dev/coze-studio/backend/crossdomain/user"
 	coze_workflow "github.com/coze-dev/coze-studio/backend/domain/workflow"
 	coze_workflow_service "github.com/coze-dev/coze-studio/backend/domain/workflow/service"
 	coze_cache "github.com/coze-dev/coze-studio/backend/infra/cache"
@@ -65,7 +63,7 @@ func Init(ctx context.Context, infra Infra) error {
 	// check point store
 	cps := coze_checkpoint.NewRedisStore(infra.Cache)
 	// code runner
-	coze_code.SetCodeRunner(coze_code_impl.New())
+	coze_code.SetCodeRunner(coze_code_impl.NewByWanwu())
 	// workflow repo
 	workflowRepo, _ := coze_workflow_service.NewWorkflowRepositoryWanwu(idGen, infra.DB, infra.Cache, infra.Storage, cps, nil, config.Cfg().Workflow)
 	coze_workflow.SetRepository(workflowRepo)
@@ -75,8 +73,6 @@ func Init(ctx context.Context, infra Infra) error {
 
 	// init application upload
 	coze_app_upload.InitService(&coze_app_upload.UploadComponents{Cache: infra.Cache, Oss: infra.Storage, DB: infra.DB, Idgen: idGen})
-	// init application modelmgr
-	_ = coze_app_modelmgr.InitService(crossmodelmgrImpl.DefaultMock(), nil)
 	// init application user
 	_ = coze_app_user.InitService(ctx, infra.DB, infra.Storage, idGen)
 	// init application workflow
