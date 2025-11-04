@@ -26,12 +26,13 @@ import (
 
 	"github.com/cloudwego/eino/schema"
 
+	"github.com/coze-dev/coze-studio/backend/api/model/app/bot_common"
 	"github.com/coze-dev/coze-studio/backend/api/model/conversation/common"
 	"github.com/coze-dev/coze-studio/backend/api/model/conversation/run"
-	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/agentrun"
-	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/message"
-	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/singleagent"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
+	singleagent "github.com/coze-dev/coze-studio/backend/crossdomain/agent/model"
+	agentrun "github.com/coze-dev/coze-studio/backend/crossdomain/agentrun/model"
+	message "github.com/coze-dev/coze-studio/backend/crossdomain/message/model"
 	saEntity "github.com/coze-dev/coze-studio/backend/domain/agent/singleagent/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/conversation/agentrun/entity"
 	convEntity "github.com/coze-dev/coze-studio/backend/domain/conversation/conversation/entity"
@@ -205,11 +206,12 @@ func (a *OpenapiAgentRunApplication) buildTools(ctx context.Context, shortcmd *r
 		argBytes, err := json.Marshal(shortcmd.Parameters)
 		if err == nil {
 			ts = append(ts, &entity.Tool{
-				PluginID:  shortcutCMD.PluginID,
-				Arguments: string(argBytes),
-				ToolName:  shortcutCMD.PluginToolName,
-				ToolID:    shortcutCMD.PluginToolID,
-				Type:      agentrun.ToolType(shortcutCMD.ToolType),
+				PluginID:   shortcutCMD.PluginID,
+				Arguments:  string(argBytes),
+				ToolName:   shortcutCMD.PluginToolName,
+				ToolID:     shortcutCMD.PluginToolID,
+				Type:       agentrun.ToolType(shortcutCMD.ToolType),
+				PluginFrom: bot_common.PluginFromPtr(bot_common.PluginFrom(shortcutCMD.Source)),
 			})
 		}
 	}
@@ -385,6 +387,7 @@ func buildARSM2ApiMessage(chunk *entity.AgentRunResponse) []byte {
 		ChatID:           strconv.FormatInt(chunkMessageItem.RunID, 10),
 		ReasoningContent: chunkMessageItem.ReasoningContent,
 		CreatedAt:        ptr.Of(chunkMessageItem.CreatedAt / 1000),
+		SectionID:        ptr.Of(strconv.FormatInt(chunkMessageItem.SectionID, 10)),
 	}
 
 	mCM, _ := json.Marshal(chunkMessage)

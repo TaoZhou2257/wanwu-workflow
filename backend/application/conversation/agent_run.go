@@ -25,11 +25,12 @@ import (
 
 	"github.com/cloudwego/eino/schema"
 
+	"github.com/coze-dev/coze-studio/backend/api/model/app/bot_common"
 	"github.com/coze-dev/coze-studio/backend/api/model/conversation/message"
 	"github.com/coze-dev/coze-studio/backend/api/model/conversation/run"
-	"github.com/coze-dev/coze-studio/backend/api/model/crossdomain/agentrun"
-	crossDomainMessage "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/message"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
+	agentrun "github.com/coze-dev/coze-studio/backend/crossdomain/agentrun/model"
+	crossDomainMessage "github.com/coze-dev/coze-studio/backend/crossdomain/message/model"
 	saEntity "github.com/coze-dev/coze-studio/backend/domain/agent/singleagent/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/conversation/agentrun/entity"
 	convEntity "github.com/coze-dev/coze-studio/backend/domain/conversation/conversation/entity"
@@ -362,11 +363,12 @@ func (c *ConversationApplicationService) buildTools(ctx context.Context, tools [
 			argBytes, err := json.Marshal(arguments)
 			if err == nil {
 				ts = append(ts, &entity.Tool{
-					PluginID:  shortcutCMD.PluginID,
-					Arguments: string(argBytes),
-					ToolName:  shortcutCMD.PluginToolName,
-					ToolID:    shortcutCMD.PluginToolID,
-					Type:      agentrun.ToolType(shortcutCMD.ToolType),
+					PluginID:   shortcutCMD.PluginID,
+					Arguments:  string(argBytes),
+					ToolName:   shortcutCMD.PluginToolName,
+					ToolID:     shortcutCMD.PluginToolID,
+					Type:       agentrun.ToolType(shortcutCMD.ToolType),
+					PluginFrom: bot_common.PluginFromPtr(bot_common.PluginFrom(shortcutCMD.Source)),
 				})
 			}
 

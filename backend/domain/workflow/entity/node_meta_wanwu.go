@@ -5,8 +5,10 @@ const (
 	NodeTypeWanWuKnowledgeRetriever NodeType = "WanWuKnowledgeRetriever"
 	NodeTypeWanWuFileGenerator      NodeType = "WanWuFileGenerator"
 	NodeTypeWanWuFileParser         NodeType = "WanWuFileParser"
+	NodeTypeWanWuMultiFileParser    NodeType = "WanWuMultiFileParser"
 	NodeTypeWanWuMCPTool            NodeType = "WanWuMCPTool"
 	NodeTypeWanWuGUI                NodeType = "WanWuGUI"
+	NodeTypeWanWuTool               NodeType = "WanWuTool"
 )
 
 // Wanwu NodeTypeMetas Init
@@ -44,6 +46,24 @@ func init() {
 	NodeTypeMetas[NodeTypeJsonDeserialization].ID = 1059
 
 	// wanwu新增节点
+	NodeTypeMetas[NodeTypeWanWuTool] = &NodeTypeMeta{
+		ID:         1004,
+		Key:        NodeTypeWanWuTool,
+		DisplayKey: "Tool",
+		Name:       "Tool工具",
+		Category:   "utilities",
+		Desc:       "",
+		Color:      "#a5f70cff",
+		//IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Plugin-v2.jpg",
+		SupportBatch: false,
+		ExecutableMeta: ExecutableMeta{
+			PreFillZero: true,
+			PostFillNil: true,
+		},
+		EnUSName:        "Tool",
+		EnUSDescription: "Used to call tools.",
+	}
+
 	NodeTypeMetas[NodeTypeWanWuKnowledgeRetriever] = &NodeTypeMeta{
 		ID:         1006,
 		Key:        NodeTypeWanWuKnowledgeRetriever,
@@ -132,6 +152,24 @@ func init() {
 		},
 		EnUSName:        "GUI Agent",
 		EnUSDescription: "An intelligent agent that analyzes image information on the user's graphical interface through visual technology and simulates human operational behaviors to perform corresponding tasks, interacting with computer systems.",
+	}
+
+	NodeTypeMetas[NodeTypeWanWuMultiFileParser] = &NodeTypeMeta{
+		ID:         1011,
+		Key:        NodeTypeWanWuMultiFileParser,
+		DisplayKey: "MultiFileParser",
+		Name:       "多文档解析",
+		Category:   "document",
+		Desc:       "输入txt、pdf、docx、xlsx、csv、pptx等格式文档的URL，可以解析提取出文档的文本内容，支持多文档解析",
+		Color:      "#FF811A",
+		// IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
+		SupportBatch: false,
+		ExecutableMeta: ExecutableMeta{
+			PreFillZero: true,
+			PostFillNil: true,
+		},
+		EnUSName:        "Multi File generator",
+		EnUSDescription: "Parse documents content.",
 	}
 
 }

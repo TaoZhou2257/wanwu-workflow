@@ -31,8 +31,6 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/coze-dev/coze-studio/backend/api/model/app/bot_common"
-	model "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/knowledge"
-	workflowModel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/workflow"
 	"github.com/coze-dev/coze-studio/backend/api/model/data/database/table"
 	"github.com/coze-dev/coze-studio/backend/api/model/playground"
 	pluginAPI "github.com/coze-dev/coze-studio/backend/api/model/plugin_develop"
@@ -44,9 +42,12 @@ import (
 	appmemory "github.com/coze-dev/coze-studio/backend/application/memory"
 	appplugin "github.com/coze-dev/coze-studio/backend/application/plugin"
 	"github.com/coze-dev/coze-studio/backend/application/user"
-	crossknowledge "github.com/coze-dev/coze-studio/backend/crossdomain/contract/knowledge"
-	pluginConsts "github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/consts"
-	crossuser "github.com/coze-dev/coze-studio/backend/crossdomain/contract/user"
+	"github.com/coze-dev/coze-studio/backend/bizpkg/debugutil"
+	crossknowledge "github.com/coze-dev/coze-studio/backend/crossdomain/knowledge"
+	model "github.com/coze-dev/coze-studio/backend/crossdomain/knowledge/model"
+	pluginConsts "github.com/coze-dev/coze-studio/backend/crossdomain/plugin/consts"
+	crossuser "github.com/coze-dev/coze-studio/backend/crossdomain/user"
+	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
 	"github.com/coze-dev/coze-studio/backend/domain/plugin/dto"
 	search "github.com/coze-dev/coze-studio/backend/domain/search/entity"
 	domainWorkflow "github.com/coze-dev/coze-studio/backend/domain/workflow"
@@ -1394,6 +1395,7 @@ func convertStreamRunEvent(workflowID int64) func(msg *entity.Message) (res *wor
 			}
 		}()
 
+		ctx := context.Background()
 		if msg.StateMessage != nil {
 			// stream run will skip all messages from workflow tools
 			if executeID > 0 && executeID != msg.StateMessage.ExecuteID {
@@ -1405,7 +1407,7 @@ func convertStreamRunEvent(workflowID int64) func(msg *entity.Message) (res *wor
 				return &workflow.OpenAPIStreamRunFlowResponse{
 					ID:       strconv.Itoa(messageID),
 					Event:    string(DoneEvent),
-					DebugUrl: ptr.Of(fmt.Sprintf(workflowModel.DebugURLTpl, executeID, spaceID, workflowID)),
+					DebugUrl: ptr.Of(debugutil.GetWorkflowDebugURL(ctx, workflowID, spaceID, executeID)),
 				}, nil
 			case entity.WorkflowFailed, entity.WorkflowCancel:
 				var wfe vo.WorkflowError
@@ -1415,7 +1417,7 @@ func convertStreamRunEvent(workflowID int64) func(msg *entity.Message) (res *wor
 				return &workflow.OpenAPIStreamRunFlowResponse{
 					ID:           strconv.Itoa(messageID),
 					Event:        string(ErrEvent),
-					DebugUrl:     ptr.Of(fmt.Sprintf(workflowModel.DebugURLTpl, executeID, spaceID, workflowID)),
+					DebugUrl:     ptr.Of(debugutil.GetWorkflowDebugURL(ctx, workflowID, spaceID, executeID)),
 					ErrorCode:    ptr.Of(int64(wfe.Code())),
 					ErrorMessage: ptr.Of(wfe.Msg()),
 				}, nil
@@ -1424,7 +1426,7 @@ func convertStreamRunEvent(workflowID int64) func(msg *entity.Message) (res *wor
 					return &workflow.OpenAPIStreamRunFlowResponse{
 						ID:       strconv.Itoa(messageID),
 						Event:    string(InterruptEvent),
-						DebugUrl: ptr.Of(fmt.Sprintf(workflowModel.DebugURLTpl, executeID, spaceID, workflowID)),
+						DebugUrl: ptr.Of(debugutil.GetWorkflowDebugURL(ctx, workflowID, spaceID, executeID)),
 						InterruptData: &workflow.Interrupt{
 							EventID: fmt.Sprintf("%d/%d", executeID, msg.InterruptEvent.ID),
 							Type:    workflow.InterruptType(msg.InterruptEvent.EventType),
@@ -1436,7 +1438,7 @@ func convertStreamRunEvent(workflowID int64) func(msg *entity.Message) (res *wor
 				return &workflow.OpenAPIStreamRunFlowResponse{
 					ID:       strconv.Itoa(messageID),
 					Event:    string(InterruptEvent),
-					DebugUrl: ptr.Of(fmt.Sprintf(workflowModel.DebugURLTpl, executeID, spaceID, workflowID)),
+					DebugUrl: ptr.Of(debugutil.GetWorkflowDebugURL(ctx, workflowID, spaceID, executeID)),
 					InterruptData: &workflow.Interrupt{
 						EventID: fmt.Sprintf("%d/%d", executeID, msg.InterruptEvent.ID),
 						Type:    workflow.InterruptType(msg.InterruptEvent.ToolInterruptEvent.EventType),
@@ -1729,7 +1731,7 @@ func (w *ApplicationService) OpenAPIRun(ctx context.Context, req *workflow.OpenA
 
 		return &workflow.OpenAPIRunFlowResponse{
 			ExecuteID: ptr.Of(strconv.FormatInt(exeID, 10)),
-			DebugUrl:  ptr.Of(fmt.Sprintf(workflowModel.DebugURLTpl, exeID, meta.SpaceID, meta.ID)),
+			DebugUrl:  ptr.Of(debugutil.GetWorkflowDebugURL(ctx, meta.ID, meta.SpaceID, exeID)),
 		}, nil
 	}
 
@@ -1765,7 +1767,7 @@ func (w *ApplicationService) OpenAPIRun(ctx context.Context, req *workflow.OpenA
 	return &workflow.OpenAPIRunFlowResponse{
 		Data:      data,
 		ExecuteID: ptr.Of(strconv.FormatInt(wfExe.ID, 10)),
-		DebugUrl:  ptr.Of(fmt.Sprintf(workflowModel.DebugURLTpl, wfExe.ID, wfExe.SpaceID, meta.ID)),
+		DebugUrl:  ptr.Of(debugutil.GetWorkflowDebugURL(ctx, meta.ID, wfExe.SpaceID, wfExe.ID)),
 		Token:     ptr.Of(wfExe.TokenInfo.InputTokens + wfExe.TokenInfo.OutputTokens),
 		Cost:      ptr.Of("0.00000"),
 	}, nil
@@ -1826,7 +1828,7 @@ func (w *ApplicationService) OpenAPIGetWorkflowRunHistory(ctx context.Context, r
 				LogID:         ptr.Of(exe.LogID),
 				CreateTime:    ptr.Of(exe.CreatedAt.Unix()),
 				UpdateTime:    updateTime,
-				DebugUrl:      ptr.Of(fmt.Sprintf(workflowModel.DebugURLTpl, exe.ID, exe.SpaceID, exe.WorkflowID)),
+				DebugUrl:      ptr.Of(debugutil.GetWorkflowDebugURL(ctx, exe.WorkflowID, exe.SpaceID, exe.ID)),
 				Input:         exe.Input,
 				Output:        exe.Output,
 				Token:         ptr.Of(exe.TokenInfo.InputTokens + exe.TokenInfo.OutputTokens),
@@ -2654,6 +2656,7 @@ func (w *ApplicationService) GetApiDetail(ctx context.Context, req *workflow.Get
 		PluginEntity: vo.PluginEntity{
 			PluginID:      pluginID,
 			PluginVersion: req.PluginVersion,
+			PluginFrom:    req.PluginFrom,
 		},
 		ToolIDs: []int64{toolID},
 	})
@@ -2691,6 +2694,7 @@ func (w *ApplicationService) GetApiDetail(ctx context.Context, req *workflow.Get
 			LatestVersion:       toolInfoResponse.LatestVersion,
 			PluginProductStatus: ternary.IFElse(toolInfoResponse.IsOfficial, int64(1), 0),
 			ProjectID:           ternary.IFElse(toolInfoResponse.AppID != 0, ptr.Of(strconv.FormatInt(toolInfoResponse.AppID, 10)), nil),
+			PluginFrom:          req.PluginFrom,
 		},
 		ToolInputs:  inputVars,
 		ToolOutputs: outputVars,
@@ -2743,6 +2747,7 @@ func (w *ApplicationService) GetLLMNodeFCSettingDetail(ctx context.Context, req 
 					PluginEntity: vo.PluginEntity{
 						PluginID:      pluginID,
 						PluginVersion: pl.PluginVersion,
+						PluginFrom:    pl.PluginFrom,
 					},
 					ToolIDs: []int64{toolID},
 					IsDraft: pl.IsDraft,
@@ -2940,7 +2945,8 @@ func (w *ApplicationService) GetLLMNodeFCSettingsMerged(ctx context.Context, req
 
 		pluginReq := &plugin.ToolsInfoRequest{
 			PluginEntity: vo.PluginEntity{
-				PluginID: pluginID,
+				PluginID:   pluginID,
+				PluginFrom: pluginFcSetting.PluginFrom,
 			},
 			ToolIDs: []int64{toolID},
 			IsDraft: isDraft,

@@ -54,7 +54,7 @@ type RetrieveParams struct {
 type HitParams struct {
 	UserId                string                 `json:"userId"`
 	Question              string                 `json:"question" validate:"required"`
-	KnowledgeBase         []string               `json:"knowledgeBase" validate:"required"`
+	KnowledgeIdList       []string               `json:"knowledgeIdList" validate:"required"`
 	Threshold             float64                `json:"threshold"`
 	TopK                  int64                  `json:"topK"`
 	RerankModelId         string                 `json:"rerank_model_id"`               // rerankId
@@ -89,6 +89,7 @@ type WeightParams struct {
 type RetrieveKnowledgeInfo struct {
 	DatasetId            string                `json:"dataset_id"`
 	Name                 string                `json:"name"`
+	KnowledgeId          string                `json:"knowledgeId"`
 	MetaDataFilterParams *MetaDataFilterParams `json:"metaDataFilterParams"`
 }
 
@@ -281,7 +282,7 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 	}
 	req := &HitParams{
 		Question:              query,
-		KnowledgeBase:         buildKnowledgeNameList(kr.knowledgeInfos),
+		KnowledgeIdList:       buildKnowledgeIdList(kr.knowledgeInfos),
 		TopK:                  retrieveParams.TopK,
 		Threshold:             retrieveParams.Threshold,
 		RerankModelId:         buildRerankId(priorityMatch, retrieveParams.RerankModelId),
@@ -386,7 +387,6 @@ func buildRetrieveKnowledgeInfo(knowledgeInfo any) (*RetrieveKnowledgeInfo, erro
 		retrieveKnowledgeInfo.Name = k
 		return retrieveKnowledgeInfo, nil
 	}
-	//通过序列化反序列化处理
 	marshal, err := json.Marshal(knowledgeInfo)
 	if err != nil {
 		return nil, err
@@ -409,13 +409,13 @@ func buildRetrieveKnowledgeInfo(knowledgeInfo any) (*RetrieveKnowledgeInfo, erro
 }
 
 // buildKnowledgeNameList 构造知识库名称
-func buildKnowledgeNameList(knowledgeInfos []*RetrieveKnowledgeInfo) []string {
+func buildKnowledgeIdList(knowledgeInfos []*RetrieveKnowledgeInfo) []string {
 	if len(knowledgeInfos) == 0 {
 		return make([]string, 0)
 	}
 	var nameList []string
 	for _, info := range knowledgeInfos {
-		nameList = append(nameList, info.Name)
+		nameList = append(nameList, info.KnowledgeId)
 	}
 	return nameList
 }
@@ -469,7 +469,23 @@ func buildValueData(valueType string, value string, condition string) (interface
 	switch valueType {
 	case metaTypeNumber:
 	case metaTypeTime:
+		//valueResult, err := parseToTimestamp(value)
+		//if err != nil || valueResult == 0 {
+		//	return strconv.ParseInt(value, 10, 64)
+		//}
+		//return valueResult, nil
 		return strconv.ParseInt(value, 10, 64)
 	}
 	return value, nil
+}
+
+// parseToTimestamp 将格式化的时间字符串转换为时间戳
+func parseToTimestamp(timeStr string) (int64, error) {
+	layout := "2006-01-02 15:04:05"
+	tm, err := time.Parse(layout, timeStr)
+	if err != nil {
+		return 0, err
+	}
+
+	return tm.UnixMilli(), nil
 }

@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"sort"
 
-	searchModel "github.com/coze-dev/coze-studio/backend/api/model/crossdomain/search"
 	pluginCommon "github.com/coze-dev/coze-studio/backend/api/model/plugin_develop/common"
 	resCommon "github.com/coze-dev/coze-studio/backend/api/model/resource/common"
-	"github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/consts"
-	"github.com/coze-dev/coze-studio/backend/crossdomain/contract/plugin/model"
-	crosssearch "github.com/coze-dev/coze-studio/backend/crossdomain/contract/search"
+	"github.com/coze-dev/coze-studio/backend/crossdomain/plugin/consts"
+	"github.com/coze-dev/coze-studio/backend/crossdomain/plugin/model"
+	crosssearch "github.com/coze-dev/coze-studio/backend/crossdomain/search"
+	searchModel "github.com/coze-dev/coze-studio/backend/crossdomain/search/model"
 	pluginConf "github.com/coze-dev/coze-studio/backend/domain/plugin/conf"
 	"github.com/coze-dev/coze-studio/backend/domain/plugin/dto"
 	"github.com/coze-dev/coze-studio/backend/domain/plugin/entity"
@@ -96,6 +96,19 @@ func (p *pluginServiceImpl) ListPluginProducts(ctx context.Context, req *dto.Lis
 	sort.Slice(plugins, func(i, j int) bool {
 		return plugins[i].GetRefProductID() < plugins[j].GetRefProductID()
 	})
+
+	// official plugins
+	officialPlugins, _, err := p.pluginRepo.ListCustomOnlinePlugins(ctx, 999999, dto.PageInfo{
+		Page:       1,
+		Size:       1000,
+		OrderByACS: ptr.Of(true),
+		SortBy:     ptr.Of(dto.SortByCreatedAt),
+	})
+	if err != nil {
+		return nil, errorx.Wrapf(err, "ListCustomOnlinePlugins failed, spaceID=999999")
+	}
+
+	plugins = append(plugins, officialPlugins...)
 
 	return &dto.ListPluginProductsResponse{
 		Plugins: plugins,
