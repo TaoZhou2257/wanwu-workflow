@@ -9,6 +9,27 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
+type Auth struct {
+	Type  string `json:"type" validate:"omitempty,oneof='none' 'apiKey'"` //
+	In    string `json:"in" validate:"omitempty,oneof='header' 'query'"`  // header or query
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func DefaultAuth(apiKey string) *Auth {
+	if apiKey == "" {
+		return &Auth{
+			Type: "none",
+		}
+	}
+	return &Auth{
+		Type:  "apiKey",
+		In:    "header",
+		Name:  "Authorization",
+		Value: "Bearer " + apiKey,
+	}
+}
+
 func LoadFromData(ctx context.Context, data []byte) (*openapi3.T, error) {
 	doc, err := openapi3.NewLoader().LoadFromData(data)
 	if err != nil {
