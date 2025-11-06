@@ -14,6 +14,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/canvas/convert"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes"
+	wanwu_util "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-util"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/schema"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
@@ -24,7 +25,7 @@ import (
 type Config struct {
 	APISchema string
 	ActionID  string
-	ApiAuth   *customToolApiAuthWebRequest
+	ApiAuth   *openapi3_util.Auth
 }
 
 func (c *Config) Adapt(_ context.Context, n *vo.Node, _ ...nodes.AdaptOption) (*schema.NodeSchema, error) {
@@ -70,9 +71,9 @@ func (c *Config) Build(ctx context.Context, ns *schema.NodeSchema, _ ...schema.B
 }
 
 type WanWuToolInfo struct {
-	client   *openapi3_util.Client
 	actionId string
-	apiAuth  *customToolApiAuthWebRequest
+	client   *openapi3_util.Client
+	apiAuth  *openapi3_util.Auth
 }
 
 func (i *WanWuToolInfo) Invoke(ctx context.Context, in map[string]any) (map[string]any, error) {
@@ -84,13 +85,12 @@ func (i *WanWuToolInfo) Invoke(ctx context.Context, in map[string]any) (map[stri
 		if params.HeaderParams == nil {
 			params.HeaderParams = make(map[string]string)
 		}
-		if i.apiAuth.Type != "" && i.apiAuth.Type != "None" && i.apiAuth.APIKey != "" {
-			if i.apiAuth.AuthType == "Custom" {
-				if i.apiAuth.CustomHeaderName != "" {
-					params.HeaderParams[i.apiAuth.CustomHeaderName] = i.apiAuth.APIKey
-				}
-			} else {
-				params.HeaderParams["Authorization"] = "Bearer " + i.apiAuth.APIKey
+		if i.apiAuth != nil && i.apiAuth.Type != "" && i.apiAuth.Type != "none" && i.apiAuth.Value != "" {
+			switch i.apiAuth.In {
+			case "header":
+				params.HeaderParams[i.apiAuth.Name] = i.apiAuth.Value
+			case "query":
+				params.QueryParams[i.apiAuth.Name] = i.apiAuth.Value
 			}
 		}
 	}
@@ -171,7 +171,7 @@ func parseInputParams(input map[string]any) *openapi3_util.RequestParams {
 }
 
 // 原有的 toolRequest 函数保持不变
-func toolRequest(toolId, toolType, userApiKey string) (string, *customToolApiAuthWebRequest, error) {
+func toolRequest(toolId, toolType, userApiKey string) (string, *openapi3_util.Auth, error) {
 	switch toolType {
 	case "custom":
 		url, err := url.JoinPath(os.Getenv("WANWU_CALLBACK_CUSTOM_TOOL_URL"))
@@ -198,7 +198,12 @@ func toolRequest(toolId, toolType, userApiKey string) (string, *customToolApiAut
 		if err = sonic.Unmarshal(marshal, &ret); err != nil {
 			return "", nil, fmt.Errorf("request %v unmarshal response body: %v", url, err)
 		}
-		return ret.Schema, &ret.ApiAuth, nil
+		var apiAuth *openapi3_util.Auth
+		apiAuth, err = ret.ApiAuth.ToOpenapiAuth()
+		if err != nil {
+			return "", nil, fmt.Errorf("request %v custom tool api auth to openapi auth err: %v", err)
+		}
+		return ret.Schema, apiAuth, nil
 	case "builtin":
 		url, err := url.JoinPath(os.Getenv("WANWU_CALLBACK_SQUARE_TOOL_URL"))
 		if err != nil {
@@ -224,12 +229,7 @@ func toolRequest(toolId, toolType, userApiKey string) (string, *customToolApiAut
 		if err = sonic.Unmarshal(marshal, &ret); err != nil {
 			return "", nil, fmt.Errorf("request %v unmarshal response body: %v", url, err)
 		}
-		apiAuth := &customToolApiAuthWebRequest{Type: "None"}
-		if userApiKey != "" {
-			apiAuth.Type = "API Key"
-			apiAuth.APIKey = userApiKey
-		}
-		return ret.Schema, apiAuth, nil
+		return ret.Schema, openapi3_util.DefaultAuth(userApiKey), nil
 	}
 	return "", nil, errors.New("unsupported tool type")
 }
@@ -241,13 +241,6 @@ type response struct {
 	Msg  string `json:"msg"`
 }
 
-type customToolApiAuthWebRequest struct {
-	Type             string `json:"type"`             // 认证类型: None 或 'API Key'
-	APIKey           string `json:"apiKey"`           // apiKey
-	AuthType         string `json:"authType"`         // Auth类型: Custom 或空
-	CustomHeaderName string `json:"customHeaderName"` // 自定义头名
-}
-
 type customToolApiResponse struct {
 	Name   string `json:"name"`
 	Method string `json:"method"`
@@ -255,14 +248,14 @@ type customToolApiResponse struct {
 }
 
 type customToolDetail struct {
-	CustomToolId  string                      `json:"customToolId"`  // 自定义工具id
-	Name          string                      `json:"name"`          // 名称
-	Description   string                      `json:"description"`   // 描述
-	Schema        string                      `json:"schema"`        // schema
-	ApiAuth       customToolApiAuthWebRequest `json:"apiAuth"`       // apiAuth
-	ApiList       []customToolApiResponse     `json:"apiList"`       // api列表
-	PrivacyPolicy string                      `json:"privacyPolicy"` // 隐私政策
-	ToolSquareID  string                      `json:"toolSquareId"`  // 广场mcpId(非空表示来源于广场)
+	CustomToolId  string                       `json:"customToolId"`  // 自定义工具id
+	Name          string                       `json:"name"`          // 名称
+	Description   string                       `json:"description"`   // 描述
+	Schema        string                       `json:"schema"`        // schema
+	ApiAuth       wanwu_util.ApiAuthWebRequest `json:"apiAuth"`       // apiAuth
+	ApiList       []customToolApiResponse      `json:"apiList"`       // api列表
+	PrivacyPolicy string                       `json:"privacyPolicy"` // 隐私政策
+	ToolSquareID  string                       `json:"toolSquareId"`  // 广场mcpId(非空表示来源于广场)
 }
 
 type toolSquareInfo struct {
