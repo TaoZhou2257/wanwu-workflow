@@ -35,7 +35,7 @@ const main = () => {
   initFlags();
   // Initialize i18n
   initI18nInstance({
-    lng: (localStorage.getItem('i18next') ?? (IS_OVERSEA ? 'en' : 'zh-CN')) as
+    lng: ((localStorage.getItem('locale') === 'zh' ? 'zh-CN' : localStorage.getItem('locale') || localStorage.getItem('i18next')) ?? (IS_OVERSEA ? 'en' : 'zh-CN')) as
       | 'en'
       | 'zh-CN',
   });

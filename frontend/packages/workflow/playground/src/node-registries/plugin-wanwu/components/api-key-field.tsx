@@ -31,6 +31,7 @@ export const ApiKeyField = ({
   onChangeValue,
 }: ApiKeyParamsFieldProps) => {
   const [value, setValue] = useState<any>('')
+  const [isChange, setIsChange] = useState(false)
   useEffect(() => {
     setValue(defaultValue)
   }, [])
@@ -39,14 +40,23 @@ export const ApiKeyField = ({
     <Section title={'API KEY'}>
       <div className="w-full flex gap-[4px] items-center">
         <div style={{ flex: 8 }}>
-          <Input value={value} onChange={(v) => setValue(v)} />
+          <Input
+            type="password"
+            value={value}
+            onChange={(v) => {
+              setValue(v)
+              setIsChange(true)
+            }}
+          />
         </div>
         <div>
           <Button
             size="default"
             color="highlight"
+            disabled={!isChange}
             onClick={() => {
               onChangeValue?.(value)
+              setIsChange(false)
             }}
           >
             {defaultValue ? I18n.t('Update') : I18n.t('confirm')}

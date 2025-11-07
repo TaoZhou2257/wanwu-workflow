@@ -19,7 +19,7 @@ import { useService } from '@flowgram-adapter/free-layout-editor';
 import {
   PluginNodeService,
   type PluginNodeStore,
-} from '@/services/plugin-node-service';
+} from '@/services/plugin-node-service-wanwu';
 
 export const usePluginNodeService = () =>
   useService<PluginNodeService>(PluginNodeService);
