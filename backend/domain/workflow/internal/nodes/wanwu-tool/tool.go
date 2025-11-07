@@ -201,7 +201,7 @@ func toolRequest(toolId, toolType, userApiKey string) (string, *openapi3_util.Au
 		var apiAuth *openapi3_util.Auth
 		apiAuth, err = ret.ApiAuth.ToOpenapiAuth()
 		if err != nil {
-			return "", nil, fmt.Errorf("request %v custom tool api auth to openapi auth err: %v", err)
+			return "", nil, fmt.Errorf("request %v custom tool api auth to openapi auth err: %v", url, err)
 		}
 		return ret.Schema, apiAuth, nil
 	case "builtin":
