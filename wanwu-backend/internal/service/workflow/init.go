@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/config"
@@ -32,7 +34,8 @@ import (
 )
 
 const (
-	workflowRepoSqlFile = "configs/schema.sql"
+	workflowRepoSqlFile         = "configs/schema.sql"
+	workflowRepoSqlMigrationDir = "configs/migrations"
 )
 
 var _workflowService coze_workflow.Service
@@ -52,6 +55,10 @@ func Init(ctx context.Context, infra Infra) error {
 	// init repo data
 	if err := initRepo(infra.DB); err != nil {
 		return fmt.Errorf("init repo err: %v", err)
+	}
+	// migrate repo
+	if err := migrateRepo(infra.DB); err != nil {
+		return fmt.Errorf("migrate repo err: %v", err)
 	}
 
 	// register all node adaptors
@@ -90,10 +97,31 @@ func Init(ctx context.Context, infra Infra) error {
 }
 
 func initRepo(db *gorm.DB) error {
+	return executeSqlFile(db, workflowRepoSqlFile, true)
+
+}
+
+func migrateRepo(db *gorm.DB) error {
+	// 读取migrations中的sql文件
+	if err := filepath.Walk(workflowRepoSqlMigrationDir, func(filePath string, fileInfo fs.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if fileInfo.IsDir() {
+			return nil
+		}
+		return executeSqlFile(db, filePath, true)
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func executeSqlFile(db *gorm.DB, sqlFilePath string, skipExecErr bool) error {
 	// 读取sql文件
-	file, err := os.Open(workflowRepoSqlFile)
+	file, err := os.Open(sqlFilePath)
 	if err != nil {
-		return fmt.Errorf("open %v err: %v", workflowRepoSqlFile, err)
+		return fmt.Errorf("open %v err: %v", sqlFilePath, err)
 	}
 	defer file.Close()
 	// 过滤注释行
@@ -105,7 +133,7 @@ func initRepo(db *gorm.DB) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("read %v err: %v", workflowRepoSqlFile, err)
+			return fmt.Errorf("read %v err: %v", sqlFilePath, err)
 		}
 
 		lineStr := strings.TrimSpace(string(line))
@@ -123,6 +151,9 @@ func initRepo(db *gorm.DB) error {
 			continue
 		}
 		if err := db.Exec(sql).Error; err != nil {
+			if !skipExecErr {
+				return fmt.Errorf("execute [%v] err: %v", sql, err)
+			}
 			log.Warnf("execute [%v] err: %v", sql, err)
 		}
 	}
