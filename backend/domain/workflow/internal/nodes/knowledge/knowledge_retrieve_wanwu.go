@@ -49,6 +49,7 @@ type RetrieveParams struct {
 	TopK                        int64   `json:"topK"`                           //topK 获取最高的几行
 	Threshold                   float64 `json:"threshold"`                      //threshold 过滤分数阈值
 	Rewrite                     bool    `json:"rewrite"`                        //是否开启重写
+	UseGraph                    bool    `json:"useGraph"`                       // 是否开启知识图谱
 }
 
 type HitParams struct {
@@ -66,6 +67,7 @@ type HitParams struct {
 	TermWeightCoefficient *float64               `json:"term_weight_coefficient"`       // 展示角标
 	MetaFilter            bool                   `json:"metadata_filtering"`            // 元数据过滤开关
 	MetaFilterConditions  []*MetadataFilterParam `json:"metadata_filtering_conditions"` // 元数据过滤条件
+	UseGraph              bool                   `json:"use_graph"`                     // 知识图谱
 }
 
 type MetadataFilterParam struct {
@@ -207,6 +209,14 @@ func (r *WanWuRetrieveConfig) Adapt(_ context.Context, n *vo.Node, _ ...nodes.Ad
 		retrieveParams.Rewrite = rewrite
 	}
 
+	if content, ok := getDesignatedParamContent("useGraph"); ok {
+		useGraph, err := cast.ToBoolE(content)
+		if err != nil {
+			return nil, err
+		}
+		retrieveParams.UseGraph = useGraph
+	}
+
 	r.RetrieveParams = retrieveParams
 
 	if err := convert.SetInputsForNodeSchema(n, ns); err != nil {
@@ -295,6 +305,7 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 		TermWeightCoefficient: termWeightCoefficient,
 		MetaFilter:            len(params) > 0,
 		MetaFilterConditions:  params,
+		UseGraph:              retrieveParams.UseGraph,
 	}
 
 	response, err := ragKnowledgeSearch(ctx, req)
