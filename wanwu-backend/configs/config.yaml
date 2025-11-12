@@ -103,8 +103,28 @@ icons:
     url: /api/static/icon/icon-Input-v2.jpg
   - id: 32
     url: /api/static/icon/icon-VariableMerge.jpg
+  - id: 37
+    url: /api/static/icon/icon-query-message-list.jpg
+  - id: 38
+    url: /api/static/icon/icon-clear-context.jpg
+  - id: 39
+    url: /api/static/icon/icon-create-conversation.jpg
   - id: 45
     url: /api/static/icon/icon-HTTP.png
+  - id: 51
+    url: /api/static/icon/icon-update-conversation.jpg
+  - id: 52
+    url: /api/static/icon/icon-delete-conversation.jpg
+  - id: 53
+    url: api/static/icon/icon-query-conversation-list.jpg
+  - id: 54
+    url: /api/static/icon/icon-query-conversation-history.jpg
+  - id: 55
+    url: /api/static/icon/icon-create-message.jpg
+  - id: 56
+    url: /api/static/icon/icon-update-message.jpg
+  - id: 57
+    url: /api/static/icon/icon-delete-message.jpg
   - id: 58
     url: /api/static/icon/icon-to_json.png
   - id: 1004

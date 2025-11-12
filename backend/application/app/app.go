@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/coze-dev/coze-studio/backend/bizpkg/config"
 	"github.com/google/uuid"
 
 	intelligenceAPI "github.com/coze-dev/coze-studio/backend/api/model/app/intelligence"
@@ -43,7 +44,6 @@ import (
 	"github.com/coze-dev/coze-studio/backend/application/memory"
 	"github.com/coze-dev/coze-studio/backend/application/plugin"
 	"github.com/coze-dev/coze-studio/backend/application/workflow"
-	"github.com/coze-dev/coze-studio/backend/bizpkg/config"
 	connectorModel "github.com/coze-dev/coze-studio/backend/crossdomain/connector/model"
 	knowledgeModel "github.com/coze-dev/coze-studio/backend/crossdomain/knowledge/model"
 	pluginConsts "github.com/coze-dev/coze-studio/backend/crossdomain/plugin/consts"
@@ -93,7 +93,6 @@ func (a *APPApplicationService) DraftProjectCreate(ctx context.Context, req *pro
 	if err != nil {
 		return nil, err
 	}
-
 	if len(modelList) == 0 {
 		return nil, errorx.New(errno.ErrAppNoModelInUseCode)
 	}

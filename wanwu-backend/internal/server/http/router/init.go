@@ -26,6 +26,36 @@ func Register(r *hertz_server.Hertz) {
 			_bot.POST("/upload_file", append(_uploadfileMw(), coze.UploadFile)...)
 		}
 		{
+			_permission_api := _api.Group("/permission_api", _permission_apiMw()...)
+			{
+				_coze_web_app := _permission_api.Group("/coze_web_app", _coze_web_appMw()...)
+				_coze_web_app.POST("/impersonate_coze_user", append(_impersonatecozeuserMw(), coze.ImpersonateCozeUser)...)
+			}
+		}
+		{
+			_intelligence_api := _api.Group("/intelligence_api", _intelligence_apiMw()...)
+
+			{
+				_search := _intelligence_api.Group("/search", _searchMw()...)
+				_search.POST("/get_draft_intelligence_info", append(_getdraftintelligenceinfoMw(), coze.GetDraftIntelligenceInfoByWanwu)...)
+				_search.POST("/get_draft_intelligence_list", append(_getdraftintelligencelistMw(), coze.GetDraftIntelligenceListByWanwu)...)
+			}
+		}
+		{
+			_memory := _api.Group("/memory", _memoryMw()...)
+			{
+				_variable0 := _memory.Group("/variable", _variable0Mw()...)
+				_variable0.POST("/get_meta", append(_getmemoryvariablemetaMw(), coze.GetMemoryVariableMetaByWanwu)...)
+			}
+			{
+				_project := _memory.Group("/project", _projectMw()...)
+				{
+					_variable := _project.Group("/variable", _variableMw()...)
+					_variable.GET("/meta_list", append(_getprojectvariablelistMw(), coze.GetProjectVariableListByWanwu)...)
+				}
+			}
+		}
+		{
 			_common := _api.Group("/common", _commonMw()...)
 			{
 				_upload := _common.Group("/upload", _uploadMw()...)
@@ -55,9 +85,10 @@ func Register(r *hertz_server.Hertz) {
 			_workflow_api.POST("/batch_delete", append(_batchdeleteworkflowMw(), coze.BatchDeleteWorkflow)...)
 			_workflow_api.POST("/cancel", append(_cancelworkflowMw(), coze.CancelWorkFlow)...)
 			_workflow_api.POST("/canvas", append(_getcanvasinfoMw(), coze.GetCanvasInfoByWanwu)...)
-			_workflow_api.POST("/copy", append(_copyworkflowMw(), coze.CopyWorkflow)...)
+			_workflow_api.POST("/copy", append(_copyworkflowMw(), coze.CopyWorkflowByWanwu)...)
 			_workflow_api.POST("/copy_wk_template", append(_copywktemplateapiMw(), coze.CopyWkTemplateApi)...)
-			_workflow_api.POST("/create", append(_createworkflowMw(), coze.CreateWorkflow)...)
+			// _workflow_api.POST("/create", append(_createworkflowMw(), coze.CreateWorkflow)...)
+			_workflow_api.POST("/create", append(_createworkflowMw(), coze.CreateWorkflowByWanwu)...)
 			_workflow_api.POST("/delete", append(_deleteworkflowMw(), coze.DeleteWorkflow)...)
 			_workflow_api.POST("/delete_strategy", append(_getdeletestrategyMw(), coze.GetDeleteStrategy)...)
 			_workflow_api.POST("/example_workflow_list", append(_getexampleworkflowlistMw(), coze.GetExampleWorkFlowListByWanwu)...)
@@ -93,10 +124,13 @@ func Register(r *hertz_server.Hertz) {
 			}
 			{
 				_project_conversation := _workflow_api.Group("/project_conversation", _project_conversationMw()...)
-				_project_conversation.POST("/create", append(_createprojectconversationdefMw(), coze.CreateProjectConversationDef)...)
-				_project_conversation.POST("/delete", append(_deleteprojectconversationdefMw(), coze.DeleteProjectConversationDef)...)
+				// _project_conversation.POST("/create", append(_createprojectconversationdefMw(), coze.CreateProjectConversationDef)...)
+				// _project_conversation.POST("/delete", append(_deleteprojectconversationdefMw(), coze.DeleteProjectConversationDef)...)
+
+				// _project_conversation.GET("/list", append(_listprojectconversationdefMw(), coze.ListProjectConversationDefByWanwu)...)
 				_project_conversation.GET("/list", append(_listprojectconversationdefMw(), coze.ListProjectConversationDef)...)
-				_project_conversation.POST("/update", append(_updateprojectconversationdefMw(), coze.UpdateProjectConversationDef)...)
+
+				// _project_conversation.POST("/update", append(_updateprojectconversationdefMw(), coze.UpdateProjectConversationDef)...)
 			}
 			{
 				_upload1 := _workflow_api.Group("/upload", _upload1Mw()...)
@@ -114,8 +148,25 @@ func Register(r *hertz_server.Hertz) {
 	{
 		_v1 := root.Group("/v1", _v1Mw()...)
 		{
+			_conversation0 := _v1.Group("/conversation", _conversation0Mw()...)
+			{
+				_message := _conversation0.Group("/message", _messageMw()...)
+				_message.POST("/list", append(_getapimessagelistMw(), coze.GetApiMessageList)...)
+			}
+		}
+		{
+			_workflows := _v1.Group("/workflows", _workflowsMw()...)
+			_workflows.POST("/chat", append(_openapichatflowrunMw(), coze.OpenAPIChatFlowRun)...)
+			// _workflows.GET("/:workflow_id", append(_openapigetworkflowinfoMw(), coze.OpenAPIGetWorkflowInfoByWanwu)...)
+			_workflows.GET("/:workflow_id", append(_openapigetworkflowinfoMw(), coze.OpenAPIGetWorkflowInfo)...)
+		}
+		{
 			_workflow := _v1.Group("/workflow", _workflowMw()...)
-
+			{
+				_conversation1 := _workflow.Group("/conversation", _conversation1Mw()...)
+				// _conversation1.POST("/create", append(_openapicreateconversationMw(), coze.OpenAPICreateConversationByWanwu)...)
+				_conversation1.POST("/create", append(_openapicreateconversationMw(), coze.OpenAPICreateConversation)...)
+			}
 			// --- wanwu adapt ---
 			_workflow.POST("/list_schema_by_wanwu", []app.HandlerFunc{coze.ListWorkFlowOpenAPIV3SchemaByWanwu}...)
 			_workflow.GET("/:workflow_id/schema_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowOpenAPIV3SchemaByWanwu}...)

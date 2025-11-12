@@ -27,6 +27,54 @@ func _uploadfileMw() []app.HandlerFunc {
 	return nil
 }
 
+func _permission_apiMw() []app.HandlerFunc {
+	return nil
+}
+
+func _coze_web_appMw() []app.HandlerFunc {
+	return nil
+}
+
+func _impersonatecozeuserMw() []app.HandlerFunc {
+	return nil
+}
+
+func _intelligence_apiMw() []app.HandlerFunc {
+	return nil
+}
+
+func _searchMw() []app.HandlerFunc { return nil }
+
+func _getdraftintelligenceinfoMw() []app.HandlerFunc { return nil }
+
+func _getdraftintelligencelistMw() []app.HandlerFunc {
+	return nil
+}
+
+func _memoryMw() []app.HandlerFunc {
+	return nil
+}
+
+func _variable0Mw() []app.HandlerFunc {
+	return nil
+}
+
+func _getmemoryvariablemetaMw() []app.HandlerFunc {
+	return nil
+}
+
+func _projectMw() []app.HandlerFunc {
+	return nil
+}
+
+func _variableMw() []app.HandlerFunc {
+	return nil
+}
+
+func _getprojectvariablelistMw() []app.HandlerFunc {
+	return nil
+}
+
 func _commonMw() []app.HandlerFunc {
 	// your code...
 	return nil
@@ -309,6 +357,38 @@ func _upload1Mw() []app.HandlerFunc {
 
 func _v1Mw() []app.HandlerFunc {
 	// your code...
+	return nil
+}
+
+func _conversation0Mw() []app.HandlerFunc {
+	return nil
+}
+
+func _messageMw() []app.HandlerFunc {
+	return nil
+}
+
+func _getapimessagelistMw() []app.HandlerFunc {
+	return nil
+}
+
+func _conversation1Mw() []app.HandlerFunc {
+	return nil
+}
+
+func _openapicreateconversationMw() []app.HandlerFunc {
+	return nil
+}
+
+func _workflowsMw() []app.HandlerFunc {
+	return nil
+}
+
+func _openapichatflowrunMw() []app.HandlerFunc {
+	return nil
+}
+
+func _openapigetworkflowinfoMw() []app.HandlerFunc {
 	return nil
 }
 

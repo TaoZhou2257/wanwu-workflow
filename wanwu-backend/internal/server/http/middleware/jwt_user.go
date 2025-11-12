@@ -24,16 +24,13 @@ import (
 func JwtUser(ctx context.Context, appCtx *app.RequestContext) {
 	requestAuthType := appCtx.GetInt32(middleware.RequestAuthTypeStr)
 	if requestAuthType != int32(middleware.RequestAuthTypeWebAPI) {
-		httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", "invalid request auth type")))
+		//httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", "invalid request auth type")))
+		appCtx.Next(ctx)
 		return
 	}
 
 	var createAt time.Time
 	var expiresAt time.Time
-
-	// orgID
-	orgID := appCtx.Request.Header.Get(config.X_ORG_ID)
-	ctxcache.Store(ctx, config.X_ORG_ID, orgID)
 
 	// userID
 	userID := appCtx.Request.Header.Get(config.X_USER_ID)

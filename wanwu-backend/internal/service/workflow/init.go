@@ -15,12 +15,27 @@ import (
 	crosssearchImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/search"
 	crossuserImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/user"
 	"github.com/UnicomAI/wanwu/pkg/log"
+	coze_app_conversation "github.com/coze-dev/coze-studio/backend/application/conversation"
+	coze_open_auth "github.com/coze-dev/coze-studio/backend/application/openauth"
 	coze_app_upload "github.com/coze-dev/coze-studio/backend/application/upload"
 	coze_app_user "github.com/coze-dev/coze-studio/backend/application/user"
 	coze_app_workflow "github.com/coze-dev/coze-studio/backend/application/workflow"
+	crossagentrun "github.com/coze-dev/coze-studio/backend/crossdomain/agentrun"
+	agentrunImpl "github.com/coze-dev/coze-studio/backend/crossdomain/agentrun/impl"
+	crossconversation "github.com/coze-dev/coze-studio/backend/crossdomain/conversation"
+	conversationImpl "github.com/coze-dev/coze-studio/backend/crossdomain/conversation/impl"
+	crossmessage "github.com/coze-dev/coze-studio/backend/crossdomain/message"
+	messageImpl "github.com/coze-dev/coze-studio/backend/crossdomain/message/impl"
+	"github.com/coze-dev/coze-studio/backend/domain/conversation/agentrun/repository"
+	agentrun "github.com/coze-dev/coze-studio/backend/domain/conversation/agentrun/service"
+	msgRepo "github.com/coze-dev/coze-studio/backend/domain/conversation/message/repository"
+	message "github.com/coze-dev/coze-studio/backend/domain/conversation/message/service"
+
 	coze_cross_upload "github.com/coze-dev/coze-studio/backend/crossdomain/upload"
 	coze_cross_upload_impl "github.com/coze-dev/coze-studio/backend/crossdomain/upload/impl"
 	coze_cross_user "github.com/coze-dev/coze-studio/backend/crossdomain/user"
+	convRepo "github.com/coze-dev/coze-studio/backend/domain/conversation/conversation/repository"
+	conversation "github.com/coze-dev/coze-studio/backend/domain/conversation/conversation/service"
 	coze_workflow "github.com/coze-dev/coze-studio/backend/domain/workflow"
 	coze_workflow_service "github.com/coze-dev/coze-studio/backend/domain/workflow/service"
 	coze_cache "github.com/coze-dev/coze-studio/backend/infra/cache"
@@ -82,13 +97,32 @@ func Init(ctx context.Context, infra Infra) error {
 	coze_app_upload.InitService(&coze_app_upload.UploadComponents{Cache: infra.Cache, Oss: infra.Storage, DB: infra.DB, Idgen: idGen})
 	// init application user
 	_ = coze_app_user.InitService(ctx, infra.DB, infra.Storage, idGen)
+	// init application auth
+	_ = coze_open_auth.InitService(infra.DB, idGen)
 	// init application workflow
 	coze_app_workflow.SVC.DomainSVC = _workflowService
 	coze_app_workflow.SVC.ImageX = infra.ImageX
 	coze_app_workflow.SVC.TosClient = infra.Storage
 	coze_app_workflow.SVC.IDGenerator = idGen
 	coze_app_workflow.SetEventBus(crosssearchImpl.DefaultResourceEventBusMock())
-
+	// init domain conversation conversation
+	c := conversation.NewService(&conversation.Components{
+		ConversationRepo: convRepo.NewConversationRepo(infra.DB, idGen),
+	})
+	crossconversation.SetDefaultSVC(conversationImpl.InitDomainService(c))
+	coze_app_conversation.ConversationSVC.ConversationDomainSVC = c
+	// init domain conversation agentrun
+	arDomainComponents := &agentrun.Components{
+		RunRecordRepo: repository.NewRunRecordRepo(infra.DB, idGen),
+		ImagexSVC:     infra.ImageX,
+	}
+	crossagentrun.SetDefaultSVC(agentrunImpl.InitDomainService(agentrun.NewService(arDomainComponents)))
+	// init domain conversation message
+	m := message.NewService(&message.Components{
+		MessageRepo: msgRepo.NewMessageRepo(infra.DB, idGen),
+	})
+	coze_app_conversation.ConversationSVC.MessageDomainSVC = m
+	crossmessage.SetDefaultSVC(messageImpl.InitDomainService(m))
 	// init cross domain user
 	coze_cross_user.SetDefaultSVC(crossuserImpl.DefaultMock())
 	coze_cross_upload.SetDefaultWanwuSVC(coze_cross_upload_impl.NewWanwuUploader(infra.Storage))
