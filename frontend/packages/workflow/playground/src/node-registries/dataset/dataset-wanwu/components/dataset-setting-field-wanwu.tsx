@@ -32,6 +32,7 @@ const DatasetSetting = () => {
   return (
     <BaseDatasetSetting
       dataSetInfo={value as DataSetInfo}
+      selectDataSet={selectDataSet}
       onDataSetInfoChange={(v: DataSetInfo) => {
         onChange(v);
         onBlur?.();

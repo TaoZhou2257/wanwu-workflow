@@ -93,10 +93,11 @@ export const DatasetSelect = ({
     },
     onDatasetListChange: list => {
       cacheDataSetInfo(list);
-      onChange(list.map(item => ({
+      onChange(list.map((item:any) => ({
         dataset_id: item.dataset_id,
         name: item.name,
         knowledgeId: item.knowledgeId,
+        graphSwitch: item.graphSwitch,
         metaDataFilterParams: item.metaDataFilterParams
       })) as object[]);
     },
@@ -118,7 +119,7 @@ export const DatasetSelect = ({
     const currentValueItem:any = value.find(item => item.dataset_id === id) || {}
     const { metaDataFilterParams } = currentValueItem
     // origin dataset data, get current dataset knowledgeId
-    const currentDataset = dataSets.find(item => item.dataset_id === id) || {}
+    const currentDataset:any = dataSets.find(item => item.dataset_id === id) || {}
     try {
       const { data = {} } = await KnowledgeApi.getMetaSelectList({
         knowledgeId: currentDataset.knowledgeId

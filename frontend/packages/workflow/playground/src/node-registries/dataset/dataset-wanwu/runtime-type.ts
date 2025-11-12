@@ -75,6 +75,7 @@ export const datasetNodeFormDataRuntimeType = t.type({
         maxHistory: t.union([t.number, t.undefined]),
         rerankKeywordPriority: t.union([t.number, t.undefined]),
         rerankKeywordPrioritySwitch: t.boolean,
+        useGraph: t.boolean,
         matchType: t.string,
         rerankModelId: t.string,
         rewrite: t.boolean,
@@ -157,6 +158,16 @@ export const datasetNodeActualDataRuntimeType = t.type({
         }),
         t.type({
           name: t.literal('rerankKeywordPrioritySwitch'),
+          input: t.type({
+            type: t.literal('boolean'),
+            value: t.type({
+              type: t.literal('literal'),
+              content: t.boolean,
+            }),
+          }),
+        }),
+        t.type({
+          name: t.literal('useGraph'),
           input: t.type({
             type: t.literal('boolean'),
             value: t.type({
