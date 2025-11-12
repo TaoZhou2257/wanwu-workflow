@@ -178,13 +178,13 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
   ]);
 
   useEffect(() => {
-    setIsInit(false)
     if (!isInit) {
       onDataSetInfoChange?.({
         ...dataSetInfo,
         useGraph: isShowGraph,
       });
     }
+    setIsInit(false)
   }, [isShowGraph])
 
   useEffect(() => {
