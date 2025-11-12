@@ -270,11 +270,6 @@ func _getworkflowdetailinfoMw() []app.HandlerFunc {
 	return nil
 }
 
-func _getworkflowlistMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
 func _getworkflowreferencesMw() []app.HandlerFunc {
 	// your code...
 	return nil
@@ -305,22 +300,7 @@ func _project_conversationMw() []app.HandlerFunc {
 	return nil
 }
 
-func _createprojectconversationdefMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _deleteprojectconversationdefMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
 func _listprojectconversationdefMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _updateprojectconversationdefMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }

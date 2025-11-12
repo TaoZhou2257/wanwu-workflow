@@ -29,7 +29,6 @@ import (
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/slices"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ternary"
-	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/pkg/safego"
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
 	"github.com/coze-dev/coze-studio/backend/types/consts"
@@ -39,6 +38,10 @@ import (
 	xmaps "golang.org/x/exp/maps"
 )
 
+// CreateWorkflowByWanwu 参考CreateWorkflow，适配了chatflow
+// 1. 调换顺序，先创建workflow，再创建conversation
+// 2. conversation名，默认为工作流(chatflow)名
+// 3. conversation的app id，为创建的工作流id，这样conversation对应唯一的工作流(chatflow)
 func (w *ApplicationService) CreateWorkflowByWanwu(ctx context.Context, req *workflow.CreateWorkflowRequest) (
 	_ *workflow.CreateWorkflowResponse, err error,
 ) {
@@ -58,8 +61,6 @@ func (w *ApplicationService) CreateWorkflowByWanwu(ctx context.Context, req *wor
 		return nil, err
 	}
 
-	// var createConversation bool
-
 	wf := &vo.MetaCreate{
 		CreatorID:        uID,
 		SpaceID:          spaceID,
@@ -72,12 +73,7 @@ func (w *ApplicationService) CreateWorkflowByWanwu(ctx context.Context, req *wor
 		InitCanvasSchema: vo.GetDefaultInitCanvasJsonSchema(i18n.GetLocale(ctx)),
 	}
 	if req.IsSetFlowMode() && req.GetFlowMode() == workflow.WorkflowMode_ChatFlow {
-		conversationName := req.Name
-		// if !req.IsSetProjectID() || mustParseInt64(req.GetProjectID()) == 0 || !createConversation {
-		// 	conversationName = "Default"
-		// }
-
-		wf.InitCanvasSchema = vo.GetDefaultInitCanvasJsonSchemaChat(i18n.GetLocale(ctx), conversationName)
+		wf.InitCanvasSchema = vo.GetDefaultInitCanvasJsonSchemaChat(i18n.GetLocale(ctx), req.Name)
 	}
 
 	id, err := GetWorkflowDomainSVC().Create(ctx, wf)
@@ -97,11 +93,8 @@ func (w *ApplicationService) CreateWorkflowByWanwu(ctx context.Context, req *wor
 		return nil, vo.WrapError(errno.ErrNotifyWorkflowResourceChangeErr, err)
 	}
 
-	// if req.ProjectID != nil && req.IsSetFlowMode() && req.GetFlowMode() == workflow.WorkflowMode_ChatFlow && req.IsSetCreateConversation() && req.GetCreateConversation() {
 	if req.IsSetFlowMode() && req.GetFlowMode() == workflow.WorkflowMode_ChatFlow {
-		// createConversation = true
 		_, err := GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
-			// AppID:   mustParseInt64(req.GetProjectID()),
 			AppID:   id,
 			UserID:  uID,
 			SpaceID: spaceID,
@@ -119,6 +112,8 @@ func (w *ApplicationService) CreateWorkflowByWanwu(ctx context.Context, req *wor
 	}, nil
 }
 
+
+// CopyWorkflowByWanwu 参考CopyWorkflow，适配了chatflow
 func (w *ApplicationService) CopyWorkflowByWanwu(ctx context.Context, req *workflow.CopyWorkflowRequest) (
 	resp *workflow.CopyWorkflowResponse, err error,
 ) {
@@ -817,70 +812,6 @@ func (w *ApplicationService) GetPlaygroundPluginListByWanwu(ctx context.Context,
 		Data: &common.GetPlaygroundPluginListData{
 			PluginList: pluginInfoList,
 			Total:      int32(len(pluginInfoList)),
-		},
-	}, nil
-}
-
-func (w *ApplicationService) OpenAPIGetWorkflowInfoByWanwu(ctx context.Context, req *workflow.OpenAPIGetWorkflowInfoRequest) (
-	_ *workflow.OpenAPIGetWorkflowInfoResponse, err error) {
-	defer func() {
-		if panicErr := recover(); panicErr != nil {
-			err = safego.NewPanicErr(panicErr, debug.Stack())
-		}
-
-		if err != nil {
-			err = vo.WrapIfNeeded(errno.ErrChatFlowRoleOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
-		}
-	}()
-	// todo
-	// 需要前端传orgId 这里先跳过
-	// uID := ctxutil.GetApiAuthFromCtx(ctx).UserID
-	wf, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{
-		ID:       mustParseInt64(req.GetWorkflowID()),
-		MetaOnly: true,
-	})
-	if err != nil {
-		return nil, err
-	}
-	//if err = checkUserSpace(ctx, uID, wf.Meta.SpaceID); err != nil {
-	//	return nil, err
-	//}
-
-	if !IsChatFlow(wf) {
-		logs.CtxWarnf(ctx, "GetChatFlowRole not chat flow, workflowID: %d", wf.ID)
-		return nil, vo.WrapError(errno.ErrChatFlowRoleOperationFail, fmt.Errorf("workflow %d is not a chat flow", wf.ID))
-	}
-
-	var version string
-	if wf.Meta.AppID != nil {
-		if vl, err := GetWorkflowDomainSVC().GetWorkflowVersionsByConnector(ctx, mustParseInt64(req.GetConnectorID()), wf.ID, 1); err != nil {
-			return nil, err
-		} else if len(vl) > 0 {
-			version = vl[0]
-		}
-	}
-
-	role, err := GetWorkflowDomainSVC().GetChatFlowRole(ctx, mustParseInt64(req.WorkflowID), version)
-	if err != nil {
-		return nil, err
-	}
-
-	if role == nil {
-		logs.CtxWarnf(ctx, "GetChatFlowRole role nil, workflowID: %d", wf.ID)
-		// Return nil for the error to align with the production behavior,
-		// where the GET API may be called before the CREATE API during chatflow creation.
-		return &workflow.OpenAPIGetWorkflowInfoResponse{}, nil
-	}
-
-	wfRole, err := w.convertChatFlowRole(ctx, role)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to get chat flow role config, internal data processing error: %+v", err)
-	}
-
-	return &workflow.OpenAPIGetWorkflowInfoResponse{
-		WorkflowInfo: &workflow.WorkflowInfo{
-			Role: wfRole,
 		},
 	}, nil
 }

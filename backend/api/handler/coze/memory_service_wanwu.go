@@ -45,6 +45,5 @@ func GetProjectVariableListByWanwu(ctx context.Context, c *app.RequestContext) {
 		Msg:          "",
 		BaseResp:     nil,
 	}
-
 	c.JSON(consts.StatusOK, resp)
 }
