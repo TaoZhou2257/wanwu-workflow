@@ -67,11 +67,7 @@ func GetWorkFlowListByWanwu(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	for _, workflowData := range resp.Data.WorkflowList {
-		if workflowData.URL == "" || strings.Contains(workflowData.URL, "default_workflow_icon.png") {
-			// 设置默认图标
-			workflowData.URL, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"),
-				os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
-		}
+		workflowDefaultIconURL(workflowData)
 	}
 	c.JSON(consts.StatusOK, resp)
 }
@@ -92,11 +88,7 @@ func GetWorkFlowSelectByWanwu(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	for _, workflowData := range resp.Data.WorkflowList {
-		if workflowData.URL == "" || strings.Contains(workflowData.URL, "default_workflow_icon.png") {
-			// 设置默认图标
-			workflowData.URL, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"),
-				os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
-		}
+		workflowDefaultIconURL(workflowData)
 	}
 
 	c.JSON(consts.StatusOK, resp)
@@ -158,12 +150,8 @@ func GetWorkflowDetailInfoByWanwu(ctx context.Context, c *app.RequestContext) {
 		internalServerErrorResponse(ctx, c, err)
 		return
 	}
-	for _, workflowData := range workflowDetailInfoDataList.List {
-		if workflowData.Icon == "" || strings.Contains(workflowData.Icon, "default_workflow_icon.png") {
-			// 设置默认图标
-			workflowData.Icon, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"),
-				os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
-		}
+	for _, workflowDetail := range workflowDetailInfoDataList.List {
+		workflowDetailDefaultIconURL(workflowDetail)
 	}
 
 	response := map[string]any{
@@ -191,12 +179,37 @@ func GetCanvasInfoByWanwu(ctx context.Context, c *app.RequestContext) {
 		internalServerErrorResponse(ctx, c, err)
 		return
 	}
-
-	if resp.Data.Workflow.URL == "" || strings.Contains(resp.Data.Workflow.URL, "default_workflow_icon.png") {
-		// 设置默认图标
-		resp.Data.Workflow.URL, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"),
-			os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
-	}
+	workflowDefaultIconURL(resp.Data.Workflow)
 
 	c.JSON(consts.StatusOK, resp)
+}
+
+// --- internal ---
+
+func workflowDefaultIconURL(wf *workflow.Workflow) {
+	if wf == nil {
+		return
+	}
+	if wf.URL == "" || strings.Contains(wf.URL, "default_workflow_icon.png") {
+		switch wf.FlowMode {
+		case workflow.WorkflowMode_Workflow:
+			wf.URL, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"), os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
+		case workflow.WorkflowMode_ChatFlow:
+			wf.URL, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"), os.Getenv("WANWU_CHATFLOW_DEFAULT_ICON"))
+		}
+	}
+}
+
+func workflowDetailDefaultIconURL(wf *workflow.WorkflowDetailInfoData) {
+	if wf == nil {
+		return
+	}
+	if wf.Icon == "" || strings.Contains(wf.Icon, "default_workflow_icon.png") {
+		switch wf.FlowMode {
+		case workflow.WorkflowMode_Workflow:
+			wf.Icon, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"), os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
+		case workflow.WorkflowMode_ChatFlow:
+			wf.Icon, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"), os.Getenv("WANWU_CHATFLOW_DEFAULT_ICON"))
+		}
+	}
 }

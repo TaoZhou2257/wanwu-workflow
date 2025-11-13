@@ -29,14 +29,13 @@ func ImportWorkFlow(ctx context.Context, c *app.RequestContext) {
 		Name:     req.Name,
 		Desc:     req.Desc,
 		FlowMode: flowMode,
+		IconURI:  "default_icon/default_chatflow_icon.png",
 	}
 	switch req.FlowMode {
 	case "3":
 		createReq.FlowMode = workflow.WorkflowModePtr(workflow.WorkflowMode_ChatFlow)
-		createReq.IconURI = "default_icon/default_chatflow_icon.png"
 	default:
 		createReq.FlowMode = workflow.WorkflowModePtr(workflow.WorkflowMode_Workflow)
-		createReq.IconURI = "default_icon/default_workflow_icon.png"
 	}
 	if req.IconUrl != "" {
 		createReq.IconURI = req.IconUrl

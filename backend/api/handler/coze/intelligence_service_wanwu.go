@@ -3,9 +3,7 @@ package coze
 import (
 	"context"
 	"net/url"
-	"os"
 	"strconv"
-	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -54,11 +52,7 @@ func GetDraftIntelligenceListByWanwu(ctx context.Context, c *app.RequestContext)
 		internalServerErrorResponse(ctx, c, err)
 		return
 	}
-	if resp.Data.Workflow.URL == "" || strings.Contains(resp.Data.Workflow.URL, "default_workflow_icon.png") {
-		// 设置默认图标
-		resp.Data.Workflow.URL, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"),
-			os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
-	}
+	workflowDefaultIconURL(resp.Data.Workflow)
 
 	c.JSON(consts.StatusOK, &intelligence.GetDraftIntelligenceListResponse{
 		Data: &intelligence.DraftIntelligenceListData{
@@ -92,11 +86,7 @@ func GetDraftIntelligenceInfoByWanwu(ctx context.Context, c *app.RequestContext)
 		internalServerErrorResponse(ctx, c, err)
 		return
 	}
-	if resp.Data.Workflow.URL == "" || strings.Contains(resp.Data.Workflow.URL, "default_workflow_icon.png") {
-		// 设置默认图标
-		resp.Data.Workflow.URL, _ = url.JoinPath(os.Getenv("WANWU_EXTERNAL_SCHEME")+"://"+os.Getenv("WANWU_EXTERNAL_ENDPOINT"),
-			os.Getenv("WANWU_WORKFLOW_DEFAULT_ICON"))
-	}
+	workflowDefaultIconURL(resp.Data.Workflow)
 
 	intellData := workflow2intelligenceData(resp.Data.Workflow)
 	c.JSON(consts.StatusOK, &intelligence.GetDraftIntelligenceInfoResponse{
