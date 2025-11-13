@@ -16,20 +16,6 @@ type Auth struct {
 	Value string `json:"value"`
 }
 
-func DefaultAuth(apiKey string) *Auth {
-	if apiKey == "" {
-		return &Auth{
-			Type: "none",
-		}
-	}
-	return &Auth{
-		Type:  "apiKey",
-		In:    "header",
-		Name:  "Authorization",
-		Value: "Bearer " + apiKey,
-	}
-}
-
 func LoadFromData(ctx context.Context, data []byte) (*openapi3.T, error) {
 	doc, err := openapi3.NewLoader().LoadFromData(data)
 	if err != nil {

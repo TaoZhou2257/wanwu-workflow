@@ -229,7 +229,12 @@ func toolRequest(toolId, toolType, userApiKey string) (string, *openapi3_util.Au
 		if err = sonic.Unmarshal(marshal, &ret); err != nil {
 			return "", nil, fmt.Errorf("request %v unmarshal response body: %v", url, err)
 		}
-		return ret.Schema, openapi3_util.DefaultAuth(userApiKey), nil
+		var apiAuth *openapi3_util.Auth
+		apiAuth, err = ret.ApiAuth.ToOpenapiAuth()
+		if err != nil {
+			return "", nil, fmt.Errorf("request %v builtin tool api auth to openapi auth err: %v", url, err)
+		}
+		return ret.Schema, apiAuth, nil
 	}
 	return "", nil, errors.New("unsupported tool type")
 }
@@ -263,33 +268,34 @@ type toolSquareInfo struct {
 	Desc         string `json:"desc"`         // 描述
 }
 
-type builtInTools struct {
-	NeedApiKeyInput bool      `json:"needApiKeyInput"` // 是否需要apiKey输入
-	APIKey          string    `json:"apiKey"`          // apiKey
-	Tools           []MCPTool `json:"tools"`           // 工具列表
-	Detail          string    `json:"detail"`          // 详细描述
-	ActionSum       int64     `json:"actionSum"`       // action总数
+type toolSquareActions struct {
+	NeedApiKeyInput bool                         `json:"needApiKeyInput"` // 是否需要apiKey输入
+	APIKey          string                       `json:"apiKey"`          // apiKey
+	ApiAuth         wanwu_util.ApiAuthWebRequest `json:"apiAuth"`         // apiAuth
+	Tools           []mcpTool                    `json:"tools"`           // 工具列表
+	Detail          string                       `json:"detail"`          // 详细描述
+	ActionSum       int64                        `json:"actionSum"`       // action总数
 }
 
-type MCPTool struct {
+type mcpTool struct {
 	Name        string             `json:"name"`        // 工具名
 	Description string             `json:"description"` // 工具描述
-	InputSchema MCPToolInputSchema `json:"inputSchema"` // 工具参数
+	InputSchema mcpToolInputSchema `json:"inputSchema"` // 工具参数
 }
 
-type MCPToolInputSchema struct {
+type mcpToolInputSchema struct {
 	Type       string                             `json:"type"`       // 固定值: object
-	Properties map[string]MCPToolInputSchemaValue `json:"properties"` // 字段名 -> 字段信息
+	Properties map[string]mcpToolInputSchemaValue `json:"properties"` // 字段名 -> 字段信息
 	Required   []string                           `json:"required"`   // 必填字段
 }
 
-type MCPToolInputSchemaValue struct {
+type mcpToolInputSchemaValue struct {
 	Type        string `json:"type"`        // 字段类型
 	Description string `json:"description"` // 字段描述
 }
 
 type toolSquareDetail struct {
 	toolSquareInfo
-	builtInTools
+	toolSquareActions
 	Schema string `json:"schema"`
 }
