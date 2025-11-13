@@ -525,7 +525,6 @@ export default class WorkflowApiService<T> {
     const _req = req;
     const url = this.genBaseURL('/user/api/v1/appspace/app/publish');
     const method = 'POST';
-    console.log(_req)
     const data = {
       appId: _req['appId'],
       appType: _req['appType'],

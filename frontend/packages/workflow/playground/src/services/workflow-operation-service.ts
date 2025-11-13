@@ -120,12 +120,11 @@ export class WorkflowOperationService {
     try {
       let published = false;
       this.globalState.updateConfig({ publishing: true });
-      const flowMode = this.globalState.flowMode
-      console.log(flowMode, WorkflowMode.ChatFlow, flowMode ===  WorkflowMode.ChatFlow, '=========================flowMode');
+      const appType = this.globalState.flowMode ===  WorkflowMode.ChatFlow ? 'chatflow' : 'workflow'
       const data = await workflowApi.PublishWanwuWorkflow({
-        appId: this.workflowId,
-        appType: flowMode === 3 ? 'chatflow' : 'workflow',
         ...obj,
+        appId: this.workflowId,
+        appType,
       });
       published = data?.code === 0;
 
