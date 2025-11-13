@@ -15,21 +15,35 @@ import (
 	crosssearchImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/search"
 	crossuserImpl "github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/crossdomain/impl/user"
 	"github.com/UnicomAI/wanwu/pkg/log"
+	coze_app_conversation "github.com/coze-dev/coze-studio/backend/application/conversation"
+	coze_app_openauth "github.com/coze-dev/coze-studio/backend/application/openauth"
 	coze_app_upload "github.com/coze-dev/coze-studio/backend/application/upload"
 	coze_app_user "github.com/coze-dev/coze-studio/backend/application/user"
 	coze_app_workflow "github.com/coze-dev/coze-studio/backend/application/workflow"
+	coze_cross_agentrun "github.com/coze-dev/coze-studio/backend/crossdomain/agentrun"
+	coze_cross_agentrun_impl "github.com/coze-dev/coze-studio/backend/crossdomain/agentrun/impl"
+	coze_cross_conversation "github.com/coze-dev/coze-studio/backend/crossdomain/conversation"
+	coze_cross_conversation_impl "github.com/coze-dev/coze-studio/backend/crossdomain/conversation/impl"
+	coze_cross_message "github.com/coze-dev/coze-studio/backend/crossdomain/message"
+	coze_cross_message_impl "github.com/coze-dev/coze-studio/backend/crossdomain/message/impl"
 	coze_cross_upload "github.com/coze-dev/coze-studio/backend/crossdomain/upload"
 	coze_cross_upload_impl "github.com/coze-dev/coze-studio/backend/crossdomain/upload/impl"
 	coze_cross_user "github.com/coze-dev/coze-studio/backend/crossdomain/user"
+	coze_conversation_agentrun_repo "github.com/coze-dev/coze-studio/backend/domain/conversation/agentrun/repository"
+	coze_conversation_agentrun "github.com/coze-dev/coze-studio/backend/domain/conversation/agentrun/service"
+	coze_conversation_conversation_repo "github.com/coze-dev/coze-studio/backend/domain/conversation/conversation/repository"
+	coze_conversation_conversation "github.com/coze-dev/coze-studio/backend/domain/conversation/conversation/service"
+	coze_conversation_message_repo "github.com/coze-dev/coze-studio/backend/domain/conversation/message/repository"
+	coze_conversation_message "github.com/coze-dev/coze-studio/backend/domain/conversation/message/service"
 	coze_workflow "github.com/coze-dev/coze-studio/backend/domain/workflow"
 	coze_workflow_service "github.com/coze-dev/coze-studio/backend/domain/workflow/service"
-	coze_cache "github.com/coze-dev/coze-studio/backend/infra/cache"
-	coze_checkpoint "github.com/coze-dev/coze-studio/backend/infra/checkpoint"
-	coze_code "github.com/coze-dev/coze-studio/backend/infra/coderunner"
-	coze_code_impl "github.com/coze-dev/coze-studio/backend/infra/coderunner/impl"
-	coze_idgen "github.com/coze-dev/coze-studio/backend/infra/idgen/impl/idgen"
-	coze_imagex "github.com/coze-dev/coze-studio/backend/infra/imagex"
-	coze_storage "github.com/coze-dev/coze-studio/backend/infra/storage"
+	coze_infra_cache "github.com/coze-dev/coze-studio/backend/infra/cache"
+	coze_infra_checkpoint "github.com/coze-dev/coze-studio/backend/infra/checkpoint"
+	coze_infra_code "github.com/coze-dev/coze-studio/backend/infra/coderunner"
+	coze_infra_code_impl "github.com/coze-dev/coze-studio/backend/infra/coderunner/impl"
+	coze_infra_idgen "github.com/coze-dev/coze-studio/backend/infra/idgen/impl/idgen"
+	coze_infra_imagex "github.com/coze-dev/coze-studio/backend/infra/imagex"
+	coze_infra_storage "github.com/coze-dev/coze-studio/backend/infra/storage"
 	"gorm.io/gorm"
 )
 
@@ -42,9 +56,9 @@ var _workflowService coze_workflow.Service
 
 type Infra struct {
 	DB      *gorm.DB
-	Cache   coze_cache.Cmdable
-	Storage coze_storage.Storage
-	ImageX  coze_imagex.ImageX
+	Cache   coze_infra_cache.Cmdable
+	Storage coze_infra_storage.Storage
+	ImageX  coze_infra_imagex.ImageX
 }
 
 func Init(ctx context.Context, infra Infra) error {
@@ -66,11 +80,11 @@ func Init(ctx context.Context, infra Infra) error {
 	coze_workflow_service.RegisterWanwuAllNodeAdaptors()
 
 	// id generator
-	idGen, _ := coze_idgen.New(infra.Cache)
+	idGen, _ := coze_infra_idgen.New(infra.Cache)
 	// check point store
-	cps := coze_checkpoint.NewRedisStore(infra.Cache)
+	cps := coze_infra_checkpoint.NewRedisStore(infra.Cache)
 	// code runner
-	coze_code.SetCodeRunner(coze_code_impl.NewByWanwu())
+	coze_infra_code.SetCodeRunner(coze_infra_code_impl.NewByWanwu())
 	// workflow repo
 	workflowRepo, _ := coze_workflow_service.NewWorkflowRepositoryWanwu(idGen, infra.DB, infra.Cache, infra.Storage, cps, nil, config.Cfg().Workflow)
 	coze_workflow.SetRepository(workflowRepo)
@@ -82,13 +96,31 @@ func Init(ctx context.Context, infra Infra) error {
 	coze_app_upload.InitService(&coze_app_upload.UploadComponents{Cache: infra.Cache, Oss: infra.Storage, DB: infra.DB, Idgen: idGen})
 	// init application user
 	_ = coze_app_user.InitService(ctx, infra.DB, infra.Storage, idGen)
+	// init application auth
+	_ = coze_app_openauth.InitService(infra.DB, idGen)
 	// init application workflow
 	coze_app_workflow.SVC.DomainSVC = _workflowService
 	coze_app_workflow.SVC.ImageX = infra.ImageX
 	coze_app_workflow.SVC.TosClient = infra.Storage
 	coze_app_workflow.SVC.IDGenerator = idGen
 	coze_app_workflow.SetEventBus(crosssearchImpl.DefaultResourceEventBusMock())
-
+	// init domain conversation conversation
+	c := coze_conversation_conversation.NewService(&coze_conversation_conversation.Components{
+		ConversationRepo: coze_conversation_conversation_repo.NewConversationRepo(infra.DB, idGen),
+	})
+	coze_cross_conversation.SetDefaultSVC(coze_cross_conversation_impl.InitDomainService(c))
+	coze_app_conversation.ConversationSVC.ConversationDomainSVC = c
+	// init domain conversation agentrun
+	coze_cross_agentrun.SetDefaultSVC(coze_cross_agentrun_impl.InitDomainService(coze_conversation_agentrun.NewService(&coze_conversation_agentrun.Components{
+		RunRecordRepo: coze_conversation_agentrun_repo.NewRunRecordRepo(infra.DB, idGen),
+		ImagexSVC:     infra.ImageX,
+	})))
+	// init domain conversation message
+	m := coze_conversation_message.NewService(&coze_conversation_message.Components{
+		MessageRepo: coze_conversation_message_repo.NewMessageRepo(infra.DB, idGen),
+	})
+	coze_cross_message.SetDefaultSVC(coze_cross_message_impl.InitDomainService(m))
+	coze_app_conversation.ConversationSVC.MessageDomainSVC = m
 	// init cross domain user
 	coze_cross_user.SetDefaultSVC(crossuserImpl.DefaultMock())
 	coze_cross_upload.SetDefaultWanwuSVC(coze_cross_upload_impl.NewWanwuUploader(infra.Storage))

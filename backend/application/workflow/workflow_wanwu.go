@@ -7,16 +7,19 @@ import (
 	"path"
 	"runtime/debug"
 	"strconv"
+	"time"
 
 	"github.com/cloudwego/eino/schema"
 	"github.com/coze-dev/coze-studio/backend/api/model/playground"
 	pluginAPI "github.com/coze-dev/coze-studio/backend/api/model/plugin_develop"
 	"github.com/coze-dev/coze-studio/backend/api/model/plugin_develop/common"
+	resource "github.com/coze-dev/coze-studio/backend/api/model/resource/common"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	"github.com/coze-dev/coze-studio/backend/application/user"
 	"github.com/coze-dev/coze-studio/backend/bizpkg/debugutil"
 	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
+	search "github.com/coze-dev/coze-studio/backend/domain/search/entity"
 	user_entity "github.com/coze-dev/coze-studio/backend/domain/user/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
@@ -34,6 +37,133 @@ import (
 	"github.com/go-resty/resty/v2"
 	xmaps "golang.org/x/exp/maps"
 )
+
+// CreateWorkflowByWanwu 参考CreateWorkflow，适配了chatflow
+// 1. 调换顺序，先创建workflow，再创建conversation
+// 2. conversation名，默认为工作流(chatflow)名
+// 3. conversation的app id，为创建的工作流id，这样conversation对应唯一的工作流(chatflow)
+func (w *ApplicationService) CreateWorkflowByWanwu(ctx context.Context, req *workflow.CreateWorkflowRequest) (
+	_ *workflow.CreateWorkflowResponse, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	uID := ctxutil.MustGetUIDFromCtx(ctx)
+	spaceID := mustParseInt64(req.GetSpaceID())
+	if err := checkUserSpace(ctx, uID, spaceID); err != nil {
+		return nil, err
+	}
+
+	wf := &vo.MetaCreate{
+		CreatorID:        uID,
+		SpaceID:          spaceID,
+		ContentType:      workflow.WorkFlowType_User,
+		Name:             req.Name,
+		Desc:             req.Desc,
+		IconURI:          req.IconURI,
+		AppID:            parseInt64(req.ProjectID),
+		Mode:             ternary.IFElse(req.IsSetFlowMode(), req.GetFlowMode(), workflow.WorkflowMode_Workflow),
+		InitCanvasSchema: vo.GetDefaultInitCanvasJsonSchema(i18n.GetLocale(ctx)),
+	}
+	if req.IsSetFlowMode() && req.GetFlowMode() == workflow.WorkflowMode_ChatFlow {
+		wf.InitCanvasSchema = vo.GetDefaultInitCanvasJsonSchemaChat(i18n.GetLocale(ctx), req.Name)
+	}
+
+	id, err := GetWorkflowDomainSVC().Create(ctx, wf)
+	if err != nil {
+		return nil, err
+	}
+
+	err = PublishWorkflowResource(ctx, id, ptr.Of(int32(wf.Mode)), search.Created, &search.ResourceDocument{
+		Name:          &wf.Name,
+		APPID:         wf.AppID,
+		SpaceID:       &wf.SpaceID,
+		OwnerID:       &wf.CreatorID,
+		PublishStatus: ptr.Of(resource.PublishStatus_UnPublished),
+		CreateTimeMS:  ptr.Of(time.Now().UnixMilli()),
+	})
+	if err != nil {
+		return nil, vo.WrapError(errno.ErrNotifyWorkflowResourceChangeErr, err)
+	}
+
+	if req.IsSetFlowMode() && req.GetFlowMode() == workflow.WorkflowMode_ChatFlow {
+		_, err := GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
+			AppID:   id,
+			UserID:  uID,
+			SpaceID: spaceID,
+			Name:    req.Name,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &workflow.CreateWorkflowResponse{
+		Data: &workflow.CreateWorkflowData{
+			WorkflowID: strconv.FormatInt(id, 10),
+		},
+	}, nil
+}
+
+
+// CopyWorkflowByWanwu 参考CopyWorkflow，适配了chatflow
+func (w *ApplicationService) CopyWorkflowByWanwu(ctx context.Context, req *workflow.CopyWorkflowRequest) (
+	resp *workflow.CopyWorkflowResponse, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+	spaceID, err := strconv.ParseInt(req.GetSpaceID(), 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = checkUserSpace(ctx, ctxutil.MustGetUIDFromCtx(ctx), spaceID); err != nil {
+		return nil, err
+	}
+
+	workflowID, err := strconv.ParseInt(req.GetWorkflowID(), 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	wf, err := w.copyWorkflow(ctx, workflowID, vo.CopyWorkflowPolicy{
+		ShouldModifyWorkflowName: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	// 对话流的复制需要创建对话
+	if wf.Mode == workflow.WorkflowMode_ChatFlow {
+		_, err := GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
+			AppID:   wf.ID,
+			UserID:  wf.CreatorID,
+			SpaceID: spaceID,
+			Name:    wf.Name,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &workflow.CopyWorkflowResponse{
+		Data: &workflow.CopyWorkflowData{
+			WorkflowID: strconv.FormatInt(wf.ID, 10),
+		},
+	}, err
+}
 
 // ListWorkflowByWanwu 参考ListWorkflow
 // 1. size上限 300 -> 99999
@@ -146,6 +276,7 @@ func (w *ApplicationService) ListWorkflowByWanwu(ctx context.Context, req *workf
 				ID:   strconv.FormatInt(w.CreatorID, 10),
 				Self: ternary.IFElse[bool](w.CreatorID == ptr.From(ctxutil.GetUIDFromCtx(ctx)), true, false),
 			},
+			FlowMode: w.Mode,
 		}
 
 		if len(req.Checker) > 0 && status == workflow.WorkFlowListStatus_HadPublished {
