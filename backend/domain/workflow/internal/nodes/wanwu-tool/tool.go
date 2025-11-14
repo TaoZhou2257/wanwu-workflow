@@ -230,6 +230,7 @@ func toolRequest(toolId, toolType, userApiKey string) (string, *openapi3_util.Au
 			return "", nil, fmt.Errorf("request %v unmarshal response body: %v", url, err)
 		}
 		var apiAuth *openapi3_util.Auth
+		ret.ApiAuth.ApiKeyValue = userApiKey
 		apiAuth, err = ret.ApiAuth.ToOpenapiAuth()
 		if err != nil {
 			return "", nil, fmt.Errorf("request %v builtin tool api auth to openapi auth err: %v", url, err)
