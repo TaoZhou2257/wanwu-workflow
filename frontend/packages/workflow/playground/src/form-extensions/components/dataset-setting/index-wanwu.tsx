@@ -42,6 +42,7 @@ const DEFAULT_MAX_HISTORY = 0;
 const DEFAULT_TOP_K = 5;
 
 export interface DataSetSettingProps {
+  selectDataSet: any;
   dataSetInfo: DataSetInfo;
   onDataSetInfoChange: (v: DataSetInfo) => void;
   readonly?: boolean;
@@ -52,6 +53,7 @@ export interface DataSetSettingProps {
 }
 
 export const DataSetSetting: FC<DataSetSettingProps> = ({
+  selectDataSet,
   dataSetInfo,
   onDataSetInfoChange,
   readonly,
@@ -70,12 +72,17 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
     rerankModelId,
     semanticsPriority,
     rewrite,
+    useGraph,
   } = dataSetInfo || {};
+
+  const isShowGraph = selectDataSet.some(item => item.graphSwitch)
 
   const isDatasetWriteActive = true;
   const isDatasetKeywordPrioritySwitch = false;
+  const isDatasetGraphActive = true;
 
   const [isDatasetEmpty, setDatasetEmpty] = useState(true);
+  const [isInit, setIsInit] = useState(true)
 
   const isContainSqlDataSet = useMemo(
     () => dataSets?.some(dataset => dataset?.format_type === FormatType.Table),
@@ -95,6 +102,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
       isNil(maxHistory) &&
       isNil(rerankKeywordPriority) &&
       isNil(rerankKeywordPrioritySwitch) &&
+      isNil(useGraph) &&
       isNil(semanticsPriority) &&
       isNil(topK) &&
       isNil(matchType) &&
@@ -113,6 +121,10 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
 
       if (isDatasetWriteActive) {
         set(initDataSetInfo, 'rewrite', true);
+      }
+
+      if (isDatasetGraphActive) {
+        set(initDataSetInfo, 'useGraph', true);
       }
 
       if (!isDatasetKeywordPrioritySwitch) {
@@ -147,8 +159,33 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
         ...dataSetInfo,
         rerankKeywordPrioritySwitch: true,
       });
+    } else if (
+      isNil(useGraph) &&
+      isDatasetGraphActive
+    ) {
+      onDataSetInfoChange?.({
+        ...dataSetInfo,
+        useGraph: true,
+      });
     }
-  }, [dataSetInfo, isDatasetWriteActive, isDatasetKeywordPrioritySwitch, isContainSqlDataSet, isDatasetEmpty]);
+  }, [
+    dataSetInfo,
+    isDatasetWriteActive,
+    isDatasetKeywordPrioritySwitch,
+    isDatasetGraphActive,
+    isContainSqlDataSet,
+    isDatasetEmpty
+  ]);
+
+  useEffect(() => {
+    if (!isInit) {
+      onDataSetInfoChange?.({
+        ...dataSetInfo,
+        useGraph: isShowGraph,
+      });
+    }
+    setIsInit(false)
+  }, [isShowGraph])
 
   useEffect(() => {
     if (!isReady) {
@@ -481,6 +518,24 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
           dataTestId={getNodeSetterId('dataset_use_rewrite')}
         />
       </div>
+
+      {isShowGraph && (
+        <div className={s['setting-item']}>
+          <CheckboxWithLabel
+            checked={useGraph}
+            onChange={checked => {
+              onDataSetInfoChange({
+                ...dataSetInfo,
+                useGraph: checked,
+              });
+            }}
+            readonly={readonly}
+            label={I18n.t('dataset_graph')}
+            description={I18n.t('dataset_graph_hint')}
+            dataTestId={getNodeSetterId('dataset_use_graph')}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -110,6 +110,9 @@ export function transformOnInit(value) {
     rerankKeywordPrioritySwitch: datasetParam.find(item => item.name === 'rerankKeywordPrioritySwitch')?.input
       .value.content as boolean,
 
+    useGraph: datasetParam.find(item => item.name === 'useGraph')?.input
+      .value.content as boolean,
+
     matchType: datasetParam.find(item => item.name === 'matchType')?.input.value
       .content as string,
 
@@ -173,6 +176,7 @@ export function transformOnSubmit(value) {
       },
     },
     BlockInput.createBoolean('rerankKeywordPrioritySwitch', datasetSetting?.rerankKeywordPrioritySwitch),
+    BlockInput.createBoolean('useGraph', datasetSetting?.useGraph),
     BlockInput.createBoolean('rewrite', datasetSetting?.rewrite),
   ]);
 

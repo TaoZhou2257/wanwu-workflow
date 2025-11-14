@@ -36,6 +36,8 @@ export interface DataSetInfo {
   use_rewrite?: boolean;
   is_personal_only?: boolean;
   topK?: number;
+  useGraph?: boolean;
+  knowledgeList?: any;
   matchType?: MatchType;
   threshold?: number;
   maxHistory?: number;

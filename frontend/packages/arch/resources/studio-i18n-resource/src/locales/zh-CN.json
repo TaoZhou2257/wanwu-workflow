@@ -5944,6 +5944,8 @@
   "dataset_lang": "语义",
   "dataset_keywords": "关键词",
   "dataset_keywords_search": "查询改写",
+  "dataset_graph": "知识图谱",
+  "dataset_graph_hint": "开启后可使用知识库中关键词管理模块所配置的映射规则",
   "dataset_min_degree_default": "默认",
   "dataset_not_found": "未找到知识库",
   "dataset_on_demand_call": "按需调用",
