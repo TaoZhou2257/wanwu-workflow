@@ -17,7 +17,6 @@ import (
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	"github.com/coze-dev/coze-studio/backend/application/user"
-	"github.com/coze-dev/coze-studio/backend/bizpkg/debugutil"
 	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
 	search "github.com/coze-dev/coze-studio/backend/domain/search/entity"
 	user_entity "github.com/coze-dev/coze-studio/backend/domain/user/entity"
@@ -111,7 +110,6 @@ func (w *ApplicationService) CreateWorkflowByWanwu(ctx context.Context, req *wor
 		},
 	}, nil
 }
-
 
 // CopyWorkflowByWanwu 参考CopyWorkflow，适配了chatflow
 func (w *ApplicationService) CopyWorkflowByWanwu(ctx context.Context, req *workflow.CopyWorkflowRequest) (
@@ -583,6 +581,7 @@ func workflowParamsToSchema(params []*vo.NamedTypeInfo) (*openapi3.Schema, error
 // 1. 去掉api auth、user check等业务逻辑
 // 2. 去掉appID、agentID、connectorID等业务逻辑
 // 3. 将必须publish才能执行的workflow，改为可以执行draft
+// 4. 屏蔽debugURL
 func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID string, req *workflow.OpenAPIRunFlowRequest) (
 	_ *workflow.OpenAPIRunFlowResponse, err error,
 ) {
@@ -679,7 +678,7 @@ func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID s
 
 		return &workflow.OpenAPIRunFlowResponse{
 			ExecuteID: ptr.Of(strconv.FormatInt(exeID, 10)),
-			DebugUrl:  ptr.Of(debugutil.GetWorkflowDebugURL(ctx, meta.ID, meta.SpaceID, exeID)),
+			// DebugUrl:  ptr.Of(debugutil.GetWorkflowDebugURL(ctx, meta.ID, meta.SpaceID, exeID)),
 		}, nil
 	}
 
@@ -715,9 +714,9 @@ func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID s
 	return &workflow.OpenAPIRunFlowResponse{
 		Data:      data,
 		ExecuteID: ptr.Of(strconv.FormatInt(wfExe.ID, 10)),
-		DebugUrl:  ptr.Of(debugutil.GetWorkflowDebugURL(ctx, meta.ID, wfExe.SpaceID, wfExe.ID)),
-		Token:     ptr.Of(wfExe.TokenInfo.InputTokens + wfExe.TokenInfo.OutputTokens),
-		Cost:      ptr.Of("0.00000"),
+		// DebugUrl:  ptr.Of(debugutil.GetWorkflowDebugURL(ctx, meta.ID, wfExe.SpaceID, wfExe.ID)),
+		Token: ptr.Of(wfExe.TokenInfo.InputTokens + wfExe.TokenInfo.OutputTokens),
+		Cost:  ptr.Of("0.00000"),
 	}, nil
 }
 
