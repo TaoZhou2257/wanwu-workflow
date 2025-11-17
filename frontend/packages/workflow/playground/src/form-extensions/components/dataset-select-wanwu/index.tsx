@@ -98,6 +98,7 @@ export const DatasetSelect = ({
         name: item.name,
         knowledgeId: item.knowledgeId,
         graphSwitch: item.graphSwitch,
+        ragName: item.ragName,
         metaDataFilterParams: item.metaDataFilterParams
       })) as object[]);
     },
