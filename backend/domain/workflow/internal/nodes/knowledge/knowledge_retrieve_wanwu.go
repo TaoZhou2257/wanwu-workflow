@@ -91,6 +91,7 @@ type WeightParams struct {
 type RetrieveKnowledgeInfo struct {
 	DatasetId            string                `json:"dataset_id"`
 	Name                 string                `json:"name"`
+	RagName              string                `json:"ragName"`
 	KnowledgeId          string                `json:"knowledgeId"`
 	MetaDataFilterParams *MetaDataFilterParams `json:"metaDataFilterParams"`
 }
@@ -445,7 +446,7 @@ func buildMetaDataFilterParams(knowledgeInfos []*RetrieveKnowledgeInfo) ([]*Meta
 			return nil, err
 		}
 		ragMetaDataFilterParams = append(ragMetaDataFilterParams, &MetadataFilterParam{
-			FilterKnowledgeName: k.Name,
+			FilterKnowledgeName: k.RagName,
 			LogicalOperator:     k.MetaDataFilterParams.FilterLogicType,
 			MetaList:            item,
 		})
