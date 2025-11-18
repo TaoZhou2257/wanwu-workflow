@@ -36,8 +36,7 @@ func GetWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Context, c *app.RequestContex
 // 0. FIXME 智能体运行该接口，不会在header中带userId、orgId，跳过jwt校验后，需要在该方法中设置ctxcache
 // 1. 将workflow_id从 body => path
 // 2. 将body参数{...} marsharl到req.Parameters上
-// 3. 屏蔽错误时的debugURL
-// 4. 返回resp.Data unmarshal的结构体
+// 3. 返回resp.Data unmarshal的结构体
 // @router /v1/workflow/:workflow_id/run_by_wanwu [POST]
 func OpenAPIRunWorkFlowByWanwu(ctx context.Context, c *app.RequestContext) {
 	var err error
@@ -71,10 +70,10 @@ func OpenAPIRunWorkFlowByWanwu(ctx context.Context, c *app.RequestContext) {
 			resp = new(workflow.OpenAPIRunFlowResponse)
 			resp.Code = int64(se.OpenAPICode())
 			resp.Msg = ptr.Of(se.Msg())
-			// debugURL := se.DebugURL()
-			// if debugURL != "" {
-			// 	resp.DebugUrl = ptr.Of(debugURL)
-			// }
+			debugURL := se.DebugURL()
+			if debugURL != "" {
+				resp.DebugUrl = ptr.Of(debugURL)
+			}
 			c.JSON(consts.StatusOK, resp)
 			return
 		}
