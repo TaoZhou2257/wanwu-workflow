@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/config"
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/pkg/httputil"
 	jwt_util "github.com/UnicomAI/wanwu/pkg/jwt-util"
 	"github.com/UnicomAI/wanwu/pkg/util"
@@ -24,46 +23,34 @@ import (
 func JwtUser(ctx context.Context, appCtx *app.RequestContext) {
 	requestAuthType := appCtx.GetInt32(middleware.RequestAuthTypeStr)
 	if requestAuthType != int32(middleware.RequestAuthTypeWebAPI) {
-		//httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", "invalid request auth type")))
 		appCtx.Next(ctx)
 		return
 	}
 
-	var createAt time.Time
-	var expiresAt time.Time
+	token, err := getJWTToken(appCtx)
+	if err != nil {
+		// httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
+		// 可能是内部调用，没有jwt token
+		logs.CtxWarnf(ctx, "request (%v) check jwt token err: %v", string(appCtx.Request.Path()), err)
+		appCtx.Next(ctx)
+		return
+	}
 
-	// userID
-	userID := appCtx.Request.Header.Get(config.X_USER_ID)
-	if userID == "" {
-		// 未获取到则从jwt token中解析
-		token, err := getJWTToken(appCtx)
-		if err != nil {
-			// httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
-			// 可能是内部调用，没有jwt token
-			logs.CtxWarnf(ctx, "request (%v) check jwt token err: %v", string(appCtx.Request.Path()), err)
-			appCtx.Next(ctx)
-			return
-		}
-
-		claims, err := jwt_util.ParseToken(token)
-		if err != nil {
-			httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
-			return
-		}
-		if claims.Subject != jwt_util.USER {
-			httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", "invalid token subject")))
-			return
-		}
-		userID = claims.UserID
-		createAt = time.Unix(claims.NotBefore, 0)
-		expiresAt = time.Unix(claims.ExpiresAt, 0)
+	claims, err := jwt_util.ParseToken(token)
+	if err != nil {
+		httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
+		return
+	}
+	if claims.Subject != jwt_util.USER {
+		httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", "invalid token subject")))
+		return
 	}
 
 	ctxcache.Store(ctx, consts.SessionDataKeyInCtx, &entity.Session{
-		UserID:    util.MustI64(userID),
+		UserID:    util.MustI64(claims.UserID),
 		Locale:    string(i18n.GetLocale(ctx)),
-		CreatedAt: createAt,
-		ExpiresAt: expiresAt,
+		CreatedAt: time.Unix(claims.NotBefore, 0),
+		ExpiresAt: time.Unix(claims.ExpiresAt, 0),
 	})
 	appCtx.Next(ctx)
 }

@@ -166,7 +166,7 @@ func GetCanvasInfoByWanwu(ctx context.Context, c *app.RequestContext) {
 }
 
 // OpenAPIGetWorkflowInfoByWanwu 参考OpenAPIGetWorkflowInfo
-// 0. FIXME 前端运行该接口，不会在header中带userId、orgId
+// 0. FIXME 前端运行该接口，不会在header中带orgId，需要在该方法中设置ctxcache
 // @router /v1/workflows/:workflow_id [GET]
 func OpenAPIGetWorkflowInfoByWanwu(ctx context.Context, c *app.RequestContext) {
 	var err error

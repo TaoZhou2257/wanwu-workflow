@@ -37,8 +37,9 @@ func Init() {
 	s.Use(coze_middleware.OpenapiAuthMW())
 	// s.Use(coze_middleware.SessionAuthMW())
 	s.Use(middleware.I18n)
-	s.Use(middleware.JwtUser)  // must after I18n
-	s.Use(middleware.SetOrgID) // set orgID
+	s.Use(middleware.JwtUser)   // must after I18n
+	s.Use(middleware.SetUserID) // set userID
+	s.Use(middleware.SetOrgID)  // set orgID
 
 	router.Register(s)
 	s.Spin()
