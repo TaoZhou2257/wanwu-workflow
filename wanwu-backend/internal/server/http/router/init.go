@@ -24,6 +24,7 @@ func Register(r *hertz_server.Hertz) {
 			_bot := _api.Group("/bot", _botMw()...)
 			_bot.POST("/get_type_list", append(_gettypelistMw(), coze.GetTypeList)...)
 			_bot.POST("/upload_file", append(_uploadfileMw(), coze.UploadFile)...)
+			_bot.POST("/upload_file_by_wanwu", append(_uploadfileByBse64Mw(), coze.UploadFileByWanwu)...)
 		}
 		{
 			_permission_api := _api.Group("/permission_api", _permission_apiMw()...)

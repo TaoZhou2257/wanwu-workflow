@@ -22,10 +22,9 @@ func _gettypelistMw() []app.HandlerFunc {
 	return nil
 }
 
-func _uploadfileMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
+func _uploadfileMw() []app.HandlerFunc { return nil }
+
+func _uploadfileByBse64Mw() []app.HandlerFunc { return nil }
 
 func _permission_apiMw() []app.HandlerFunc {
 	return nil
