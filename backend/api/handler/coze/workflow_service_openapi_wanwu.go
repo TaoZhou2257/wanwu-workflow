@@ -15,6 +15,25 @@ import (
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
 )
 
+// ListWorkFlowOpenAPIV3SchemaByWanwu 获取workflow list openapi v3 schema
+// @router /v1/workflow/list_schema_by_wanwu [POST]
+func ListWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req workflow.GetWorkflowDetailRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+	schemas, err := appworkflow.SVC.ListWorkFlowOpenAPIV3SchemaByWanwu(ctx, req.WorkflowIds)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	c.JSON(consts.StatusOK, schemas)
+}
+
 // GetWorkFlowOpenAPIV3SchemaByWanwu 获取workflow openapi v3 schema
 // @router /v1/workflow/:workflow_id/schema_by_wanwu [GET]
 func GetWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Context, c *app.RequestContext) {

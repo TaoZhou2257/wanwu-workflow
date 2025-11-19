@@ -115,25 +115,6 @@ func GetExampleWorkFlowListByWanwu(ctx context.Context, c *app.RequestContext) {
 	c.JSON(consts.StatusOK, resp)
 }
 
-// ListWorkFlowOpenAPIV3SchemaByWanwu 获取workflow list openapi v3 schema
-// @router /v1/workflow/list_schema_by_wanwu [POST]
-func ListWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Context, c *app.RequestContext) {
-	var err error
-	var req workflow.GetWorkflowDetailRequest
-	err = c.BindAndValidate(&req)
-	if err != nil {
-		invalidParamRequestResponse(c, err.Error())
-		return
-	}
-	schemas, err := appworkflow.SVC.ListWorkFlowOpenAPIV3SchemaByWanwu(ctx, req.WorkflowIds)
-	if err != nil {
-		invalidParamRequestResponse(c, err.Error())
-		return
-	}
-
-	c.JSON(consts.StatusOK, schemas)
-}
-
 // GetWorkflowDetailInfoByWanwu 参考GetWorkflowDetailInfo 替换返回URL
 // @router /api/workflow_api/workflow_detail_info [POST]
 func GetWorkflowDetailInfoByWanwu(ctx context.Context, c *app.RequestContext) {
@@ -180,6 +161,34 @@ func GetCanvasInfoByWanwu(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	workflowDefaultIconURL(resp.Data.Workflow)
+
+	c.JSON(consts.StatusOK, resp)
+}
+
+// OpenAPIGetWorkflowInfoByWanwu 参考OpenAPIGetWorkflowInfo
+// 0. FIXME 前端运行该接口，不会在header中带userId、orgId
+// @router /v1/workflows/:workflow_id [GET]
+func OpenAPIGetWorkflowInfoByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+
+	if err = processOpenAPIGetWorkflowInfoRequest(ctx, c); err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	var req workflow.OpenAPIGetWorkflowInfoRequest
+
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	resp, err := appworkflow.SVC.OpenAPIGetWorkflowInfoByWanwu(ctx, &req)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
 
 	c.JSON(consts.StatusOK, resp)
 }

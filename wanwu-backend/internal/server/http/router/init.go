@@ -150,7 +150,7 @@ func Register(r *hertz_server.Hertz) {
 		{
 			_workflows := _v1.Group("/workflows", _workflowsMw()...)
 			_workflows.POST("/chat", append(_openapichatflowrunMw(), coze.OpenAPIChatFlowRun)...)
-			_workflows.GET("/:workflow_id", append(_openapigetworkflowinfoMw(), coze.OpenAPIGetWorkflowInfo)...)
+			_workflows.GET("/:workflow_id", append(_openapigetworkflowinfoMw(), coze.OpenAPIGetWorkflowInfoByWanwu)...)
 		}
 		{
 			_workflow := _v1.Group("/workflow", _workflowMw()...)
