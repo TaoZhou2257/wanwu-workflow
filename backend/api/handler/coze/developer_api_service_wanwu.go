@@ -53,7 +53,7 @@ func UploadFileByWanwu(ctx context.Context, c *app.RequestContext) {
 		invalidParamRequestResponse(c, err.Error())
 		return
 	}
-	uploadResp,err := crossupload.DefaultWanwuSVC().UploadFileByByte(ctx,req.Name,fileContent)
+	uploadResp, err := crossupload.DefaultWanwuSVC().UploadFileByByte(ctx, req.Name, fileContent)
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
 		return

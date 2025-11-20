@@ -30,7 +30,7 @@ func JwtUser(ctx context.Context, appCtx *app.RequestContext) {
 	token, err := getJWTToken(appCtx)
 	if err != nil {
 		// httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
-		// 可能是内部调用，没有jwt token
+		// 可能是内部调用，没有jwt token；或者是前缀为 pat_ 开头的coze openapi token
 		logs.CtxWarnf(ctx, "request (%v) check jwt token err: %v", string(appCtx.Request.Path()), err)
 		appCtx.Next(ctx)
 		return
@@ -61,10 +61,12 @@ func getJWTToken(ctx *app.RequestContext) (token string, err error) {
 	if authorization != "" {
 		tks := strings.Split(authorization, " ")
 		if len(tks) > 1 && tks[0] == "Bearer" {
+			if strings.HasPrefix(tks[1], "pat_") {
+				return "", fmt.Errorf("coze openapi token (pat_)")
+			}
 			return tks[1], err
 		} else {
-			err = fmt.Errorf("not Bearer token format")
-			return "", err
+			return "", fmt.Errorf("not Bearer token format")
 		}
 	} else {
 		return "", fmt.Errorf("token is nil")
