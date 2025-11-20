@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
+	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	appworkflow "github.com/coze-dev/coze-studio/backend/application/workflow"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
@@ -114,6 +116,44 @@ func OpenAPIRunWorkFlowByWanwu(ctx context.Context, c *app.RequestContext) {
 	internalServerErrorResponse(ctx, c, errors.New("empty response"))
 }
 
+// OpenAPICreateConversationByWanwu参考 OpenAPICreateConversation
+// @router /v1/workflow/conversation/create_by_wanwu [POST]
+func OpenAPICreateConversationByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req workflow.CreateConversationRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
+	}
+	apiKeyInfo := ctxutil.GetApiAuthFromCtx(ctx)
+	userID := apiKeyInfo.UserID
+	newAppID, _ := appworkflow.SVC.IDGenerator.GenID(ctx)
+	// 创建conversation template草稿
+	_, err = appworkflow.GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
+		AppID:   newAppID,
+		UserID:  userID,
+		SpaceID: mustParseInt64(*req.SpaceID),
+		Name:    *req.ConversationMame,
+	})
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+	req.AppID = ptr.Of(strconv.FormatInt(newAppID, 10))
+	resp, err := appworkflow.SVC.OpenAPICreateConversation(ctx, &req)
+	// 将appId返回给bff
+	resp.ConversationData.MetaData = map[string]string{
+		"appId": strconv.FormatInt(newAppID, 10),
+	}
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+
+	c.JSON(consts.StatusOK, resp)
+}
+
 // preprocessWorkflowRequestBodyByWanwu 参考preprocessWorkflowRequestBody
 func preprocessWorkflowRequestBodyByWanwu(_ context.Context, c *app.RequestContext) (*string, error) {
 	// Read the raw request body
@@ -129,4 +169,12 @@ func preprocessWorkflowRequestBodyByWanwu(_ context.Context, c *app.RequestConte
 	}
 
 	return ptr.Of(string(rawData)), nil
+}
+
+func mustParseInt64(s string) int64 {
+	i, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	return i
 }
