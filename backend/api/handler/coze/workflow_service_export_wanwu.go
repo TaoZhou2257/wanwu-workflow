@@ -29,7 +29,6 @@ func ImportWorkFlow(ctx context.Context, c *app.RequestContext) {
 		Name:     req.Name,
 		Desc:     req.Desc,
 		FlowMode: flowMode,
-		IconURI:  "default_icon/default_chatflow_icon.png",
 	}
 	switch req.FlowMode {
 	case "3":
@@ -160,6 +159,8 @@ func cleanNode(node *vo.Node) {
 		cleanMCPNode(node)
 	case "1010": // GUI智能体节点
 		cleanGUINode(node)
+	case "1004": // Tool节点
+		cleanToolNode(node)
 	}
 }
 
@@ -257,5 +258,30 @@ func cleanGUINode(node *vo.Node) {
 	if node.Data.Inputs.WanwuGUIParam != nil {
 		// 将 modelId 置为空
 		node.Data.Inputs.WanwuGUIParam.ModelID = ""
+	}
+}
+
+// cleanToolNode 清理Tool节点 - 删除apiKey和header-Authorization
+func cleanToolNode(node *vo.Node) {
+	if node.Data == nil || node.Data.Inputs == nil {
+		return
+	}
+	// 清理 apiParam 中的 apiKey
+	if node.Data.Inputs.APIParams != nil {
+		for _, param := range node.Data.Inputs.APIParams {
+			if param.Name == "apiKey" {
+				// 删除该参数
+				param.Input.Value.Content = ""
+			}
+		}
+		for _, param := range node.Data.Inputs.InputParameters {
+			if param.Name == "header-Authorization" {
+				//删除该参数
+				param.Input.Value.Content = ""
+			}
+		}
+	}
+	if node.Data.Inputs.WanwuToolParam != nil {
+		node.Data.Inputs.WanwuToolParam.ApiKey = ""
 	}
 }
