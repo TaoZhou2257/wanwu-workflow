@@ -126,8 +126,7 @@ func OpenAPICreateConversationByWanwu(ctx context.Context, c *app.RequestContext
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-	apiKeyInfo := ctxutil.GetApiAuthFromCtx(ctx)
-	userID := apiKeyInfo.UserID
+	userID := ctxutil.GetApiAuthFromCtx(ctx).UserID
 	newAppID, _ := appworkflow.SVC.IDGenerator.GenID(ctx)
 	// 创建conversation template草稿
 	_, err = appworkflow.GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
