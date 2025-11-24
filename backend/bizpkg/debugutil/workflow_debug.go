@@ -29,6 +29,11 @@ import (
 func GetWorkflowDebugURL(ctx context.Context, workflowID, spaceID, executeID int64) string {
 	defaultURL := fmt.Sprintf("http://127.0.0.1:8888/work_flow?execute_id=%d&space_id=%d&workflow_id=%d&execute_mode=2", executeID, spaceID, workflowID)
 
+	// wanwu adapt
+	if debugURL := GetWorkflowDebugURLByWanwu(ctx, workflowID, spaceID, executeID); debugURL != "" {
+		return debugURL
+	}
+
 	serverHost, err := config.Base().GetServerHost(ctx)
 	if err != nil {
 		logs.CtxErrorf(ctx, "[GetWorkflowDebugURL] get base config failed, use default debug url instead, err: %v", err)

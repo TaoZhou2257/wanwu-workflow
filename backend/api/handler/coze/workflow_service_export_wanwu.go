@@ -17,6 +17,7 @@ import (
 func ImportWorkFlow(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req importWorkflowRequest
+	var flowMode *workflow.WorkflowMode
 	err = c.BindAndValidate(&req)
 	if err != nil {
 		invalidParamRequestResponse(c, err.Error())
@@ -24,15 +25,21 @@ func ImportWorkFlow(ctx context.Context, c *app.RequestContext) {
 	}
 	// create
 	createReq := workflow.CreateWorkflowRequest{
-		SpaceID: req.SpaceID,
-		Name:    req.Name,
-		Desc:    req.Desc,
+		SpaceID:  req.SpaceID,
+		Name:     req.Name,
+		Desc:     req.Desc,
+		FlowMode: flowMode,
 	}
-	createReq.IconURI = "default_icon/default_workflow_icon.png"
+	switch req.FlowMode {
+	case "3":
+		createReq.FlowMode = workflow.WorkflowModePtr(workflow.WorkflowMode_ChatFlow)
+	default:
+		createReq.FlowMode = workflow.WorkflowModePtr(workflow.WorkflowMode_Workflow)
+	}
 	if req.IconUrl != "" {
 		createReq.IconURI = req.IconUrl
 	}
-	resp, err := appworkflow.SVC.CreateWorkflow(ctx, &createReq)
+	resp, err := appworkflow.SVC.CreateWorkflowByWanwu(ctx, &createReq)
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
 		return
@@ -62,6 +69,8 @@ type importWorkflowRequest struct {
 	Schema string `form:"schema" json:"schema" query:"schema"`
 	// icon url
 	IconUrl string `form:"icon_url" json:"icon_url" query:"icon_url"`
+	// flow mode
+	FlowMode string `form:"flow_mode" json:"flow_mode" query:"flow_mode"`
 }
 
 // ExportWorkFlow .
@@ -150,6 +159,8 @@ func cleanNode(node *vo.Node) {
 		cleanMCPNode(node)
 	case "1010": // GUI智能体节点
 		cleanGUINode(node)
+	case "1004": // Tool节点
+		cleanToolNode(node)
 	}
 }
 
@@ -247,5 +258,30 @@ func cleanGUINode(node *vo.Node) {
 	if node.Data.Inputs.WanwuGUIParam != nil {
 		// 将 modelId 置为空
 		node.Data.Inputs.WanwuGUIParam.ModelID = ""
+	}
+}
+
+// cleanToolNode 清理Tool节点 - 删除apiKey和header-Authorization
+func cleanToolNode(node *vo.Node) {
+	if node.Data == nil || node.Data.Inputs == nil {
+		return
+	}
+	// 清理 apiParam 中的 apiKey
+	if node.Data.Inputs.APIParams != nil {
+		for _, param := range node.Data.Inputs.APIParams {
+			if param.Name == "apiKey" {
+				// 删除该参数
+				param.Input.Value.Content = ""
+			}
+		}
+		for _, param := range node.Data.Inputs.InputParameters {
+			if param.Name == "header-Authorization" {
+				//删除该参数
+				param.Input.Value.Content = ""
+			}
+		}
+	}
+	if node.Data.Inputs.WanwuToolParam != nil {
+		node.Data.Inputs.WanwuToolParam.ApiKey = ""
 	}
 }

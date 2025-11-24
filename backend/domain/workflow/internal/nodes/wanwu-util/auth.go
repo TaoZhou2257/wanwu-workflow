@@ -1,0 +1,93 @@
+package wanwu_util
+
+import (
+	"fmt"
+
+	openapi3_util "github.com/coze-dev/coze-studio/backend/pkg/wanwu-openapi3-util"
+)
+
+// api 鉴权
+const (
+	AuthTypeNone             = "none"
+	AuthTypeAPIKeyQuery      = "api_key_query"
+	AuthTypeAPIKeyHeader     = "api_key_header"
+	ApiKeyHeaderPrefixBasic  = "basic"
+	ApiKeyHeaderPrefixBearer = "bearer"
+	ApiKeyHeaderPrefixCustom = "custom"
+	ApiKeyHeaderDefault      = "Authorization"
+)
+
+type ApiAuthWebRequest struct {
+	AuthType           string `json:"authType" validate:"required,oneof='none' 'api_key_query' 'api_key_header'"` // 鉴权类型 None 或 请求头 或 查询参数
+	ApiKeyHeaderPrefix string `json:"apiKeyHeaderPrefix" validate:"omitempty,oneof='basic' 'bearer' 'custom'"`    // 鉴权头部前缀
+	ApiKeyHeader       string `json:"apiKeyHeader"`                                                               // HTTP头部名称
+	ApiKeyQueryParam   string `json:"apiKeyQueryParam"`                                                           // 查询参数名称
+	ApiKeyValue        string `json:"apiKeyValue"`                                                                // apiKey
+}
+
+func (req *ApiAuthWebRequest) Check() error {
+	switch req.AuthType {
+	case AuthTypeNone:
+		return nil
+	case AuthTypeAPIKeyQuery:
+		if req.ApiKeyQueryParam == "" {
+			return fmt.Errorf("apiKeyQueryParam is empty")
+		}
+		if req.ApiKeyValue == "" {
+			return fmt.Errorf("apiKeyValue is empty")
+		}
+		return nil
+	case AuthTypeAPIKeyHeader:
+		if req.ApiKeyHeader == "" {
+			return fmt.Errorf("apiKeyHeader is empty")
+		}
+		if req.ApiKeyValue == "" {
+			return fmt.Errorf("apiKeyValue is empty")
+		}
+		return nil
+	default:
+		return fmt.Errorf("invalid authType: %v", req.AuthType)
+	}
+}
+
+func (auth *ApiAuthWebRequest) ToOpenapiAuth() (*openapi3_util.Auth, error) {
+	if auth == nil || auth.AuthType == "" || auth.AuthType == AuthTypeNone {
+		return &openapi3_util.Auth{
+			Type: "none",
+		}, nil
+	}
+	if err := auth.Check(); err != nil {
+		return nil, err
+	}
+	ret := &openapi3_util.Auth{Type: "apiKey"}
+	switch auth.AuthType {
+	case AuthTypeNone:
+		return ret, nil
+	case AuthTypeAPIKeyQuery:
+		ret.In = "query"
+		ret.Name = auth.ApiKeyQueryParam
+		ret.Value = auth.ApiKeyValue
+		return ret, nil
+	case AuthTypeAPIKeyHeader:
+		ret.In = "header"
+		switch auth.ApiKeyHeaderPrefix {
+		case ApiKeyHeaderPrefixBasic:
+			// FIXME
+			ret.Name = auth.ApiKeyHeader
+			ret.Value = "Basic " + auth.ApiKeyValue
+			return ret, nil
+		case ApiKeyHeaderPrefixBearer:
+			ret.Name = auth.ApiKeyHeader
+			ret.Value = "Bearer " + auth.ApiKeyValue
+			return ret, nil
+		case ApiKeyHeaderPrefixCustom:
+			ret.Name = auth.ApiKeyHeader
+			ret.Value = auth.ApiKeyValue
+			return ret, nil
+		default:
+			return nil, fmt.Errorf("invalid apiKeyHeaderPrefix: %v", auth.ApiKeyHeaderPrefix)
+		}
+	default:
+		return nil, fmt.Errorf("invalid authType: %v", auth.AuthType)
+	}
+}

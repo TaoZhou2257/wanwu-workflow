@@ -58,11 +58,17 @@ func LoadConfig(in string) error {
 		return err
 	}
 	for _, icon := range _c.Icons {
-		if icon.ID == "9" {
+		switch icon.ID {
+		case "9":
+			// 工作流默认图标
 			if err := os.Setenv("WANWU_WORKFLOW_DEFAULT_ICON", icon.Url); err != nil {
 				return err
 			}
-			break
+		case "-9":
+			// 对话流默认图标
+			if err := os.Setenv("WANWU_CHATFLOW_DEFAULT_ICON", icon.Url); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

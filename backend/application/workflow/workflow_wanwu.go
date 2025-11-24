@@ -7,16 +7,19 @@ import (
 	"path"
 	"runtime/debug"
 	"strconv"
+	"time"
 
 	"github.com/cloudwego/eino/schema"
 	"github.com/coze-dev/coze-studio/backend/api/model/playground"
 	pluginAPI "github.com/coze-dev/coze-studio/backend/api/model/plugin_develop"
 	"github.com/coze-dev/coze-studio/backend/api/model/plugin_develop/common"
+	resource "github.com/coze-dev/coze-studio/backend/api/model/resource/common"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	"github.com/coze-dev/coze-studio/backend/application/user"
 	"github.com/coze-dev/coze-studio/backend/bizpkg/debugutil"
 	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
+	search "github.com/coze-dev/coze-studio/backend/domain/search/entity"
 	user_entity "github.com/coze-dev/coze-studio/backend/domain/user/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
@@ -26,6 +29,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/slices"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ternary"
+	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/pkg/safego"
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
 	"github.com/coze-dev/coze-studio/backend/types/consts"
@@ -34,6 +38,132 @@ import (
 	"github.com/go-resty/resty/v2"
 	xmaps "golang.org/x/exp/maps"
 )
+
+// CreateWorkflowByWanwu 参考CreateWorkflow，适配了chatflow
+// 1. 调换顺序，先创建workflow，再创建conversation
+// 2. conversation名，默认为工作流(chatflow)名
+// 3. conversation的app id，为创建的工作流id，这样conversation对应唯一的工作流(chatflow)
+func (w *ApplicationService) CreateWorkflowByWanwu(ctx context.Context, req *workflow.CreateWorkflowRequest) (
+	_ *workflow.CreateWorkflowResponse, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	uID := ctxutil.MustGetUIDFromCtx(ctx)
+	spaceID := mustParseInt64(req.GetSpaceID())
+	if err := checkUserSpace(ctx, uID, spaceID); err != nil {
+		return nil, err
+	}
+
+	wf := &vo.MetaCreate{
+		CreatorID:        uID,
+		SpaceID:          spaceID,
+		ContentType:      workflow.WorkFlowType_User,
+		Name:             req.Name,
+		Desc:             req.Desc,
+		IconURI:          req.IconURI,
+		AppID:            parseInt64(req.ProjectID),
+		Mode:             ternary.IFElse(req.IsSetFlowMode(), req.GetFlowMode(), workflow.WorkflowMode_Workflow),
+		InitCanvasSchema: vo.GetDefaultInitCanvasJsonSchema(i18n.GetLocale(ctx)),
+	}
+	if req.IsSetFlowMode() && req.GetFlowMode() == workflow.WorkflowMode_ChatFlow {
+		wf.InitCanvasSchema = vo.GetDefaultInitCanvasJsonSchemaChat(i18n.GetLocale(ctx), req.Name)
+	}
+
+	id, err := GetWorkflowDomainSVC().Create(ctx, wf)
+	if err != nil {
+		return nil, err
+	}
+
+	err = PublishWorkflowResource(ctx, id, ptr.Of(int32(wf.Mode)), search.Created, &search.ResourceDocument{
+		Name:          &wf.Name,
+		APPID:         wf.AppID,
+		SpaceID:       &wf.SpaceID,
+		OwnerID:       &wf.CreatorID,
+		PublishStatus: ptr.Of(resource.PublishStatus_UnPublished),
+		CreateTimeMS:  ptr.Of(time.Now().UnixMilli()),
+	})
+	if err != nil {
+		return nil, vo.WrapError(errno.ErrNotifyWorkflowResourceChangeErr, err)
+	}
+
+	if req.IsSetFlowMode() && req.GetFlowMode() == workflow.WorkflowMode_ChatFlow {
+		_, err := GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
+			AppID:   id,
+			UserID:  uID,
+			SpaceID: spaceID,
+			Name:    req.Name,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &workflow.CreateWorkflowResponse{
+		Data: &workflow.CreateWorkflowData{
+			WorkflowID: strconv.FormatInt(id, 10),
+		},
+	}, nil
+}
+
+// CopyWorkflowByWanwu 参考CopyWorkflow，适配了chatflow
+func (w *ApplicationService) CopyWorkflowByWanwu(ctx context.Context, req *workflow.CopyWorkflowRequest) (
+	resp *workflow.CopyWorkflowResponse, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+	spaceID, err := strconv.ParseInt(req.GetSpaceID(), 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = checkUserSpace(ctx, ctxutil.MustGetUIDFromCtx(ctx), spaceID); err != nil {
+		return nil, err
+	}
+
+	workflowID, err := strconv.ParseInt(req.GetWorkflowID(), 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	wf, err := w.copyWorkflow(ctx, workflowID, vo.CopyWorkflowPolicy{
+		ShouldModifyWorkflowName: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	// 对话流的复制需要创建对话
+	if wf.Mode == workflow.WorkflowMode_ChatFlow {
+		_, err := GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
+			AppID:   wf.ID,
+			UserID:  wf.CreatorID,
+			SpaceID: spaceID,
+			Name:    wf.Name,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &workflow.CopyWorkflowResponse{
+		Data: &workflow.CopyWorkflowData{
+			WorkflowID: strconv.FormatInt(wf.ID, 10),
+		},
+	}, err
+}
 
 // ListWorkflowByWanwu 参考ListWorkflow
 // 1. size上限 300 -> 99999
@@ -146,6 +276,7 @@ func (w *ApplicationService) ListWorkflowByWanwu(ctx context.Context, req *workf
 				ID:   strconv.FormatInt(w.CreatorID, 10),
 				Self: ternary.IFElse[bool](w.CreatorID == ptr.From(ctxutil.GetUIDFromCtx(ctx)), true, false),
 			},
+			FlowMode: w.Mode,
 		}
 
 		if len(req.Checker) > 0 && status == workflow.WorkFlowListStatus_HadPublished {
@@ -448,7 +579,7 @@ func workflowParamsToSchema(params []*vo.NamedTypeInfo) (*openapi3.Schema, error
 }
 
 // OpenAPIRunByWanwu 参考OpenAPIRun
-// 0. FIXME 智能体运行该接口，不会在header中带userId、orgId，跳过jwt校验后，需要在该方法中设置ctxcache
+// 0. FIXME 智能体运行该接口，不会在header中带userId、orgId，需要在该方法中设置ctxcache
 // 1. 去掉api auth、user check等业务逻辑
 // 2. 去掉appID、agentID、connectorID等业务逻辑
 // 3. 将必须publish才能执行的workflow，改为可以执行draft
@@ -681,6 +812,77 @@ func (w *ApplicationService) GetPlaygroundPluginListByWanwu(ctx context.Context,
 		Data: &common.GetPlaygroundPluginListData{
 			PluginList: pluginInfoList,
 			Total:      int32(len(pluginInfoList)),
+		},
+	}, nil
+}
+
+// OpenAPIGetWorkflowInfoByWanwu 参考OpenAPIGetWorkflowInfo
+// 0. FIXME 前端运行该接口，不会在header中带orgId，需要在该方法中设置ctxcache
+func (w *ApplicationService) OpenAPIGetWorkflowInfoByWanwu(ctx context.Context, req *workflow.OpenAPIGetWorkflowInfoRequest) (
+	_ *workflow.OpenAPIGetWorkflowInfoResponse, err error) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrChatFlowRoleOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	wf, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{
+		ID:       mustParseInt64(req.GetWorkflowID()),
+		MetaOnly: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// 设置ctxcache
+	if _, ok := ctxcache.Get[string](ctx, "X-Org-Id"); !ok {
+		ctxcache.Store(ctx, "X-Org-Id", strconv.Itoa(int(wf.Meta.SpaceID)))
+	}
+
+	uID := ctxutil.GetApiAuthFromCtx(ctx).UserID
+	if err = checkUserSpace(ctx, uID, wf.Meta.SpaceID); err != nil {
+		return nil, err
+	}
+
+	if !IsChatFlow(wf) {
+		logs.CtxWarnf(ctx, "GetChatFlowRole not chat flow, workflowID: %d", wf.ID)
+		return nil, vo.WrapError(errno.ErrChatFlowRoleOperationFail, fmt.Errorf("workflow %d is not a chat flow", wf.ID))
+	}
+
+	var version string
+	if wf.Meta.AppID != nil {
+		if vl, err := GetWorkflowDomainSVC().GetWorkflowVersionsByConnector(ctx, mustParseInt64(req.GetConnectorID()), wf.ID, 1); err != nil {
+			return nil, err
+		} else if len(vl) > 0 {
+			version = vl[0]
+		}
+	}
+
+	role, err := GetWorkflowDomainSVC().GetChatFlowRole(ctx, mustParseInt64(req.WorkflowID), version)
+	if err != nil {
+		return nil, err
+	}
+
+	if role == nil {
+		logs.CtxWarnf(ctx, "GetChatFlowRole role nil, workflowID: %d", wf.ID)
+		// Return nil for the error to align with the production behavior,
+		// where the GET API may be called before the CREATE API during chatflow creation.
+		return &workflow.OpenAPIGetWorkflowInfoResponse{}, nil
+	}
+
+	wfRole, err := w.convertChatFlowRole(ctx, role)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get chat flow role config, internal data processing error: %+v", err)
+	}
+
+	return &workflow.OpenAPIGetWorkflowInfoResponse{
+		WorkflowInfo: &workflow.WorkflowInfo{
+			Role: wfRole,
 		},
 	}, nil
 }
