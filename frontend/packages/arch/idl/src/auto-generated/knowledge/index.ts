@@ -431,6 +431,23 @@ export default class KnowledgeService<T> {
     return this.request({ url, method, data }, options);
   }
 
+  /** POST /user/api/v1/qaKnowledge/select/ */
+  QAListSelectDataset(
+    req?: dataset.ListSelectRequest,
+    options?: T,
+  ): Promise<dataset.ListSelectResponse> {
+    const _req = req || {};
+    const url = this.genBaseURL('/user/api/v1/knowledge/select');
+    const method = 'POST';
+    const data = {
+      category: 1,
+      name: _req['name'],
+      page: _req['page'],
+      pageSize: _req['pageSize'],
+    };
+    return this.request({ url, method, data }, options);
+  }
+
   /** GET /user/api/v1/knowledge/meta/select */
   getMetaSelectList(
     req?: dataset.ListSelectRequest,

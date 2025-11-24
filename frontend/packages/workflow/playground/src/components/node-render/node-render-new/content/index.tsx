@@ -52,6 +52,7 @@ import { LLMContent } from './llm-content';
 import { LLMWanwuContent } from './llm-wanwu-content';
 import { DatasetContent } from './knowledge-content';
 import { DatasetWanwuContent } from './knowledge-wanwu-content';
+import { QADatasetWanwuContent } from './qa-knowledge-wanwu-content';
 import { ImageGenerateContent } from './image-generate-content';
 import { HttpContent } from './http-content';
 import { DatabaseUpdateContent } from './database-update-content';
@@ -65,6 +66,7 @@ import styles from './index.module.less';
 
 const ContentMap = {
   [StandardNodeType.DatasetWanwu]: DatasetWanwuContent,
+  [StandardNodeType.QADatasetWanwu]: QADatasetWanwuContent,
   [StandardNodeType.McpWanwu]: McpWanwuContent,
   [StandardNodeType.FileParseWanwu]: FileParseWanwuContent,
   [StandardNodeType.MultiFileParseWanwu]: MultiFileParseWanwuContent,

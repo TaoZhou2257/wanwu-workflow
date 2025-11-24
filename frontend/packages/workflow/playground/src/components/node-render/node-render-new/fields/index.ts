@@ -21,6 +21,7 @@ export { Outputs } from './outputs';
 export { Intents } from './intents';
 export { Knowledge } from './knowledge';
 export { KnowledgeWanwu } from './knowledge-wanwu';
+export { QAKnowledgeWanwu } from './qa-knowledge-wanwu';
 export { QuestionPairs } from './question-pairs';
 export { MessageOutput } from './message-output';
 // export { LoopVariableInput } from './loop-variable-input';

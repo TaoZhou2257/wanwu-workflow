@@ -30,6 +30,7 @@ export class CrossSpaceNodeValidator extends BaseNodeValidator {
       [
         StandardNodeType.Dataset,
         StandardNodeType.DatasetWanwu,
+        StandardNodeType.QADatasetWanwu,
         StandardNodeType.DatasetWrite,
         StandardNodeType.Database,
         StandardNodeType.DatabaseQuery,

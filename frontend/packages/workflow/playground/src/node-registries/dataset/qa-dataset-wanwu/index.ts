@@ -14,24 +14,4 @@
  * limitations under the License.
  */
 
-import React from 'react';
-
-import { DatasetSelect as BaseDatasetSelect } from '@/form-extensions/components/dataset-select-wanwu';
-import { useField, withField } from '@/form';
-
-const DatasetSelect = () => {
-  const { value, onChange, readonly, onBlur } = useField<string[]>();
-
-  return (
-    <BaseDatasetSelect
-      value={value as any[]}
-      onChange={(v: any) => {
-        onChange(v);
-        onBlur?.();
-      }}
-      readonly={!!readonly}
-    />
-  );
-};
-
-export const DatasetSelectField = withField(DatasetSelect);
+export { QA_DATASET_WANWU_NODE_REGISTRY } from './node-registry';

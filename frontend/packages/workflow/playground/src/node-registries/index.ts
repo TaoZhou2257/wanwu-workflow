@@ -22,6 +22,7 @@ export { DATABASE_QUERY_NODE_REGISTRY } from './database/database-query';
 export { DATABASE_UPDATE_NODE_REGISTRY } from './database/database-update';
 export { DATASET_NODE_REGISTRY } from './dataset/dataset-search';
 export { DATASET_WANWU_NODE_REGISTRY } from './dataset/dataset-wanwu';
+export { QA_DATASET_WANWU_NODE_REGISTRY } from './dataset/qa-dataset-wanwu';
 export { MCP_WANWU_NODE_REGISTRY } from './mcp-wanwu';
 export { FILE_PARSE_WANWU_NODE_REGISTRY } from './file-parse-wanwu';
 export { FILE_GENERATE_WANWU_NODE_REGISTRY } from './file-generate-wanwu';

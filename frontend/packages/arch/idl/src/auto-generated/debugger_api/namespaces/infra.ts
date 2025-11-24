@@ -44,6 +44,8 @@ export enum ComponentType {
   CozeCodeNode = 10005,
   /** Coze workflow中的Knowledge节点 */
   CozeKnowledgeNode = 10006,
+  /** Coze workflow中的Knowledge节点 */
+  CozeQAKnowledgeNode = 10016,
   /** Coze workflow中的Tool节点 */
   CozeToolNode = 10007,
   /** Coze workflow中的start节点 */
