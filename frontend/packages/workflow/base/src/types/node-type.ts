@@ -25,6 +25,7 @@ export enum StandardNodeType {
   MultiFileParseWanwu = '1011',
   JsonParserWanwu = '1059',
   GuiAgentWanwu = '1010',
+  QADatasetWanwu = '1012',
 
   Start = '1',
   End = '2',

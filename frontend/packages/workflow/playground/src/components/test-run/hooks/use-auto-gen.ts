@@ -38,6 +38,8 @@ const nodeType2ComponentType = (nodeType: StandardNodeType) => {
       return ComponentType.CozeKnowledgeNode;
     case StandardNodeType.DatasetWanwu:
       return ComponentType.CozeKnowledgeNode;
+    case StandardNodeType.QADatasetWanwu:
+      return ComponentType.CozeQAKnowledgeNode;
     case StandardNodeType.DatasetWrite:
       return ComponentType.CozeKnowledgeNode;
     case StandardNodeType.Api:

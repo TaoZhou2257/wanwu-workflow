@@ -77,6 +77,7 @@ import { getIsInitWorkflow } from '@/utils/get-is-init-workflow';
 
 import { type WorkflowPlaygroundProps } from '../typing';
 import { DataSetStore } from './workflow-dataset-store-entity';
+import { QADataSetStore } from "./workflow-qa-dataset-store-entity";
 
 export type WorkflowInfo = Omit<Workflow, 'status'> & {
   status?: WorkFlowDevStatus | WorkFlowStatus;
@@ -172,6 +173,8 @@ export interface WorkflowGlobalState {
   /** Whether the nodes and lines of the process are in the initial state, only the entry and exit parameters of the beginning and end nodes are judged */
   isInitWorkflow?: boolean;
 
+  sharedQADataSet?: QADataSetStore;
+
   /**
    * Knowledge Base Information
    */
@@ -205,6 +208,7 @@ export class WorkflowGlobalStateEntity extends ConfigEntity<WorkflowGlobalState>
       nodeSideSheetVisible: false,
       isInitWorkflow: false,
       isBindDouyin: false,
+      sharedQADataSet: new QADataSetStore(),
       sharedDataSet: new DataSetStore(),
     };
   }
@@ -772,5 +776,12 @@ export class WorkflowGlobalStateEntity extends ConfigEntity<WorkflowGlobalState>
       this.config.sharedDataSet = new DataSetStore();
     }
     return this.config.sharedDataSet;
+  }
+
+  get sharedQADataSetStore() {
+    if (!this.config.sharedQADataSet) {
+      this.config.sharedQADataSet = new QADataSetStore();
+    }
+    return this.config.sharedQADataSet;
   }
 }
