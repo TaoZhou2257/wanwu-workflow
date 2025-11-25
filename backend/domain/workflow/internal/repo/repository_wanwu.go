@@ -26,9 +26,11 @@ func NewRepositoryWanwu(idgen idgen.IDGenerator, db *gorm.DB, redis cache.Cmdabl
 		CancelSignalStore: &cancelSignalStoreImpl{
 			redis: redis,
 		},
-		ExecuteHistoryStore: &executeHistoryStoreImpl{
-			query: query.Use(db),
-			redis: redis,
+		ExecuteHistoryStore: &executeHistoryStoreImplByWanwu{
+			executeHistoryStoreImpl: &executeHistoryStoreImpl{
+				query: query.Use(db),
+				redis: redis,
+			},
 		},
 
 		builtinModel:   chatModel,

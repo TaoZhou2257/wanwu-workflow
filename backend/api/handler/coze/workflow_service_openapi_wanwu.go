@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -57,7 +58,8 @@ func GetWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Context, c *app.RequestContex
 // 0. FIXME 智能体运行该接口，不会在header中带userId、orgId，需要在该方法中设置ctxcache
 // 1. 将workflow_id从 body => path
 // 2. 将body参数{...} marsharl到req.Parameters上
-// 3. 返回resp.Data unmarshal的结构体
+// 3. ctx中设置WANWU_WORKFLOW_OPENAPI_RUN_RECORD_EXECUTE_HISTORY
+// 4. 返回resp.Data unmarshal的结构体
 // @router /v1/workflow/:workflow_id/run_by_wanwu [POST]
 func OpenAPIRunWorkFlowByWanwu(ctx context.Context, c *app.RequestContext) {
 	var err error
@@ -83,6 +85,10 @@ func OpenAPIRunWorkFlowByWanwu(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	req.Parameters = parameters
+
+	if os.Getenv("WANWU_WORKFLOW_OPENAPI_RUN_SKIP_EXECUTE_HISTORY") == "1" {
+		ctx = context.WithValue(ctx, "WANWU_WORKFLOW_OPENAPI_RUN_SKIP_EXECUTE_HISTORY", true)
+	}
 
 	resp, err := appworkflow.SVC.OpenAPIRunByWanwu(ctx, workflowID, &req)
 	if err != nil {
