@@ -53,11 +53,6 @@ export function transformOnInit(value) {
           children: [
             {
               key: nanoid(),
-              name: 'prompt',
-              type: ViewVariableType.String,
-            },
-            {
-              key: nanoid(),
               name: 'score',
               type: ViewVariableType.ArrayNumber,
             },
