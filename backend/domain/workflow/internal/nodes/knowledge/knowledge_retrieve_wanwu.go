@@ -387,7 +387,7 @@ func buildWeight(priorityType int, semanticsPriority float64, keywordPriority fl
 	}
 	return &WeightParams{
 		VectorWeight: semanticsPriority,
-		TextWeight:   keywordPriority,
+		TextWeight:   1.0 - semanticsPriority,
 	}
 }
 
