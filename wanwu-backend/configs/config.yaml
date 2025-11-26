@@ -144,7 +144,7 @@ icons:
   - id: 1011
     url: /api/static/icon/icon-KnowledgeQuery-v2.jpg
   - id: 1012
-    url: /api/static/icon/icon-Question-Answer.jpg
+    url: /api/static/icon/icon-Question-Answer.png
   - id: 1059
     url: /api/static/icon/icon-from_json.png
 
