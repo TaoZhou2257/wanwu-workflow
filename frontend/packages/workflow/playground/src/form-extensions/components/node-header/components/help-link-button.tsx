@@ -50,7 +50,7 @@ export const HelpLinkButton = ({
   return (
     <Tooltip
       key={`workflow-${subTitle}`}
-      content={subTitle}
+      content={subTitle || ''}
     >
       <IconButton
         onClick={handleClick}
