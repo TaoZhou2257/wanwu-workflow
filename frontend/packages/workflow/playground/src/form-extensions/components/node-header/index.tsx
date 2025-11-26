@@ -103,6 +103,7 @@ interface NodeHeaderProps {
 
 export const NodeHeader: React.FC<NodeHeaderProps> = ({
   title,
+  subTitle,
   description,
   readonly,
   readonlyAllowDeleteOperation,
@@ -232,7 +233,7 @@ export const NodeHeader: React.FC<NodeHeaderProps> = ({
     node.flowNodeType === StandardNodeType.Api &&
     get(nodeData, 'pluginType') === PluginType.LOCAL;
 
-  const accessCert = JSON.parse(localStorage.getItem("access_cert")) || {}
+  const accessCert = JSON.parse(localStorage.getItem("access_cert") || '{}')
   const docLinkList = accessCert?.user?.commonInfo?.data?.linkList || {}
 
   return (
@@ -403,6 +404,7 @@ export const NodeHeader: React.FC<NodeHeaderProps> = ({
             {/* registry?.meta?.helpLink && isNodeSideSheet */}
             {docLinkList[`workflow-${registry.type}`] && isNodeSideSheet ? (
               <HelpLinkButton
+                subTitle={subTitle}
                 nodeData={nodeData}
                 nodeType={registry.type}
                 helpLink={docLinkList[`workflow-${registry.type}`]} // registry.meta.helpLink

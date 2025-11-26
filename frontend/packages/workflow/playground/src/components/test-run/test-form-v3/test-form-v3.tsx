@@ -58,6 +58,7 @@ export const InnerTestForm: React.FC<TestFormV3Props> = ({
   const { schemaWithMode } = useModeFormSchema({ node, formApiRef });
   const events = useModeFormEvent({ schemaWithMode, formApiRef });
 
+  console.log(schemaWithMode, onMounted, '-----------------------------111')
   useEffect(() => {
     onMounted(formApiRef.current);
   }, [formApiRef]);

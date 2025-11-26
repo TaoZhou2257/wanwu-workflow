@@ -21,13 +21,15 @@ import { type FlowNodeType } from '@flowgram-adapter/free-layout-editor';
 import { type NodeData } from '@coze-workflow/nodes';
 import { EVENT_NAMES, sendTeaEvent } from '@coze-arch/bot-tea';
 import { IconCozQuestionMarkCircle } from '@coze-arch/coze-design/icons';
-import { IconButton } from '@coze-arch/coze-design';
+import { IconButton, Tooltip } from '@coze-arch/coze-design';
 
 export const HelpLinkButton = ({
+  subTitle,
   helpLink,
   nodeData,
   nodeType,
 }: {
+  subTitle: string | undefined,
   helpLink: string | ((props: { apiName: string }) => string);
   nodeData: NodeData[keyof NodeData];
   nodeType: FlowNodeType;
@@ -46,13 +48,16 @@ export const HelpLinkButton = ({
     window.open(path, '_blank');
   };
   return (
-    <>
+    <Tooltip
+      key={`workflow-${subTitle}`}
+      content={subTitle}
+    >
       <IconButton
         onClick={handleClick}
         icon={<IconCozQuestionMarkCircle />}
         size="default"
         color="secondary"
       />
-    </>
+    </Tooltip>
   );
 };
