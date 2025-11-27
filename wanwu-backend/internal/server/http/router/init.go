@@ -111,6 +111,7 @@ func Register(r *hertz_server.Hertz) {
 			_workflow_api.POST("/test_resume", append(_workflowtestresumeMw(), coze.WorkFlowTestResume)...)
 			_workflow_api.POST("/test_run", append(_workflowtestrunMw(), coze.WorkFlowTestRun)...)
 			_workflow_api.POST("/update_meta", append(_updateworkflowmetaMw(), coze.UpdateWorkflowMeta)...)
+			_workflow_api.POST("/update_meta_by_wanwu", append(_updateworkflowmetaMw(), coze.UpdateWorkflowMetaByWanwu)...)
 			_workflow_api.POST("/validate_tree", append(_validatetreeMw(), coze.ValidateTree)...)
 			_workflow_api.POST("/workflow_detail", append(_getworkflowdetailMw(), coze.GetWorkflowDetail)...)
 			_workflow_api.POST("/workflow_detail_info", append(_getworkflowdetailinfoMw(), coze.GetWorkflowDetailInfoByWanwu)...)
@@ -149,7 +150,7 @@ func Register(r *hertz_server.Hertz) {
 		}
 		{
 			_workflows := _v1.Group("/workflows", _workflowsMw()...)
-			_workflows.POST("/chat", append(_openapichatflowrunMw(), coze.OpenAPIChatFlowRun)...)
+			_workflows.POST("/chat", append(_openapichatflowrunMw(), coze.OpenAPIChatFlowRunByWanwu)...)
 			_workflows.GET("/:workflow_id", append(_openapigetworkflowinfoMw(), coze.OpenAPIGetWorkflowInfoByWanwu)...)
 		}
 		{
@@ -163,7 +164,7 @@ func Register(r *hertz_server.Hertz) {
 			_workflow.POST("/list_schema_by_wanwu", []app.HandlerFunc{coze.ListWorkFlowOpenAPIV3SchemaByWanwu}...)
 			_workflow.GET("/:workflow_id/schema_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowOpenAPIV3SchemaByWanwu}...)
 			_workflow.POST("/:workflow_id/run_by_wanwu", append(_openapirunflowMw(), coze.OpenAPIRunWorkFlowByWanwu)...)
-			_workflow.POST("/chat_by_wanwu", []app.HandlerFunc{coze.OpenAPIChatFlowRun}...)
+			_workflow.POST("/chat_by_wanwu", []app.HandlerFunc{coze.OpenAPIChatFlowRunByWanwu}...)
 		}
 	}
 }
