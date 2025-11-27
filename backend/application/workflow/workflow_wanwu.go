@@ -368,7 +368,7 @@ func (w *ApplicationService) GetWorkFlowSelectByWanwu(ctx context.Context, req *
 			},
 		}, nil
 	}
-	// 调用BFF的CallBack接口获取发布的workflowIDs
+	// 调用BFF的CallBack接口获取发布的workflow IDs
 	ret := &cozeWorkflowSelectByWanwuResp{}
 	if resp, err := resty.New().
 		R().
@@ -385,6 +385,24 @@ func (w *ApplicationService) GetWorkFlowSelectByWanwu(ctx context.Context, req *
 	} else if resp.StatusCode() >= 300 {
 		return nil, fmt.Errorf("http request failed with status code: %d", resp.StatusCode())
 	}
+	// 调用BFF的CallBack接口获取发布的chatflow IDs
+	chatRet := &cozeWorkflowSelectByWanwuResp{}
+	if resp, err := resty.New().
+		R().
+		SetContext(ctx).
+		SetHeader("Content-Type", "application/json").
+		SetHeader("Accept", "application/json").
+		SetQueryParams(map[string]string{
+			"userId": strconv.FormatInt(userID, 10),
+			"orgId":  req.GetSpaceID(),
+		}).
+		SetResult(chatRet).
+		Get(os.Getenv("WANWU_CALLBACK_CHATFLOW_LIST_URL")); err != nil {
+		return nil, err
+	} else if resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("http request failed with status code: %d", resp.StatusCode())
+	}
+	ret.Data.List = append(ret.Data.List, chatRet.Data.List...)
 	// 获取已发布的workflow ID集合
 	publishedWorkflowIDs := make(map[string]bool)
 	for _, wf := range ret.Data.List {
