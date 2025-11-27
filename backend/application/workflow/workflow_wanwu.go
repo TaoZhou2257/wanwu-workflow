@@ -834,75 +834,77 @@ func (w *ApplicationService) GetPlaygroundPluginListByWanwu(ctx context.Context,
 	}, nil
 }
 
-// OpenAPIGetWorkflowInfoByWanwu 参考OpenAPIGetWorkflowInfo
-// 0. FIXME 前端运行该接口，不会在header中带orgId，需要在该方法中设置ctxcache
-func (w *ApplicationService) OpenAPIGetWorkflowInfoByWanwu(ctx context.Context, req *workflow.OpenAPIGetWorkflowInfoRequest) (
-	_ *workflow.OpenAPIGetWorkflowInfoResponse, err error) {
+// 1：如果是转换成chatflow模式，且没有对话模板，则创建一个默认的对话模板
+func (w *ApplicationService) UpdateWorkflowMetaByWanwu(ctx context.Context, req *workflow.UpdateWorkflowMetaRequest) (
+	_ *workflow.UpdateWorkflowMetaResponse, err error,
+) {
 	defer func() {
 		if panicErr := recover(); panicErr != nil {
 			err = safego.NewPanicErr(panicErr, debug.Stack())
 		}
 
 		if err != nil {
-			err = vo.WrapIfNeeded(errno.ErrChatFlowRoleOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
 		}
 	}()
 
-	wf, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{
-		ID:       mustParseInt64(req.GetWorkflowID()),
-		MetaOnly: true,
+	if err := checkUserSpace(ctx, ctxutil.MustGetUIDFromCtx(ctx), mustParseInt64(req.GetSpaceID())); err != nil {
+		return nil, err
+	}
+
+	workflowID := mustParseInt64(req.GetWorkflowID())
+	if req.IsSetFlowMode() && req.GetFlowMode() == workflow.WorkflowMode_ChatFlow {
+		def, err := w.ListApplicationConversationDef(ctx, &workflow.ListProjectConversationRequest{
+			ProjectID:    strconv.FormatInt(workflowID, 10),
+			CreateMethod: workflow.CreateMethod_ManualCreate,
+			CreateEnv:    workflow.CreateEnv_Draft,
+			Limit:        1000,
+			SpaceID:      req.GetSpaceID(),
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(def.Data) == 0 {
+			wf, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{
+				ID:       mustParseInt64(req.GetWorkflowID()),
+				MetaOnly: true,
+			})
+			if err != nil {
+				return nil, err
+			}
+			_, err = GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
+				AppID:   workflowID,
+				UserID:  ctxutil.MustGetUIDFromCtx(ctx),
+				SpaceID: mustParseInt64(req.GetSpaceID()),
+				Name:    wf.Name,
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	err = GetWorkflowDomainSVC().UpdateMeta(ctx, mustParseInt64(req.GetWorkflowID()), &vo.MetaUpdate{
+		Name:         req.Name,
+		Desc:         req.Desc,
+		IconURI:      req.IconURI,
+		WorkflowMode: req.FlowMode,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	// 设置ctxcache
-	if _, ok := ctxcache.Get[string](ctx, "X-Org-Id"); !ok {
-		ctxcache.Store(ctx, "X-Org-Id", strconv.Itoa(int(wf.Meta.SpaceID)))
-	}
-
-	uID := ctxutil.GetApiAuthFromCtx(ctx).UserID
-	if err = checkUserSpace(ctx, uID, wf.Meta.SpaceID); err != nil {
-		return nil, err
-	}
-
-	if !IsChatFlow(wf) {
-		logs.CtxWarnf(ctx, "GetChatFlowRole not chat flow, workflowID: %d", wf.ID)
-		return nil, vo.WrapError(errno.ErrChatFlowRoleOperationFail, fmt.Errorf("workflow %d is not a chat flow", wf.ID))
-	}
-
-	var version string
-	if wf.Meta.AppID != nil {
-		if vl, err := GetWorkflowDomainSVC().GetWorkflowVersionsByConnector(ctx, mustParseInt64(req.GetConnectorID()), wf.ID, 1); err != nil {
-			return nil, err
-		} else if len(vl) > 0 {
-			version = vl[0]
+	safego.Go(ctx, func() {
+		err := PublishWorkflowResource(ctx, workflowID, nil, search.Updated, &search.ResourceDocument{
+			Name:         req.Name,
+			UpdateTimeMS: ptr.Of(time.Now().UnixMilli()),
+		})
+		if err != nil {
+			logs.CtxErrorf(ctx, "publish update workflow resource failed, workflowID: %d, err: %v", workflowID, err)
 		}
-	}
+	})
 
-	role, err := GetWorkflowDomainSVC().GetChatFlowRole(ctx, mustParseInt64(req.WorkflowID), version)
-	if err != nil {
-		return nil, err
-	}
-
-	if role == nil {
-		logs.CtxWarnf(ctx, "GetChatFlowRole role nil, workflowID: %d", wf.ID)
-		// Return nil for the error to align with the production behavior,
-		// where the GET API may be called before the CREATE API during chatflow creation.
-		return &workflow.OpenAPIGetWorkflowInfoResponse{}, nil
-	}
-
-	wfRole, err := w.convertChatFlowRole(ctx, role)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to get chat flow role config, internal data processing error: %+v", err)
-	}
-
-	return &workflow.OpenAPIGetWorkflowInfoResponse{
-		WorkflowInfo: &workflow.WorkflowInfo{
-			Role: wfRole,
-		},
-	}, nil
+	return &workflow.UpdateWorkflowMetaResponse{}, nil
 }
 
 // -- internal ---
