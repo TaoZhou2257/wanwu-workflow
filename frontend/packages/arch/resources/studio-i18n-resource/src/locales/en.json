@@ -5375,7 +5375,7 @@
   "dataset_keywords": "关键词",
   "dataset_keywords_search": "查询改写",
   "dataset_graph": "知识图谱",
-  "dataset_graph_hint": "开启后可使用知识库中关键词管理模块所配置的映射规则",
+  "dataset_graph_hint": "开启后检索时会引入图谱增强chunk间关系检索，提升相关性召回效果。",
   "dataset_min_degree_default": "Default",
   "dataset_not_found": "Knowledge not found",
   "dataset_on_demand_call": "On-demand call",
