@@ -47,6 +47,7 @@ export {
 export { useOpenTraceListPanel } from './use-open-trace-list-panel';
 export { useTestRun } from './use-test-run';
 export { useDataSetInfos } from './use-dataset-info';
+export { useQADataSetInfos } from './use-qa-dataset-info';
 export { useNodeVersionService } from './node-version';
 export { useSaveService } from './use-save-service';
 export { useDatabaseNodeService } from './use-database-node-service';

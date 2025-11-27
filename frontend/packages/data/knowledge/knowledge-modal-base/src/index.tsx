@@ -50,6 +50,18 @@ export {
   KnowledgeCardListVertical,
 } from './knowledge-list-modal-wanwu';
 export { type DataSetModalContentProps } from './knowledge-list-modal-wanwu/use-content';
+
+export {
+  useQAKnowledgeListModal,
+  type UseQAKnowledgeListModalParams,
+  type UseQAKnowledgeListReturnValue,
+  useQAKnowledgeListModalContent,
+  QAKnowledgeListModalContent,
+  QAKnowledgeCard,
+  QAKnowledgeCardListVertical,
+} from './qa-knowledge-list-modal-wanwu';
+export { type QADataSetModalContentProps } from './qa-knowledge-list-modal-wanwu/use-content';
+
 export {
   useUpdateFrequencyModal,
   type UseUpdateFrequencyModalProps,

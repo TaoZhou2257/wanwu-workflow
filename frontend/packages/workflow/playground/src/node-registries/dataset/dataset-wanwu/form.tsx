@@ -23,7 +23,8 @@ import { OutputsField } from '@/node-registries/common/fields';
 import { NodeConfigForm } from '@/node-registries/common/components';
 import { Section } from '@/form';
 
-import { DatasetSelectField, DatasetParamsField, DatasetSettingFieldWanwu } from './components';
+import { DatasetSelectFieldWanwu, DatasetSettingFieldWanwu } from './components';
+import { DatasetParamsField } from '../common/componets/dataset-params-field-wanwu';
 
 const Render = () => (
   <NodeConfigForm>
@@ -48,7 +49,7 @@ const Render = () => (
       )}
     >
       <div className="w-full mb-[16px]">
-        <DatasetSelectField name="inputs.datasetParameters.datasetParam" />
+        <DatasetSelectFieldWanwu name="inputs.datasetParameters.datasetParam" />
       </div>
       <DatasetSettingFieldWanwu name="inputs.datasetParameters.datasetSetting" />
     </Section>

@@ -119,12 +119,12 @@ const EmptyToCreate: FC<{
         <UIEmpty
           className={styles.empty}
           empty={{
-            ...(canCreate
+            /*...(canCreate
               ? {
                   btnText: I18n.t('datasets_create_btn'),
                   btnOnClick: handleAdd,
                 }
-              : {}),
+              : {}),*/
             title: I18n.t('datasets_empty_title'),
             description: I18n.t('datasets_empty_description'),
           }}

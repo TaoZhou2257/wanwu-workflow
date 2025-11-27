@@ -33,6 +33,7 @@ describe('node-type', () => {
       expect(StandardNodeType.Code).toBe('5');
       expect(StandardNodeType.Dataset).toBe('6');
       expect(StandardNodeType.DatasetWanwu).toBe('1006');
+      expect(StandardNodeType.QADatasetWanwu).toBe('1012');
       expect(StandardNodeType.If).toBe('8');
       expect(StandardNodeType.SubWorkflow).toBe('9');
       expect(StandardNodeType.Variable).toBe('11');
