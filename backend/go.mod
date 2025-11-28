@@ -55,7 +55,7 @@ require (
 	github.com/pingcap/tidb/pkg/parser v0.0.0-20250417044355-c5882b1f6c58
 	github.com/pkg/errors v0.9.1
 	github.com/rbretecher/go-postman-collection v0.9.0
-	github.com/redis/go-redis/v9 v9.7.3
+	github.com/redis/go-redis/v9 v9.8.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/spf13/cast v1.7.1
@@ -69,7 +69,7 @@ require (
 	github.com/yuin/goldmark v1.4.13
 	go.uber.org/mock v0.5.1
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
-	golang.org/x/image v0.22.0
+	golang.org/x/image v0.23.0
 	golang.org/x/mod v0.25.0
 	golang.org/x/oauth2 v0.28.0
 	golang.org/x/sync v0.16.0
@@ -157,7 +157,7 @@ require (
 	github.com/goph/emperror v0.17.2 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0 // indirect
@@ -215,7 +215,7 @@ require (
 	github.com/rogpeppe/fastuuid v1.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/rs/xid v1.6.0 // indirect
-	github.com/samber/lo v1.27.0 // indirect
+	github.com/samber/lo v1.51.0 // indirect
 	github.com/shabbyrobe/xmlwriter v0.0.0-20200208144257-9fca06d00ffa // indirect
 	github.com/shirou/gopsutil/v3 v3.23.12 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
@@ -223,7 +223,7 @@ require (
 	github.com/smarty/assertions v1.16.0 // indirect
 	github.com/soheilhy/cmux v0.1.5 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
@@ -275,7 +275,6 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c // indirect
-	gorm.io/driver/postgres v1.5.11 // indirect
 	gorm.io/hints v1.1.0 // indirect
 	k8s.io/apimachinery v0.32.3 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
@@ -323,7 +322,10 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.2 // indirect
 )
 
-require github.com/ThinkInAIXYZ/go-mcp v0.2.21
+require (
+	github.com/ThinkInAIXYZ/go-mcp v0.2.22
+	github.com/UnicomAI/wanwu v0.2.8
+)
 
 require (
 	github.com/orcaman/concurrent-map/v2 v2.0.1 // indirect

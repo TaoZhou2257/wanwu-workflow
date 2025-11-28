@@ -116,12 +116,12 @@ func guiRequest(ctx context.Context, modelID string, req *guiReq) (map[string]an
 	if err != nil {
 		return nil, fmt.Errorf("request %v err: %v", url, err)
 	}
-	if resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("request %v http status %v msg: %v", url, resp.StatusCode(), resp.String())
-	}
 	b, err := io.ReadAll(resp.RawResponse.Body)
 	if err != nil {
 		return nil, fmt.Errorf("request %v read response body: %v", url, err)
+	}
+	if resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("request %v http status %v msg: %v", url, resp.StatusCode(), string(b))
 	}
 	var ret map[string]any
 	if err = sonic.Unmarshal(b, &ret); err != nil {

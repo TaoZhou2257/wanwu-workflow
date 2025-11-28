@@ -113,6 +113,80 @@ func (w *ApplicationService) CreateWorkflowByWanwu(ctx context.Context, req *wor
 	}, nil
 }
 
+// UpdateWorkflowMetaByWanwu 参考UpdateWorkflowMeta
+// 1. 如果是转换成chatflow模式，且没有对话模板，则创建一个默认的对话模板
+func (w *ApplicationService) UpdateWorkflowMetaByWanwu(ctx context.Context, req *workflow.UpdateWorkflowMetaRequest) (
+	_ *workflow.UpdateWorkflowMetaResponse, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	if err := checkUserSpace(ctx, ctxutil.MustGetUIDFromCtx(ctx), mustParseInt64(req.GetSpaceID())); err != nil {
+		return nil, err
+	}
+
+	workflowID := mustParseInt64(req.GetWorkflowID())
+	if req.IsSetFlowMode() && req.GetFlowMode() == workflow.WorkflowMode_ChatFlow {
+		def, err := w.ListApplicationConversationDef(ctx, &workflow.ListProjectConversationRequest{
+			ProjectID:    strconv.FormatInt(workflowID, 10),
+			CreateMethod: workflow.CreateMethod_ManualCreate,
+			CreateEnv:    workflow.CreateEnv_Draft,
+			Limit:        1000,
+			SpaceID:      req.GetSpaceID(),
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(def.Data) == 0 {
+			wf, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{
+				ID:       mustParseInt64(req.GetWorkflowID()),
+				MetaOnly: true,
+			})
+			if err != nil {
+				return nil, err
+			}
+			_, err = GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
+				AppID:   workflowID,
+				UserID:  ctxutil.MustGetUIDFromCtx(ctx),
+				SpaceID: mustParseInt64(req.GetSpaceID()),
+				Name:    wf.Name,
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	err = GetWorkflowDomainSVC().UpdateMeta(ctx, mustParseInt64(req.GetWorkflowID()), &vo.MetaUpdate{
+		Name:         req.Name,
+		Desc:         req.Desc,
+		IconURI:      req.IconURI,
+		WorkflowMode: req.FlowMode,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	safego.Go(ctx, func() {
+		err := PublishWorkflowResource(ctx, workflowID, nil, search.Updated, &search.ResourceDocument{
+			Name:         req.Name,
+			UpdateTimeMS: ptr.Of(time.Now().UnixMilli()),
+		})
+		if err != nil {
+			logs.CtxErrorf(ctx, "publish update workflow resource failed, workflowID: %d, err: %v", workflowID, err)
+		}
+	})
+
+	return &workflow.UpdateWorkflowMetaResponse{}, nil
+}
+
 // CopyWorkflowByWanwu 参考CopyWorkflow，适配了chatflow
 func (w *ApplicationService) CopyWorkflowByWanwu(ctx context.Context, req *workflow.CopyWorkflowRequest) (
 	resp *workflow.CopyWorkflowResponse, err error,
@@ -832,79 +906,6 @@ func (w *ApplicationService) GetPlaygroundPluginListByWanwu(ctx context.Context,
 			Total:      int32(len(pluginInfoList)),
 		},
 	}, nil
-}
-
-// 1：如果是转换成chatflow模式，且没有对话模板，则创建一个默认的对话模板
-func (w *ApplicationService) UpdateWorkflowMetaByWanwu(ctx context.Context, req *workflow.UpdateWorkflowMetaRequest) (
-	_ *workflow.UpdateWorkflowMetaResponse, err error,
-) {
-	defer func() {
-		if panicErr := recover(); panicErr != nil {
-			err = safego.NewPanicErr(panicErr, debug.Stack())
-		}
-
-		if err != nil {
-			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
-		}
-	}()
-
-	if err := checkUserSpace(ctx, ctxutil.MustGetUIDFromCtx(ctx), mustParseInt64(req.GetSpaceID())); err != nil {
-		return nil, err
-	}
-
-	workflowID := mustParseInt64(req.GetWorkflowID())
-	if req.IsSetFlowMode() && req.GetFlowMode() == workflow.WorkflowMode_ChatFlow {
-		def, err := w.ListApplicationConversationDef(ctx, &workflow.ListProjectConversationRequest{
-			ProjectID:    strconv.FormatInt(workflowID, 10),
-			CreateMethod: workflow.CreateMethod_ManualCreate,
-			CreateEnv:    workflow.CreateEnv_Draft,
-			Limit:        1000,
-			SpaceID:      req.GetSpaceID(),
-		})
-		if err != nil {
-			return nil, err
-		}
-		if len(def.Data) == 0 {
-			wf, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{
-				ID:       mustParseInt64(req.GetWorkflowID()),
-				MetaOnly: true,
-			})
-			if err != nil {
-				return nil, err
-			}
-			_, err = GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
-				AppID:   workflowID,
-				UserID:  ctxutil.MustGetUIDFromCtx(ctx),
-				SpaceID: mustParseInt64(req.GetSpaceID()),
-				Name:    wf.Name,
-			})
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	err = GetWorkflowDomainSVC().UpdateMeta(ctx, mustParseInt64(req.GetWorkflowID()), &vo.MetaUpdate{
-		Name:         req.Name,
-		Desc:         req.Desc,
-		IconURI:      req.IconURI,
-		WorkflowMode: req.FlowMode,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	safego.Go(ctx, func() {
-		err := PublishWorkflowResource(ctx, workflowID, nil, search.Updated, &search.ResourceDocument{
-			Name:         req.Name,
-			UpdateTimeMS: ptr.Of(time.Now().UnixMilli()),
-		})
-		if err != nil {
-			logs.CtxErrorf(ctx, "publish update workflow resource failed, workflowID: %d, err: %v", workflowID, err)
-		}
-	})
-
-	return &workflow.UpdateWorkflowMetaResponse{}, nil
 }
 
 // -- internal ---

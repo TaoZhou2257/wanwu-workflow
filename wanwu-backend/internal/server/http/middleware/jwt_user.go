@@ -41,7 +41,7 @@ func JwtUser(ctx context.Context, appCtx *app.RequestContext) {
 		httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", err.Error())))
 		return
 	}
-	if claims.Subject != jwt_util.USER {
+	if claims.Subject != jwt_util.SUBJECT_USER {
 		httputil.Unauthorized(ctx, appCtx, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", "invalid token subject")))
 		return
 	}

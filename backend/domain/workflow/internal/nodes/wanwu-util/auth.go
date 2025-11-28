@@ -3,7 +3,7 @@ package wanwu_util
 import (
 	"fmt"
 
-	openapi3_util "github.com/coze-dev/coze-studio/backend/pkg/wanwu-openapi3-util"
+	openapi3_util "github.com/UnicomAI/wanwu/pkg/openapi3-util"
 )
 
 // api 鉴权

@@ -75,12 +75,12 @@ func CreateChatModel(ctx context.Context, llmParams *vo.LLMParams) (modelbuilder
 	if err != nil {
 		return nil, nil, fmt.Errorf("request %v err: %v", baseUrl, err)
 	}
-	if resp.StatusCode() >= 300 {
-		return nil, nil, fmt.Errorf("request %v http status %v msg: %v", baseUrl, resp.StatusCode(), resp.String())
-	}
 	b, err := io.ReadAll(resp.RawResponse.Body)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request %v read response body: %v", baseUrl, err)
+	}
+	if resp.StatusCode() >= 300 {
+		return nil, nil, fmt.Errorf("request %v http status %v msg: %v", baseUrl, resp.StatusCode(), string(b))
 	}
 	var ret *modelResp
 	if err = sonic.Unmarshal(b, &ret); err != nil {

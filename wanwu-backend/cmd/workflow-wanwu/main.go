@@ -15,6 +15,7 @@ import (
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/service/workflow"
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/pkg/redis"
 	"github.com/UnicomAI/wanwu/pkg/db"
+	jwt_util "github.com/UnicomAI/wanwu/pkg/jwt-util"
 	"github.com/UnicomAI/wanwu/pkg/log"
 	coze_cache_impl "github.com/coze-dev/coze-studio/backend/infra/cache/impl/redis"
 	coze_minio "github.com/coze-dev/coze-studio/backend/infra/storage/impl/minio"
@@ -54,6 +55,10 @@ func main() {
 
 	if err := log.InitLog(config.Cfg().Log.Std, config.Cfg().Log.Level, config.Cfg().Log.Logs...); err != nil {
 		log.Fatalf("init log err: %v", err)
+	}
+
+	if err := jwt_util.InitUserJWT(config.Cfg().JWT.SigningKey); err != nil {
+		log.Fatalf("init jwt err: %v", err)
 	}
 
 	// db

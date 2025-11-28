@@ -170,7 +170,7 @@ func init() {
 		DisplayKey: "QAset",
 		Name:       "问答库检索",
 		Category:   "data",
-		Desc:       "在选定的问答库中,根据输入变量召回最匹配的信息,并以列表形式返回",
+		Desc:       "在选定的问答库中，根据输入变量召回最匹配的信息，并以列表形式返回",
 		Color:      "#FF811A",
 		// IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
 		SupportBatch: false,

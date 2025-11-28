@@ -122,7 +122,7 @@ func OpenAPIRunWorkFlowByWanwu(ctx context.Context, c *app.RequestContext) {
 	internalServerErrorResponse(ctx, c, errors.New("empty response"))
 }
 
-// OpenAPICreateConversationByWanwu参考 OpenAPICreateConversation
+// OpenAPICreateConversationByWanwu 参考OpenAPICreateConversation
 // @router /v1/workflow/conversation/create_by_wanwu [POST]
 func OpenAPICreateConversationByWanwu(ctx context.Context, c *app.RequestContext) {
 	var err error
