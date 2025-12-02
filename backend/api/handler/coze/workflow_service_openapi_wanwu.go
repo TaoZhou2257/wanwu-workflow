@@ -90,7 +90,7 @@ func OpenAPIRunWorkFlowByWanwu(ctx context.Context, c *app.RequestContext) {
 		ctx = context.WithValue(ctx, "WANWU_WORKFLOW_OPENAPI_RUN_SKIP_EXECUTE_HISTORY", true)
 	}
 
-	resp, err := appworkflow.SVC.OpenAPIRunByWanwu(ctx, workflowID, &req)
+	resp, tPlan, err := appworkflow.SVC.OpenAPIRunByWanwu(ctx, workflowID, &req)
 	if err != nil {
 		var se vo.WorkflowError
 		if errors.As(err, &se) {
@@ -108,17 +108,22 @@ func OpenAPIRunWorkFlowByWanwu(ctx context.Context, c *app.RequestContext) {
 		internalServerErrorResponse(ctx, c, err)
 		return
 	}
-
-	var respData map[string]any
-	if resp.Data != nil {
-		if err = sonic.Unmarshal([]byte(*resp.Data), &respData); err != nil {
-			logs.CtxErrorf(ctx, "unmarshal resp.Data (%v) err: %v", resp.Data, err)
-			c.JSON(consts.StatusOK, resp.Data)
+	if tPlan == vo.ReturnVariables {
+		var respData map[string]any
+		if resp.Data != nil {
+			if err = sonic.Unmarshal([]byte(*resp.Data), &respData); err != nil {
+				logs.CtxErrorf(ctx, "unmarshal resp.Data (%v) err: %v", resp.Data, err)
+				c.JSON(consts.StatusOK, resp.Data)
+				return
+			}
+			c.JSON(consts.StatusOK, respData)
 			return
 		}
-		c.JSON(consts.StatusOK, respData)
+	} else {
+		c.JSON(consts.StatusOK, resp.Data)
 		return
 	}
+
 	internalServerErrorResponse(ctx, c, errors.New("empty response"))
 }
 
