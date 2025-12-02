@@ -676,7 +676,7 @@ func workflowParamsToSchema(params []*vo.NamedTypeInfo) (*openapi3.Schema, error
 // 2. 去掉appID、agentID、connectorID等业务逻辑
 // 3. 将必须publish才能执行的workflow，改为可以执行draft
 func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID string, req *workflow.OpenAPIRunFlowRequest) (
-	_ *workflow.OpenAPIRunFlowResponse, err error,
+	_ *workflow.OpenAPIRunFlowResponse, _ vo.TerminatePlan, err error,
 ) {
 	defer func() {
 		if panicErr := recover(); panicErr != nil {
@@ -695,7 +695,7 @@ func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID s
 	if req.Parameters != nil {
 		err := sonic.UnmarshalString(*req.Parameters, &parameters)
 		if err != nil {
-			return nil, vo.WrapError(errno.ErrInvalidParameter, err)
+			return nil, "", vo.WrapError(errno.ErrInvalidParameter, err)
 		}
 	}
 
@@ -704,7 +704,7 @@ func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID s
 		MetaOnly: true,
 	})
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	// 设置ctxcache
@@ -766,51 +766,34 @@ func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID s
 		exeCfg.TaskType = workflowModel.TaskTypeBackground
 		exeID, err := GetWorkflowDomainSVC().AsyncExecute(ctx, exeCfg, parameters)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 
 		return &workflow.OpenAPIRunFlowResponse{
 			ExecuteID: ptr.Of(strconv.FormatInt(exeID, 10)),
 			DebugUrl:  ptr.Of(debugutil.GetWorkflowDebugURL(ctx, meta.ID, meta.SpaceID, exeID)),
-		}, nil
+		}, "", nil
 	}
 
 	exeCfg.SyncPattern = workflowModel.SyncPatternSync
 	exeCfg.TaskType = workflowModel.TaskTypeForeground
 	wfExe, tPlan, err := GetWorkflowDomainSVC().SyncExecute(ctx, exeCfg, parameters)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	if wfExe.Status == entity.WorkflowInterrupted {
-		return nil, vo.NewError(errno.ErrInterruptNotSupported)
+		return nil, "", vo.NewError(errno.ErrInterruptNotSupported)
 	}
 
-	var data *string
-	if tPlan == vo.ReturnVariables {
-		data = wfExe.Output
-	} else {
-		answerOutput := map[string]any{
-			"content_type":   1,
-			"data":           *wfExe.Output,
-			"type_for_model": 2,
-		}
-
-		answerOutputStr, err := sonic.MarshalString(answerOutput)
-		if err != nil {
-			return nil, err
-		}
-
-		data = ptr.Of(answerOutputStr)
-	}
-
+	data := wfExe.Output
 	return &workflow.OpenAPIRunFlowResponse{
 		Data:      data,
 		ExecuteID: ptr.Of(strconv.FormatInt(wfExe.ID, 10)),
 		DebugUrl:  ptr.Of(debugutil.GetWorkflowDebugURL(ctx, meta.ID, wfExe.SpaceID, wfExe.ID)),
 		Token:     ptr.Of(wfExe.TokenInfo.InputTokens + wfExe.TokenInfo.OutputTokens),
 		Cost:      ptr.Of("0.00000"),
-	}, nil
+	}, tPlan, nil
 }
 
 // GetPlaygroundPluginListByWanwu 参考GetPlaygroundPluginList
