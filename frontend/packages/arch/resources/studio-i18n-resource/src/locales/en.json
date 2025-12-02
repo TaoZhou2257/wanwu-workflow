@@ -13696,6 +13696,7 @@
   "workflow_detail_title_saved_2": "Saved at {time}",
   "workflow_detail_title_source": "Source",
   "workflow_detail_title_testrun": "Test run",
+  "workflow_detail_title_testrun_desc": "点击左侧 '运行' 按钮，开始运行工作流",
   "workflow_detail_title_testrun_batch_title": "The variable of this batch process",
   "workflow_detail_title_testrun_boolean_select": "Select {a}",
   "workflow_detail_title_testrun_cancel": "Cancel",

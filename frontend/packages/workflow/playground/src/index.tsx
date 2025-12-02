@@ -16,6 +16,7 @@
 
 export { WorkflowGlobalState } from './entities';
 export { WorkflowGlobalStateEntity } from './typing';
+export { WorkflowRunWanwu } from './workflow-run-wanwu';
 export { WorkflowPlayground } from './workflow-playground';
 export {
   useGlobalState,

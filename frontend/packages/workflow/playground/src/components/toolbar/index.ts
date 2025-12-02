@@ -15,4 +15,5 @@
  */
 
 export { ToolbarContainer as Toolbar } from './components';
+export { RunContainerWanwu } from './components';
 export { useAddNode } from './hooks';

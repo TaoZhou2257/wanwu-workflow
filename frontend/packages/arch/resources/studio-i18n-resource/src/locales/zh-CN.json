@@ -15895,6 +15895,7 @@
   "workflow_detail_title_saved_2": "已自动保存 {time}",
   "workflow_detail_title_source": "来源",
   "workflow_detail_title_testrun": "试运行",
+  "workflow_detail_title_testrun_desc": "点击左侧 '运行' 按钮，开始运行工作流",
   "workflow_detail_title_testrun_batch_title": "本次批处理变量",
   "workflow_detail_title_testrun_boolean_select": "请选择 {a}",
   "workflow_detail_title_testrun_cancel": "取消运行",
