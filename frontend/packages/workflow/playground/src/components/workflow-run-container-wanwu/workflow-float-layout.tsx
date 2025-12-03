@@ -22,26 +22,26 @@ import {
   type TestWorkflowFormPanelPropsWanwu,
 } from '../test-run/test-form-sheet-v2/index-wanwu';
 import {
-  ChatFlowTestFormPanel,
-  type ChatFlowTestFormPanelProps,
+  ChatFlowTestFormPanelWanwu,
+  type ChatFlowTestFormPanelPropsWanwu,
 } from '../test-run/chat-flow-test-form-panel';
 import { FloatLayoutWanwu, type FloatLayoutPropsWanwu } from '../float-layout';
 
 export const WorkflowFloatLayout: React.FC<
   React.PropsWithChildren<FloatLayoutPropsWanwu>
-> = ({ components, children }) => {
+> = ({ components, children, isChatflow }) => {
   const registry = useMemo(
     () => ({
       ...components,
       [LayoutPanelKey.TestFlowForm]: (p: TestWorkflowFormPanelPropsWanwu) => (
         <StartTestFormSheetWanwu {...p} />
       ),
-      [LayoutPanelKey.TestChatFlowForm]: (p: ChatFlowTestFormPanelProps) => (
-        <ChatFlowTestFormPanel {...p} />
+      [LayoutPanelKey.TestChatFlowForm]: (p: ChatFlowTestFormPanelPropsWanwu) => (
+        <ChatFlowTestFormPanelWanwu {...p} />
       ),
     }),
     [components],
   );
 
-  return <FloatLayoutWanwu components={registry}>{children}</FloatLayoutWanwu>;
+  return <FloatLayoutWanwu isChatflow={isChatflow} components={registry}>{children}</FloatLayoutWanwu>;
 };

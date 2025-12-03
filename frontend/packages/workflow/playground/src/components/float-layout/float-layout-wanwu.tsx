@@ -19,6 +19,7 @@
  */
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { useSize } from 'ahooks';
+import cs from 'classnames';
 import { type Render } from '@/services/workflow-float-layout-service';
 import { useFloatLayoutService } from '@/hooks/use-float-layout-service';
 import { FloatPanel } from './float-panel';
@@ -27,11 +28,12 @@ import styles from './float-layout-wanwu.module.less';
 
 export interface FloatLayoutPropsWanwu {
   components: Record<string, Render>;
+  isChatflow?: boolean;
 }
 
 export const FloatLayoutWanwu: React.FC<
   React.PropsWithChildren<FloatLayoutPropsWanwu>
-> = ({ components, children }) => {
+> = ({ components, children, isChatflow }) => {
   const ref = useRef<HTMLDivElement>(null);
   const floatLayoutService = useFloatLayoutService();
   const size = useSize(ref);
@@ -49,14 +51,12 @@ export const FloatLayoutWanwu: React.FC<
 
   return (
     <div className={styles['float-layout-wanwu']} ref={ref}>
-      <div className={styles['left-panel']}>
-        <FloatPanel panel={floatLayoutService.right} />
+      <div className={cs(styles['left-panel'], isChatflow ? styles['panel-content'] : null)}>
+        <FloatPanel panel={floatLayoutService.right}/>
       </div>
-      {children && (
-        <div className={styles['right-panel']}>
-          <div className={styles['left-main-panel']}>{children}</div>
-        </div>
-      )}
+      <div className={styles['right-panel']}>
+        <div className={styles['left-main-panel']}>{children}</div>
+      </div>
     </div>
   );
 };

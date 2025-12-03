@@ -18,3 +18,8 @@ export {
   ChatFlowTestFormPanel,
   type ChatFlowTestFormPanelProps,
 } from './test-form-panel';
+
+export {
+  ChatFlowTestFormPanelWanwu,
+  type ChatFlowTestFormPanelPropsWanwu,
+} from './test-form-panel-wanwu';

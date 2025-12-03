@@ -18,6 +18,7 @@ import { forwardRef, useMemo } from 'react';
 import classnames from 'classnames';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { workflowQueryClient } from '@coze-workflow/base';
+import { WorkflowMode } from '@coze-workflow/base/api';
 import { Spin } from '@coze-arch/bot-semi';
 import { CustomError } from '@coze-arch/bot-error';
 import { type BotSpace } from '@coze-arch/bot-api/developer_api';
@@ -41,7 +42,7 @@ const WorkflowRunContainerWanwu = forwardRef<
   }
 >((props, ref) => {
   const workflowState = useGlobalState();
-  const { loading, loadingError } = workflowState;
+  const { loading, loadingError, info } = workflowState;
   let playgroundContent;
 
   // Synchronize component properties to globalStatus
@@ -67,7 +68,7 @@ const WorkflowRunContainerWanwu = forwardRef<
         <div className="flex flex-1 h-full">
           <div className="flex flex-1 flex-col">
             <div className={`${styles.workflowContent} clean-code`}>
-              <WorkflowFloatLayout components={{}}>
+              <WorkflowFloatLayout components={{}} isChatflow={ info.flow_mode === WorkflowMode.ChatFlow }>
                 <RunContainerWanwu />
               </WorkflowFloatLayout>
             </div>

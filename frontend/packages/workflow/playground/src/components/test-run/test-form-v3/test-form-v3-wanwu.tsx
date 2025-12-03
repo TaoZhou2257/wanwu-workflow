@@ -46,7 +46,7 @@ const components = {
   RelatedFieldCollapse,
   TypedFileInput,
   JsonModeInput,
-  // TestsetSave,
+  TestsetSave,
   TestsetSelect,
 };
 
