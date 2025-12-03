@@ -38,6 +38,8 @@ export { getFormValueByPathEnds } from './form-helpers';
 
 export { isGeneralWorkflow } from './is-general-workflow';
 
+export { isRunPage } from './is-workflow-run-page-wanwu';
+
 export { isPresetStartParams, isUserInputStartParams } from './start-params';
 
 export {

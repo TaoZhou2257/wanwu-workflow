@@ -14,5 +14,15 @@
  * limitations under the License.
  */
 
-export { TestFormV3 } from './test-form-v3';
-export { TestFormV3Wanwu } from './test-form-v3-wanwu';
+import { useRef, type RefObject } from 'react';
+import { ShowRunWanwu } from '../../test-run/test-run-button';
+
+export const RunContainerWanwu = () => {
+  const runToolbarRef = useRef<HTMLDivElement>();
+
+  return (
+    <div ref={runToolbarRef as RefObject<HTMLDivElement>}>
+      <ShowRunWanwu />
+    </div>
+  );
+};

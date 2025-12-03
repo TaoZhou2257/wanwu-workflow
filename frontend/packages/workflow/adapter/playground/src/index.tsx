@@ -15,3 +15,4 @@
  */
 
 export { WorkflowPage } from './page';
+export { WorkflowRunPage } from './runPageWanwu';

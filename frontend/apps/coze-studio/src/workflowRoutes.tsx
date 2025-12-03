@@ -16,6 +16,11 @@ const WorkflowPage = lazy(() =>
     default: res.WorkflowPage,
   })),
 );
+const WorkflowRunPage = lazy(() =>
+  import('@coze-workflow/playground-adapter').then(res => ({
+    default: res.WorkflowRunPage,
+  })),
+);
 
 export const workflowRouter: ReturnType<typeof createBrowserRouter> =
   createBrowserRouter([
@@ -39,6 +44,14 @@ export const workflowRouter: ReturnType<typeof createBrowserRouter> =
         {
           path: 'workflow',
           Component: WorkflowPage,
+          loader: () => ({
+            hasSider: false,
+            requireAuth: false,
+          }),
+        },
+        {
+          path: 'workflow/run',
+          Component: WorkflowRunPage,
           loader: () => ({
             hasSider: false,
             requireAuth: false,

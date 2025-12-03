@@ -17,6 +17,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import {
   captureException,
+  isRunPage,
   RESPONSE_FORMAT_NAME,
   ResponseFormat,
 } from '@coze-workflow/base';
@@ -151,7 +152,7 @@ export const getLLMModels = async ({
           getTypeListParams.model_scene = ModelScene.Douyin;
         }
 
-        const resp = await developerApi.GetLLMList();
+        const resp:any = isRunPage() ? {} : await developerApi.GetLLMList();
         const list = resp?.data?.list ?? [];
         const _modelList: Model[] = list.map(item => ({...item, name: item.model, model_type: Number(item.modelId)}))
 
