@@ -27,7 +27,7 @@ import styles from './show-run-wanwu.module.less'
 type StartTestRunButtonProps = Pick<ButtonProps, 'size'>;
 
 export const ShowRunWanwu: React.FC<StartTestRunButtonProps> = props => {
-  const [resultData, setResultData] = useState<any>('')
+  const [resultData, setResultData] = useState<any>(null)
   const [loading, setLoading] = useState<any>(false)
   const { testRunFlow, isChatFlow } = useTestRunFlowV2Wanwu({
     onSubmit: async (params) => {
@@ -35,14 +35,7 @@ export const ShowRunWanwu: React.FC<StartTestRunButtonProps> = props => {
         setLoading(true)
         const res:any = await workflowApi.WorkFlowRunWanwu(params);
         const { data } = res || {}
-        const resData = {
-          NodeType: "End",
-          input: data,
-          output: data,
-          raw_output: data,
-          extra: "{\"response_extra\":{\"terminal_plan\":2}}"
-        }
-        setResultData(resData)
+        setResultData(data)
       } catch (err) {
         const { statusText, data } = err?.response || {}
         Toast.error(data?.msg || statusText || 'Server Error');

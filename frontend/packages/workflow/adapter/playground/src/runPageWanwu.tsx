@@ -19,17 +19,11 @@ import React, { useRef, useState } from 'react';
 
 import { WorkflowRunWanwu } from '@coze-workflow/playground';
 import {
-  type AddNodeRef,
   type WorkflowPlaygroundRef,
 } from '@coze-workflow/playground/typing';
 
 import { usePageParams } from './hooks/use-page-params';
 import { useNavigateBack } from './hooks';
-
-// The added node is placed in the toolbar, but the original sidebar is no longer needed.
-const EmptySidebar = React.forwardRef<AddNodeRef, unknown>(
-  (_props, _addNodeRef) => null,
-);
 
 export function WorkflowRunPage(): React.ReactNode {
   const workflowPlaygroundRef = useRef<WorkflowPlaygroundRef>(null);
@@ -59,7 +53,6 @@ export function WorkflowRunPage(): React.ReactNode {
     <>
       <WorkflowRunWanwu
         ref={workflowPlaygroundRef}
-        /*sidebar={EmptySidebar}*/
         workflowId={workflowId}
         spaceId={spaceId}
         /*commitId={setVersion ? undefined : version}
@@ -92,8 +85,8 @@ export function WorkflowRunPage(): React.ReactNode {
 
             setInitOnce(true);
           }
-        }}*/
-        // from={from}
+        }}
+        from={from}*/
         onBackClick={workflowState => {
           navigateBack(workflowState, 'exit');
         }}

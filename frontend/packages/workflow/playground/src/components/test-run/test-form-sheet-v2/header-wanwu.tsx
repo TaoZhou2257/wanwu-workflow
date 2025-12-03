@@ -29,14 +29,14 @@ export const TestFormSheetHeaderWanwu = () => {
 
   return (
     <div className={cls(styles['test-form-sheet-header-v2'], styles['test-form-sheet-header-v2-wanwu'])}>
-      <IconButton
+      {/*<IconButton
         icon={<IconCozArrowLeft />}
         color="secondary"
         data-testid={getWorkflowHeaderTestId('back')}
         onClick={() => {
           playgroundProps.onBackClick?.(globalState);
         }}
-      />
+      />*/}
       <div className={cls(styles['header-title-v2'])}>
         {I18n.t('workflow_detail_title_testrun')} {info.name || ''}
       </div>
