@@ -104,6 +104,14 @@ func (w *ApplicationService) CreateWorkflowByWanwu(ctx context.Context, req *wor
 		if err != nil {
 			return nil, err
 		}
+		// 如果是对话流还需要创建chat_flow_role
+		_, err = GetWorkflowDomainSVC().CreateChatFlowRole(ctx, &vo.ChatFlowRoleCreate{
+			WorkflowID: id,
+			CreatorID:  uID,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &workflow.CreateWorkflowResponse{
@@ -157,6 +165,20 @@ func (w *ApplicationService) UpdateWorkflowMetaByWanwu(ctx context.Context, req 
 				UserID:  ctxutil.MustGetUIDFromCtx(ctx),
 				SpaceID: mustParseInt64(req.GetSpaceID()),
 				Name:    wf.Name,
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+		oldRole, err := GetWorkflowDomainSVC().GetChatFlowRole(ctx, workflowID, "")
+		if err != nil {
+			return nil, err
+		}
+		if oldRole == nil {
+			// 如果是对话流并且role不存在还需要创建chat_flow_role
+			_, err = GetWorkflowDomainSVC().CreateChatFlowRole(ctx, &vo.ChatFlowRoleCreate{
+				WorkflowID: workflowID,
+				CreatorID:  ctxutil.MustGetUIDFromCtx(ctx),
 			})
 			if err != nil {
 				return nil, err
