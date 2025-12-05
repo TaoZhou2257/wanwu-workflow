@@ -33,7 +33,6 @@ import { I18n } from '@coze-arch/i18n';
 import { Toast } from '@coze-arch/coze-design';
 import { type WorkflowNodeEntity } from '@/test-run-kit';
 import { useGlobalState } from '@/hooks';
-import { ResizableSidePanel } from '@/components/resizable-side-panel';
 
 import { stringifyValue } from '../utils/stringify-value';
 import { TestFormV3Wanwu } from '../test-form-v3';
@@ -41,11 +40,10 @@ import { JsonEditorSemi } from '../test-form-materials/json-editor';
 import { InputForm } from '../input-form';
 import { useGetStartNode } from '../hooks/use-get-start-node';
 import { TestsetBotProjectSelect } from '../chat-flow-test-form-panel/testset-bot-project-select';
-import { PanelWrap } from '../../float-layout';
 import { TestFormSheetHeaderWanwu } from './header-wanwu';
 import { TestFormSheetFooterV2Wanwu } from './footer-wanwu';
 
-import styles from './styles.module.less';
+import styles from './index-wanwu.module.less';
 
 interface TestWorkflowFormPanelPropsWanwu {
   node: WorkflowNodeEntity;
@@ -116,13 +114,11 @@ const TestFormSheetV2Wanwu: React.FC<TestWorkflowFormPanelPropsWanwu> = ({ node,
 };
 
 const StartTestFormSheetWanwu: React.FC<TestWorkflowFormPanelPropsWanwu> = props => (
-  <PanelWrap layout="vertical">
-    <ResizableSidePanel>
-      <FormPanelLayout>
-        <TestFormSheetV2Wanwu {...props} />
-      </FormPanelLayout>
-    </ResizableSidePanel>
-  </PanelWrap>
+  <div className={styles['test-form-v2-wrapper-wanwu']}>
+    <FormPanelLayout>
+      <TestFormSheetV2Wanwu {...props} />
+    </FormPanelLayout>
+  </div>
 );
 
 export { TestFormSheetV2Wanwu, StartTestFormSheetWanwu, type TestWorkflowFormPanelPropsWanwu };

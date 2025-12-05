@@ -51,10 +51,10 @@ export const FloatLayoutWanwu: React.FC<
 
   return (
     <div className={styles['float-layout-wanwu']} ref={ref}>
-      <div className={cs(styles['left-panel'], isChatflow ? styles['panel-content'] : null)}>
+      <div className={cs(styles['left-panel'], isChatflow ? styles['panel-content-full'] : null)}>
         <FloatPanel panel={floatLayoutService.right}/>
       </div>
-      <div className={styles['right-panel']}>
+      <div className={cs(styles['right-panel'], isChatflow ? styles['panel-content-none'] : null)}>
         <div className={styles['left-main-panel']}>{children}</div>
       </div>
     </div>

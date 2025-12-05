@@ -21,7 +21,7 @@ import { IconButton } from "@coze-arch/coze-design";
 import { getWorkflowHeaderTestId } from "../../workflow-header/utils";
 import { useGlobalState } from "../../../hooks";
 
-import styles from './styles.module.less';
+import styles from './index-wanwu.module.less';
 
 export const TestFormSheetHeaderWanwu = () => {
   const globalState = useGlobalState();

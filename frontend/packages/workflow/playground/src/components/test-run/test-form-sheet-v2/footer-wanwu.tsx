@@ -19,7 +19,7 @@ import { I18n } from '@coze-arch/i18n';
 import { IconCozPlayFill } from '@coze-arch/coze-design/icons';
 import { Button } from '@coze-arch/coze-design';
 
-import styles from './styles.module.less';
+import styles from './index-wanwu.module.less';
 
 interface TestFormSheetFooterV2Props {
   onClick?: (e: React.MouseEvent) => void;
