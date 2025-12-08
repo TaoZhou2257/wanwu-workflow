@@ -14,5 +14,4 @@
  * limitations under the License.
  */
 
-export { TestFormV3 } from './test-form-v3';
-export { TestFormV3Wanwu } from './test-form-v3-wanwu';
+export const isRunPage = () => window.location.pathname === '/workflow/run';

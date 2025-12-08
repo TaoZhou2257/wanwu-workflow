@@ -40,7 +40,7 @@ export const WORKFLOW_NAME_MAX_LEN = 30;
 /**
  * workflow naming regular
  */
-export const WORKFLOW_NAME_REGEX = /^[a-zA-Z][a-zA-Z0-9_]{0,63}$/;
+export const WORKFLOW_NAME_REGEX = /^[A-Za-z0-9.\u4e00-\u9fa5_-]+$/; // /^[a-zA-Z][a-zA-Z0-9_]{0,63}$/;
 
 /**
  * Node test ID prefix

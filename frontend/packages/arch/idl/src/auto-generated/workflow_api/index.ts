@@ -493,6 +493,25 @@ export default class WorkflowApiService<T> {
   }
 
   /**
+   * POST /user/api/v1/workflow/run
+   *
+   * 应用广场工作流试运行接口
+   */
+  WorkFlowRunWanwu(
+    req: workflow.WorkFlowTestRunRequest,
+    options?: T,
+  ): Promise<workflow.WorkFlowTestRunResponse> {
+    const _req = req;
+    const url = this.genBaseURL('/user/api/v1/workflow/run');
+    const method = 'POST';
+    const data = {
+      workflow_id: _req['workflow_id'],
+      input: _req['input'],
+    };
+    return this.request({ url, method, data }, options);
+  }
+
+  /**
    * POST /api/workflow_api/publish
    *
    * 发布流程。该接口的用途是发布非 project 内部的流程。

@@ -37,6 +37,7 @@ import {
   WorkflowMode,
   type NodeTemplateListResponse,
 } from '@coze-workflow/base/api';
+import { isRunPage } from '@coze-workflow/base';
 import { REPORT_EVENTS } from '@coze-arch/report-events';
 import { CustomError } from '@coze-arch/bot-error';
 import {
@@ -121,16 +122,7 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
     let resp: NodeTemplateListResponse | undefined;
     let favoritePlugins: GetUserFavoriteListData | undefined;
     const response = await Promise.allSettled([
-      workflowApi.NodeTemplateList(
-        {
-          node_types: nodeIds,
-        },
-        {
-          headers: {
-            'x-locale': locale, // zh-CN, en-US
-          },
-        },
-      ),
+      this.fetchTemplateNodeList({ nodeIds, locale }),
       this.fetchFavoritePlugins({ pageNum: 1 }),
     ]);
     response[0].status === 'fulfilled' && (resp = response[0].value);
@@ -242,7 +234,7 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
     pageSize?: number;
   }): Promise<GetUserFavoriteListData | undefined> {
     // will support soon
-    if (IS_OPEN_SOURCE) {
+    if (IS_OPEN_SOURCE || isRunPage()) {
       return {
         favorite_products: [],
         has_more: false,
@@ -256,6 +248,37 @@ export class WorkflowPlaygroundContext implements PlaygroundContext {
       page_size: pageSize,
     });
     return resp.data;
+  }
+
+  // get workflow node list
+  async fetchTemplateNodeList({
+    nodeIds,
+    locale,
+  }: {
+    nodeIds: any;
+    locale?: string;
+  }): Promise<any> {
+    if (isRunPage()) {
+      return {
+        data: {
+          template_list: [],
+          cate_list: [],
+        },
+        code: 0,
+      };
+    }
+
+    const resp = await workflowApi.NodeTemplateList(
+      {
+        node_types: nodeIds,
+      },
+      {
+        headers: {
+          'x-locale': locale, // zh-CN, en-US
+        },
+      },
+    );
+    return resp;
   }
 
   getTemplateCategoryList(
