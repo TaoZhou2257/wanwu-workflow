@@ -138,6 +138,10 @@ export interface GetDraftIntelligenceListRequest {
   Base?: base.Base;
 }
 
+export interface GetDraftIntelligenceListRequestWanwu {
+  workflow_id?: string;
+}
+
 export interface GetDraftIntelligenceListResponse {
   data?: DraftIntelligenceListData;
   code?: number;

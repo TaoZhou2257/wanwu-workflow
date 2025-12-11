@@ -979,6 +979,29 @@ export default class WorkflowApiService<T> {
     return this.request({ url, method, params }, options);
   }
 
+  /**
+   * POST /v1/workflow/conversation/create
+   *
+   * 对话流创建会话
+   */
+  CreateConversationWanwu(
+    req?: workflow.CreateConversationWanwuRequest,
+    options?: T,
+  ): Promise<workflow.CreateConversationWanwuResponse> {
+    const _req = req || {};
+    const url = this.genBaseURL('/v1/workflow/conversation/create');
+    const method = 'POST';
+    const data = {
+      app_id: _req['app_id'],
+      conversation_name: _req['conversation_name'],
+      get_or_create: _req['get_or_create'],
+      draft_mode: _req['draft_mode'],
+      workflow_id: _req['workflow_id'],
+      connector_id: _req['connector_id'],
+    };
+    return this.request({ url, method, data }, options);
+  }
+
   /** GET /api/workflow_api/bots_ide_token */
   GetBotsIDEToken(
     req?: workflow.GetBotsIDETokenRequest,

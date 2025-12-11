@@ -21,7 +21,7 @@ import classNames from 'classnames';
 import { useService } from '@flowgram-adapter/free-layout-editor';
 import { IconSearch } from '@douyinfe/semi-icons';
 import { PUBLIC_SPACE_ID } from '@coze-workflow/base/constants';
-import { concatTestId } from '@coze-workflow/base';
+import { concatTestId, isRunPage } from '@coze-workflow/base';
 import {
   IntelligenceStatus,
   IntelligenceType,
@@ -231,6 +231,12 @@ export const Bots: React.FC<BotsProps & DisableExtraOptions> = ({
     }
   }, [value, selectList]);
 
+  const fetchDraftRunIntelligenceListWanwu = async () => {
+    return await intelligenceApi.GetDraftRunIntelligenceListWanwu({
+      workflow_id: globalState.workflowId
+    })
+  }
+
   const fetchBotList = async (query?: string, isReset = false) => {
     if (query) {
       setIsLoading(true);
@@ -241,7 +247,7 @@ export const Bots: React.FC<BotsProps & DisableExtraOptions> = ({
     }
 
     // Query the list using the new interface within the project
-    const res = await intelligenceApi.GetDraftIntelligenceList({
+    const res = isRunPage() ? await fetchDraftRunIntelligenceListWanwu() : await intelligenceApi.GetDraftIntelligenceList({
       space_id:
         globalState.spaceId === PUBLIC_SPACE_ID
           ? globalState.personalSpaceId

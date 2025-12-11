@@ -17,6 +17,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { IntelligenceType } from '@coze-arch/idl/intelligence_api';
 import { intelligenceApi, MemoryApi } from '@coze-arch/bot-api';
+import { isRunPage } from '@coze-workflow/base';
 
 export const useProjectInfo = (projectId?: string) => {
   const { isLoading, data: variableList } = useQuery({
@@ -49,7 +50,10 @@ export const useProjectItemInfo = (projectId?: string) => {
         return undefined;
       }
 
-      const { data } = await intelligenceApi.GetDraftIntelligenceInfo({
+      const { data } = isRunPage() ? await intelligenceApi.GetDraftRunIntelligenceInfoWanwu({
+        intelligence_id: projectId,
+        intelligence_type: IntelligenceType.Project,
+      }) : await intelligenceApi.GetDraftIntelligenceInfo({
         intelligence_id: projectId,
         intelligence_type: IntelligenceType.Project,
       });
