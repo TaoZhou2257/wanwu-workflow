@@ -3,7 +3,6 @@ package impl
 import (
 	"context"
 	"fmt"
-	"path"
 
 	"github.com/coze-dev/coze-studio/backend/api/model/app/developer_api"
 	crossupload "github.com/coze-dev/coze-studio/backend/crossdomain/upload"
@@ -22,11 +21,8 @@ func NewWanwuUploader(oss storage.Storage) crossupload.WanwuUploader {
 }
 
 func (s *wanwuUploader) UploadFileByByte(ctx context.Context, fileName string, data []byte) (*crossupload.UploadFileResp, error) {
-	fileExt := path.Ext(fileName)
-
 	var BizType developer_api.FileBizType = 0
-	newFileName := fmt.Sprintf("%s%s", uuid.New().String(), fileExt)
-	objectName := fmt.Sprintf("%s/%s", BizType.String(), newFileName)
+	objectName := fmt.Sprintf("%s/%s/%s", BizType.String(), uuid.New().String(), fileName)
 
 	err := s.oss.PutObject(ctx, objectName, data)
 	if err != nil {
