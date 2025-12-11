@@ -223,10 +223,8 @@ export const Conversations: React.FC<ConversationsProps> = ({
   };
 
   const createConversation = async (params: any) => {
-    const token = await getToken()
-    if (!token) {
-      return
-    }
+    const token = await getToken();
+    if (!token) return;
     await workflowApi.CreateConversationWanwu(
       {
         app_id: projectId,
@@ -241,11 +239,19 @@ export const Conversations: React.FC<ConversationsProps> = ({
           'authorization': 'Bearer ' + token,
         },
       },
-    )
+    );
   }
 
   const closePopover = () => {
     setVisible(false);
+  }
+
+  const handleCreateChange = (conversationId: string) => {
+    if (!conversationId) return;
+    const findItem:any = [...(staticList || []), ...(dynamicList || [])].find(
+      item => item.conversationId === conversationId,
+    );
+    handleChange(findItem?.value as string, findItem);
   }
 
   const handleSubmit = async () => {
@@ -254,10 +260,10 @@ export const Conversations: React.FC<ConversationsProps> = ({
     }
     try {
       await formApiRef.current.validate();
-      await createConversation(formApiRef.current.getValues());
+      const res:any = await createConversation(formApiRef.current.getValues());
       await fetchList();
-
-      closePopover()
+      handleCreateChange(res?.data?.id);
+      closePopover();
     } catch {
       // Validation error requires no additional processing
     }
