@@ -76,15 +76,18 @@ func (w *ApplicationService) OpenAPICreateConversationByWanwu(ctx context.Contex
 		userID     = apiKeyInfo.UserID
 		env        = ternary.IFElse(req.GetDraftMode(), vo.Draft, vo.Online)
 		cID        int64
-		spaceID, _ = ctxcache.Get[string](ctx, "X-Org-Id")
-		//spaceID = mustParseInt64(req.GetSpaceID())
-		//_       = spaceID
+		// 先从req中获取spaceID（如果是前端调用，req中不会传orgId要从header中获取）
+		spaceID = req.GetSpaceID()
 
 		templateId int64
 		t          *entity.ConversationTemplate
 	)
 
 	// todo  check permission
+
+	if spaceID == "" {
+		spaceID, _ = ctxcache.Get[string](ctx, "X-Org-Id")
+	}
 
 	if !req.GetGetOrCreate() {
 		cID, err = GetWorkflowDomainSVC().UpdateConversation(ctx, env, appID, req.GetConnectorId(), userID, req.GetConversationMame())
