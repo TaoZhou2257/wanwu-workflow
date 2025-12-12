@@ -136,6 +136,8 @@ func OpenAPICreateConversationByWanwu(ctx context.Context, c *app.RequestContext
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
+	// appID非空，用于对话流调试(appID == workflowID)
+	// appID为空，自动生成一个新的，用于应用广场新建对话流
 	if req.AppID == nil {
 		newAppID, _ := appworkflow.SVC.IDGenerator.GenID(ctx)
 		req.AppID = ptr.Of(strconv.FormatInt(newAppID, 10))

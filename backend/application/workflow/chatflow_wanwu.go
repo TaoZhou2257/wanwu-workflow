@@ -2,26 +2,25 @@ package workflow
 
 import (
 	"context"
+	"fmt"
 	"runtime/debug"
 	"strconv"
+	"sync"
 
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
+	crossconversation "github.com/coze-dev/coze-studio/backend/crossdomain/conversation"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
-	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
-	"github.com/coze-dev/coze-studio/backend/pkg/safego"
-	"github.com/coze-dev/coze-studio/backend/types/errno"
-
-	"sync"
-
-	crossconversation "github.com/coze-dev/coze-studio/backend/crossdomain/conversation"
 	"github.com/coze-dev/coze-studio/backend/pkg/ctxcache"
-
+	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ternary"
+	"github.com/coze-dev/coze-studio/backend/pkg/safego"
+	"github.com/coze-dev/coze-studio/backend/types/errno"
 )
 
+// CreateApplicationConversationDefByWanwu 参考CreateApplicationConversationDef
 func (w *ApplicationService) CreateApplicationConversationDefByWanwu(ctx context.Context, req *workflow.CreateProjectConversationDefRequest) (resp *workflow.CreateProjectConversationDefResponse, err error) {
 	defer func() {
 		if panicErr := recover(); panicErr != nil {
@@ -32,7 +31,7 @@ func (w *ApplicationService) CreateApplicationConversationDefByWanwu(ctx context
 			err = vo.WrapIfNeeded(errno.ErrConversationOfAppOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
 		}
 	}()
-	// 取消获取appID,返回随机生成的newAppId（放在uniqueID字段中）作为app-service的applicationId
+	// 取消获取appID，返回随机生成的newAppId（放在uniqueID字段中）作为app-service的applicationId
 	var (
 		spaceID = mustParseInt64(req.GetSpaceID())
 		//appID   = mustParseInt64(req.GetProjectID())
@@ -43,7 +42,7 @@ func (w *ApplicationService) CreateApplicationConversationDefByWanwu(ctx context
 		return nil, err
 	}
 	newAppID, _ := w.IDGenerator.GenID(ctx)
-	// 应用广场是否默认创建conversation template草稿
+	// 应用广场默认创建conversation template，表现为用户首次进入应用广场对话流，会有一个默认的conversation
 	_, err = GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
 		AppID:   newAppID,
 		SpaceID: spaceID,
@@ -60,8 +59,8 @@ func (w *ApplicationService) CreateApplicationConversationDefByWanwu(ctx context
 	}, err
 }
 
+// OpenAPICreateConversationByWanwu 参考OpenAPICreateConversation
 func (w *ApplicationService) OpenAPICreateConversationByWanwu(ctx context.Context, req *workflow.CreateConversationRequest) (resp *workflow.CreateConversationResponse, err error) {
-
 	defer func() {
 		if panicErr := recover(); panicErr != nil {
 			err = safego.NewPanicErr(panicErr, debug.Stack())
@@ -77,12 +76,13 @@ func (w *ApplicationService) OpenAPICreateConversationByWanwu(ctx context.Contex
 		userID     = apiKeyInfo.UserID
 		env        = ternary.IFElse(req.GetDraftMode(), vo.Draft, vo.Online)
 		cID        int64
+		spaceID, _ = ctxcache.Get[string](ctx, "X-Org-Id")
+		//spaceID = mustParseInt64(req.GetSpaceID())
+		//_       = spaceID
+
 		templateId int64
 		t          *entity.ConversationTemplate
-		//spaceID = mustParseInt64(req.GetSpaceID()) coze
-		//_       = spaceID
 	)
-	spaceID, _ := ctxcache.Get[string](ctx, "X-Org-Id")
 
 	// todo  check permission
 
@@ -98,6 +98,7 @@ func (w *ApplicationService) OpenAPICreateConversationByWanwu(ctx context.Contex
 			defer wg.Done()
 			t, tplExisted, tplErr = GetWorkflowDomainSVC().GetTemplateByName(ctx, env, appID, req.GetConversationMame())
 			if tplExisted {
+				// 需要给前端返回templateId
 				templateId = t.TemplateID
 			}
 		})
@@ -117,7 +118,7 @@ func (w *ApplicationService) OpenAPICreateConversationByWanwu(ctx context.Contex
 		}
 
 		if !tplExisted && !dcExisted {
-			// 创建conversation template草稿
+			// 应用广场用户新建会话，需要先创建conversation template
 			templateId, err = GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
 				AppID:   appID,
 				UserID:  userID,
@@ -127,7 +128,7 @@ func (w *ApplicationService) OpenAPICreateConversationByWanwu(ctx context.Contex
 			if err != nil {
 				return &workflow.CreateConversationResponse{
 					Code: errno.ErrConversationNotFoundForOperation,
-					Msg:  "Conversation not found. Please create a conversation before attempting to perform any related operations.",
+					Msg:  fmt.Sprintf("Conversation not found. Please create a conversation before attempting to perform any related operations. (%v)", err),
 				}, nil
 			}
 		}
