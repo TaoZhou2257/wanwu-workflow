@@ -117,7 +117,6 @@ export const Conversations: React.FC<ConversationsProps> = ({
   }, [staticList, dynamicList]);
 
   const handleChange = (newValue: string, findItem?: ConversationItem) => {
-    console.log(findItem, projectId, globalState, '===========================handleChange')
     if (findItem) {
       chatflowService.setSelectConversationItem(findItem);
     }
@@ -225,7 +224,7 @@ export const Conversations: React.FC<ConversationsProps> = ({
   const createConversation = async (params: any) => {
     const token = await getToken();
     if (!token) return;
-    await workflowApi.CreateConversationWanwu(
+    return await workflowApi.CreateConversationWanwu(
       {
         app_id: projectId,
         get_or_create: true,
@@ -236,7 +235,7 @@ export const Conversations: React.FC<ConversationsProps> = ({
       },
       {
         headers: {
-          'authorization': 'Bearer ' + token,
+          'x-authorization': 'Bearer ' + token,
         },
       },
     );
@@ -246,27 +245,21 @@ export const Conversations: React.FC<ConversationsProps> = ({
     setVisible(false);
   }
 
-  const handleCreateChange = (conversationId: string) => {
-    if (!conversationId) return;
-    const findItem:any = [...(staticList || []), ...(dynamicList || [])].find(
-      item => item.conversationId === conversationId,
-    );
-    handleChange(findItem?.value as string, findItem);
-  }
-
   const handleSubmit = async () => {
     if (!formApiRef.current) {
       return;
     }
-    try {
-      await formApiRef.current.validate();
-      const res:any = await createConversation(formApiRef.current.getValues());
-      await fetchList();
-      handleCreateChange(res?.data?.id);
-      closePopover();
-    } catch {
-      // Validation error requires no additional processing
-    }
+    await formApiRef.current.validate();
+    const params = formApiRef.current.getValues();
+    const res:any = await createConversation(params);
+    const { meta_data, id } = res?.data || {}
+    await fetchList();
+    handleChange(meta_data.uniqueId, {
+      value: meta_data.uniqueId || '',
+      label: params.conversation_name || '',
+      conversationId: id || '',
+    });
+    closePopover();
   };
 
   return (
