@@ -18,10 +18,10 @@ import React, {useEffect, useState, useMemo, useRef, useCallback} from 'react';
 
 import { debounce } from 'lodash-es';
 import { useService } from '@flowgram-adapter/free-layout-editor';
-import { CONVERSATION_NAME, workflowApi } from '@coze-workflow/base';
+import { CONVERSATION_NAME, WORKFLOW_NAME_REGEX, workflowApi } from '@coze-workflow/base';
 import { patPermissionApi } from '@coze-arch/bot-api';
 import { I18n } from '@coze-arch/i18n';
-import { Typography, Select, Button, Popover, Form, type useFormApi } from '@coze-arch/coze-design';
+import { Typography, Select, Button, Popover, Form, type useFormApi, Toast } from '@coze-arch/coze-design';
 import { CreateMethod, CreateEnv } from '@coze-arch/bot-api/workflow_api';
 import { ChatflowService } from '@/services';
 
@@ -245,12 +245,24 @@ export const Conversations: React.FC<ConversationsProps> = ({
     setVisible(false);
   }
 
+  const checkSameConversationName = (conversationName: string) => {
+    const nameItem = [...(staticList || []), ...(dynamicList || [])].find(
+      item => item.label === conversationName,
+    );
+    console.log(Boolean(nameItem), '=-=======')
+    return Boolean(nameItem)
+  }
+
   const handleSubmit = async () => {
-    if (!formApiRef.current) {
+    if (!formApiRef.current) return;
+    await formApiRef.current.validate();
+
+    const params = formApiRef.current.getValues();
+    if (checkSameConversationName(params.conversation_name)) {
+      Toast.warning(I18n.t('wf_chatflow_conversation_name_same'));
       return;
     }
-    await formApiRef.current.validate();
-    const params = formApiRef.current.getValues();
+
     const res:any = await createConversation(params);
     const { meta_data, id } = res?.data || {}
     await fetchList();
@@ -310,15 +322,20 @@ export const Conversations: React.FC<ConversationsProps> = ({
             <Form getFormApi={v => (formApiRef.current = v)}>
               <Form.Input
                 className={styles['conversation-popover-input']}
-                label={'会话名称'}
+                label={I18n.t('wf_chatflow_conversation_name')}
                 required
                 field="conversation_name"
                 data-testid="workflow-conversations-name"
+                maxLength={30}
                 rules={[
                   {
                     required: true,
-                    message: '必填',
+                    message: I18n.t('wf_chatflow_conversation_name_hint'),
                   },
+                  {
+                    pattern: WORKFLOW_NAME_REGEX,
+                    message: I18n.t('wf_chatflow_conversation_name_limit')
+                  }
                 ]}
               />
               <div className="text-center mt-[8px]">
