@@ -160,6 +160,9 @@ func Register(r *hertz_server.Hertz) {
 			{
 				_conversation1 := _workflow.Group("/conversation", _conversation1Mw()...)
 				_conversation1.POST("/create", append(_openapicreateconversationMw(), coze.OpenAPICreateConversationByWanwu)...)
+				// 加上create_by_wanwu 跳过coze的openapi鉴权（别删）
+				_conversation1.POST("/create_by_wanwu", append(_openapicreateconversationMw(), coze.OpenAPICreateConversationByWanwu)...)
+				
 			}
 			// --- wanwu adapt ---
 			_workflow.POST("/list_schema_by_wanwu", []app.HandlerFunc{coze.ListWorkFlowOpenAPIV3SchemaByWanwu}...)
