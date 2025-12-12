@@ -54,7 +54,7 @@ import { WorkflowModalSider } from '../sider-wanwu';
 import styles from '../index.module.less';
 import { WorkflowModalFilterForDouyin } from '../filter-douyin';
 import { WorkflowModalFilter } from '../filter-wanwu';
-import { WorkflowModalContent } from '../content';
+import { WorkflowModalContent } from '../content-wanwu';
 import { reporter } from '../../utils';
 import { ModalI18nKey, WORKFLOW_MODAL_I18N_KEY_MAP } from './use-i18n-text';
 /**
@@ -222,7 +222,7 @@ export const useWorkflowModalParts = (props: WorkFlowModalModeProps) => {
         {isBindDouyin ? (
           <WorkflowModalFilterForDouyin {...props} />
         ) : (
-          <WorkflowModalFilter hiddenListFlowModeFilter={true} {...props} />
+          <WorkflowModalFilter {...props} />
         )}
       </WorkflowModalContext.Provider>
     </QueryClientProvider>

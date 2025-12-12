@@ -1807,6 +1807,21 @@ export interface GetToolDetailResponse {
   data?: any;
 }
 
+export interface CreateConversationWanwuRequest {
+  app_id?: string;
+  conversation_name?: string;
+  get_or_create?: boolean;
+  draft_mode?: boolean;
+  workflow_id?: string;
+  connector_id?: string;
+}
+
+export interface CreateConversationWanwuResponse {
+  code?: Int64;
+  msg?: string;
+  data?: any;
+}
+
 export interface GetApiDetailRequest {
   /** 插件的唯一标识符。用于指定要查询哪个插件下的 API 详情。 */
   pluginID?: string;

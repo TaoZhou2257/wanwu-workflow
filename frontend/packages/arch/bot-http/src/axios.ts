@@ -137,12 +137,13 @@ axiosInstance.interceptors.request.use(config => {
     return config.headers[key];
   };
 
-  const accessCert = JSON.parse(localStorage.getItem("access_cert")) || {}
-  const {token, userInfo = {}} = accessCert.user || {}
-  setHeader('Authorization', "Bearer " + token);
+  const accessCert = JSON.parse(localStorage.getItem("access_cert") || '{}')
+  const { token, userInfo = {} } = accessCert.user || {}
+  setHeader('Authorization', config.headers['x-authorization'] || "Bearer " + token);
   setHeader('x-user-id', userInfo.uid);
   setHeader('x-org-id', userInfo.orgId);
   setHeader('x-requested-with', 'XMLHttpRequest');
+  delete config.headers['x-authorization']
   if (
     ['post', 'get'].includes(config.method?.toLowerCase() ?? '') &&
     !getHeader('content-type')

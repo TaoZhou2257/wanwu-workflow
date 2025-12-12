@@ -21,6 +21,7 @@
 import * as product_common from './product_common';
 import * as benefit_common from './benefit_common';
 import * as marketplace_common from './marketplace_common';
+import type { WorkflowMode } from "../../workflow_api";
 
 export type Int64 = string | number;
 
@@ -1261,6 +1262,7 @@ export interface ProductInfo {
   commercial_setting?: product_common.CommercialSetting;
   plugin_extra?: PluginExtraInfo;
   bot_extra?: BotExtraInfo;
+  flow_mode?: WorkflowMode;
   workflow_extra?: WorkflowExtraInfo;
   social_scene_extra?: SocialSceneExtraInfo;
   project_extra?: ProjectExtraInfo;

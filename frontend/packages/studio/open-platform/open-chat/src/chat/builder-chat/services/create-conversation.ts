@@ -43,7 +43,8 @@ export const createOrGetConversation = async (
       // @ts-expect-error -- linter-disable-autofix
       sectionId = res.last_section_id;
     } else {
-      if (IS_OPEN_SOURCE) {
+      // IS_OPEN_SOURCE
+      if (true) {
         const res = (await apiSdk?.post(
           '/v1/workflow/conversation/create',
           {

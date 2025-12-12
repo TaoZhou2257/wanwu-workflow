@@ -44,7 +44,7 @@ import {
 } from './test-form-provider';
 import { TestFormFloatButton } from './test-form-float-button';
 import { ChatFlowTestForm } from './test-form';
-import { ConversationSelect } from './conversation-select';
+import { ConversationSelectWanwu } from './conversation-select-wanwu';
 
 import css from './test-form-panel-wanwu.module.less';
 
@@ -160,7 +160,7 @@ export const ChatFlowTestFormPanelWanwu: React.FC<ChatFlowTestFormPanelPropsWanw
       <ChatFlowTestFormProvider>
         <FormPanelLayout className={css['test-form-wanwu']}>
           <TestFormSheetHeaderWanwu />
-          <ConversationSelect />
+          <ConversationSelectWanwu />
           <ChatFlowTestRunHistory
             projectInfo={projectInfo}
             showInputArea={true}

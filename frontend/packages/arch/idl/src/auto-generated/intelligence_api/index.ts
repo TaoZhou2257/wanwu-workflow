@@ -230,6 +230,45 @@ export default class IntelligenceApiService<T> {
     return this.request({ url, method, data }, options);
   }
 
+  /**
+   * POST /user/api/v1/chatflow/application/list
+   *
+   * search start
+   */
+  GetDraftRunIntelligenceListWanwu(
+    req: search.GetDraftIntelligenceListRequestWanwu,
+    options?: T,
+  ): Promise<search.GetDraftIntelligenceListResponse> {
+    const _req = req;
+    const url = this.genBaseURL(
+      '/user/api/v1/chatflow/application/list',
+    );
+    const method = 'POST';
+    const data = {
+      workflow_id: _req['workflow_id'],
+    };
+    return this.request({ url, method, data }, options);
+  }
+
+  /** POST /user/api/v1/chatflow/application/info */
+  GetDraftRunIntelligenceInfoWanwu(
+    req?: search.GetDraftIntelligenceInfoRequest,
+    options?: T,
+  ): Promise<search.GetDraftIntelligenceInfoResponse> {
+    const _req = req || {};
+    const url = this.genBaseURL(
+      '/user/api/v1/chatflow/application/info',
+    );
+    const method = 'POST';
+    const data = {
+      intelligence_id: _req['intelligence_id'],
+      intelligence_type: _req['intelligence_type'],
+      version: _req['version'],
+      Base: _req['Base'],
+    };
+    return this.request({ url, method, data }, options);
+  }
+
   /** POST /api/intelligence_api/draft_project/update */
   DraftProjectUpdate(
     req: project.DraftProjectUpdateRequest,
