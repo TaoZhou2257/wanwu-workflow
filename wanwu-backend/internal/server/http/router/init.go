@@ -125,6 +125,7 @@ func Register(r *hertz_server.Hertz) {
 			{
 				_project_conversation := _workflow_api.Group("/project_conversation", _project_conversationMw()...)
 				_project_conversation.GET("/list", append(_listprojectconversationdefMw(), coze.ListProjectConversationDef)...)
+				_project_conversation.POST("/create_by_wanwu", append(_createprojectconversationdefMw(), coze.CreateProjectConversationDefByWanwu)...)
 			}
 			{
 				_upload1 := _workflow_api.Group("/upload", _upload1Mw()...)
@@ -157,8 +158,7 @@ func Register(r *hertz_server.Hertz) {
 			_workflow := _v1.Group("/workflow", _workflowMw()...)
 			{
 				_conversation1 := _workflow.Group("/conversation", _conversation1Mw()...)
-				_conversation1.POST("/create", append(_openapicreateconversationMw(), coze.OpenAPICreateConversation)...)
-				_conversation1.POST("/create_by_wanwu", append(_openapicreateconversationMw(), coze.OpenAPICreateConversationByWanwu)...)
+				_conversation1.POST("/create", append(_openapicreateconversationMw(), coze.OpenAPICreateConversationByWanwu)...)
 			}
 			// --- wanwu adapt ---
 			_workflow.POST("/list_schema_by_wanwu", []app.HandlerFunc{coze.ListWorkFlowOpenAPIV3SchemaByWanwu}...)

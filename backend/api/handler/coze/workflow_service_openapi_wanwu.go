@@ -10,7 +10,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
-	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	appworkflow "github.com/coze-dev/coze-studio/backend/application/workflow"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
@@ -137,25 +136,11 @@ func OpenAPICreateConversationByWanwu(ctx context.Context, c *app.RequestContext
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-	userID := ctxutil.GetApiAuthFromCtx(ctx).UserID
-	newAppID, _ := appworkflow.SVC.IDGenerator.GenID(ctx)
-	// 创建conversation template草稿
-	_, err = appworkflow.GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
-		AppID:   newAppID,
-		UserID:  userID,
-		SpaceID: mustParseInt64(*req.SpaceID),
-		Name:    *req.ConversationMame,
-	})
-	if err != nil {
-		internalServerErrorResponse(ctx, c, err)
-		return
+	if req.AppID == nil {
+		newAppID, _ := appworkflow.SVC.IDGenerator.GenID(ctx)
+		req.AppID = ptr.Of(strconv.FormatInt(newAppID, 10))
 	}
-	req.AppID = ptr.Of(strconv.FormatInt(newAppID, 10))
-	resp, err := appworkflow.SVC.OpenAPICreateConversation(ctx, &req)
-	// 将appId返回给bff
-	resp.ConversationData.MetaData = map[string]string{
-		"appId": strconv.FormatInt(newAppID, 10),
-	}
+	resp, err := appworkflow.SVC.OpenAPICreateConversationByWanwu(ctx, &req)
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
 		return
