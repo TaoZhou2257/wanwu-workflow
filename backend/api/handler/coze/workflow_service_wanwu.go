@@ -283,6 +283,26 @@ func OpenAPIChatFlowRunByWanwu(ctx context.Context, c *app.RequestContext) {
 
 }
 
+// CreateProjectConversationDefByWanwu 参考CreateProjectConversationDef
+// @router /api/workflow_api/project_conversation/create_by_wanwu [POST]
+func CreateProjectConversationDefByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req workflow.CreateProjectConversationDefRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	resp, err := appworkflow.SVC.CreateApplicationConversationDefByWanwu(ctx, &req)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+
+	c.JSON(consts.StatusOK, resp)
+}
+
 // --- internal ---
 
 func workflowDefaultIconURL(wf *workflow.Workflow) {
