@@ -10,6 +10,7 @@ const (
 	NodeTypeWanWuGUI                NodeType = "WanWuGUI"
 	NodeTypeWanWuTool               NodeType = "WanWuTool"
 	NodeTypeWanWuQARetriever        NodeType = "WanWuQARetriever"
+	NodeTypeWanWuAgent              NodeType = "WanWuAgent"
 )
 
 // Wanwu NodeTypeMetas Init
@@ -180,6 +181,24 @@ func init() {
 		},
 		EnUSName:        "Question and answer retrieval",
 		EnUSDescription: "In the selected qa pairs, the best matching information is recalled based on the input variable and returned as an Array.",
+	}
+
+	NodeTypeMetas[NodeTypeWanWuAgent] = &NodeTypeMeta{
+		ID:           1013,
+		Key:          NodeTypeWanWuAgent,
+		DisplayKey:   "Agent",
+		Name:         "智能体",
+		Category:     "utilities",
+		Desc:         "调用智能体服务执行任务，支持流式和非流式输出",
+		Color:        "#5C62FF",
+		SupportBatch: false,
+		ExecutableMeta: ExecutableMeta{
+			PreFillZero:       true,
+			PostFillNil:       true,
+			IncrementalOutput: true,
+		},
+		EnUSName:        "Agent",
+		EnUSDescription: "Call agent service to execute tasks, supporting both streaming and non-streaming output",
 	}
 
 }
