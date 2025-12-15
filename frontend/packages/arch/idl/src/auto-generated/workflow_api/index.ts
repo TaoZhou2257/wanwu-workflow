@@ -1002,6 +1002,25 @@ export default class WorkflowApiService<T> {
     return this.request({ url, method, data }, options);
   }
 
+  /**
+   * DELETE /user/api/v1/chatflow/conversation/delete
+   *
+   * 对话流删除会话
+   */
+  DeleteConversationWanwu(
+    req?: workflow.DeleteConversationWanwuRequest,
+    options?: T,
+  ): Promise<workflow.DeleteConversationWanwuResponse> {
+    const _req = req || {};
+    const url = this.genBaseURL('/user/api/v1/chatflow/conversation/delete');
+    const method = 'DELETE';
+    const data = {
+      project_id: _req['project_id'],
+      unique_id: _req['unique_id'],
+    };
+    return this.request({ url, method, data }, options);
+  }
+
   /** GET /api/workflow_api/bots_ide_token */
   GetBotsIDEToken(
     req?: workflow.GetBotsIDETokenRequest,

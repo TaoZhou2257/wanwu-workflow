@@ -1,7 +1,3 @@
-.test-form-wrapper-wanwu {
-  width: 100%;
-  height: 100%;
-}
 .test-form-wanwu {
   position: relative;
   width: 100%;
@@ -11,4 +7,43 @@
 
   background: var(--coz-bg-max);
   border: 1px solid #e6e8f2;
+}
+.test-form-content-wanwu {
+  display: flex;
+  height: 100%;
+  .test-form-left {
+    width: 450px;
+    height: 100%;
+  }
+  .test-form-right {
+    position: relative;
+    width: calc(100% - 450px);
+    height: 100%;
+    background: #fff;
+    margin-left: 8px;
+    border-radius: 8px;
+  }
+  .test-form-right-empty {
+    width: 100%;
+    height: calc(100vh - 20px);
+    min-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .chat-history-content {
+    position: absolute;
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+    top: 0;
+    right: 0;
+  }
+  .hide-chatflow-form {
+    display: none;
+  }
 }

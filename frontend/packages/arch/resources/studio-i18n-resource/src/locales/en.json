@@ -13701,6 +13701,7 @@
   "workflow_detail_title_source": "Source",
   "workflow_detail_title_testrun": "Test run",
   "workflow_detail_title_testrun_desc": "点击左侧 '运行' 按钮，开始运行工作流",
+  "workflow_testrun_chatflow_desc": "关联左侧应用，开始对话调试",
   "workflow_detail_title_testrun_batch_title": "The variable of this batch process",
   "workflow_detail_title_testrun_boolean_select": "Select {a}",
   "workflow_detail_title_testrun_cancel": "Cancel",

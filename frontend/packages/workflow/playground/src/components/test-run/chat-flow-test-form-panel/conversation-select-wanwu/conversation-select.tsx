@@ -15,11 +15,7 @@
  */
 
 import { useMemo, useState } from 'react';
-
-import { I18n } from '@coze-arch/i18n';
-import { Typography } from '@coze-arch/coze-design';
 import { IntelligenceType } from '@coze-arch/bot-api/intelligence_api';
-
 import { useGlobalState } from '@/hooks';
 
 import { useChatflowInfo } from '../../hooks/use-chatflow-info';
@@ -50,11 +46,8 @@ export const ConversationSelectWanwu = () => {
 
   return (
     <div className={css['conversation-select']}>
-      <Typography.Text fontSize="14px">
-        {I18n.t('wf_chatflow_74')}
-      </Typography.Text>
-
       <OnlyConversationSelect
+        sessionInfo={sessionInfo}
         projectId={projectId}
         value={value}
         onChange={setValue}

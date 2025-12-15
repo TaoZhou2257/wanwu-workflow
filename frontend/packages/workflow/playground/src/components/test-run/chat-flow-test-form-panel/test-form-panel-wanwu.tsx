@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import { useMemoizedFn } from 'ahooks';
 import { FormPanelLayout } from '@coze-workflow/test-run';
 import { USER_INPUT } from '@coze-workflow/base';
+import { I18n } from '@coze-arch/i18n';
 import { CreateEnv } from '@coze-arch/idl/workflow_api';
 import {
   IntelligenceType,
   type IntelligenceBasicInfo,
 } from '@coze-arch/idl/intelligence_api';
-
+import { Empty } from "@coze-arch/coze-design";
+import { IllustrationNoContent } from "@douyinfe/semi-illustrations";
 import { type WorkflowNodeEntity } from '@/test-run-kit';
 import { useGlobalState, useWorkflowRunService } from '@/hooks';
 import { WorkflowExecStatus } from '@/entities';
@@ -89,42 +91,53 @@ const ChatFlowTestRunHistory = (props: {
       };
 
   // Get the default value of the start node
-  return (
-    <ChatHistory
-      type={CreateEnv.Draft}
-      projectOrBotInfo={projectOrBotInfo}
-      workflowInfo={{
-        id: config.workflowId,
-        parameters: inputData,
-        header: {
-          'rpc-persist-mock-traffic-enable': '1',
-        },
-      }}
-      activateChat={{
-        unique_id: conversationInfo?.value,
-        conversation_name:
-          projectOrBotInfo?.type === IntelligenceType.Bot
-            ? projectOrBotInfo?.name
-            : conversationInfo?.label,
-        conversation_id: conversationInfo?.conversationId,
-      }}
-      onGetChatFlowExecuteId={(executeId: string) => {
-        // Help backend @zhangshiqi.live compatibility logic
-        // Do not use the newly given executeId when there is already a polling in progress
-        if (
-          runService.globalState.viewStatus === WorkflowExecStatus.EXECUTING
-        ) {
-          return;
+  return projectOrBotInfo?.id ? (
+    <div className={css['chat-history-content']}>
+      <ChatHistory
+        type={CreateEnv.Draft}
+        projectOrBotInfo={projectOrBotInfo}
+        workflowInfo={{
+          id: config.workflowId,
+          parameters: inputData,
+          header: {
+            'rpc-persist-mock-traffic-enable': '1',
+          },
+        }}
+        activateChat={{
+          unique_id: conversationInfo?.value,
+          conversation_name:
+            projectOrBotInfo?.type === IntelligenceType.Bot
+              ? projectOrBotInfo?.name
+              : conversationInfo?.label,
+          conversation_id: conversationInfo?.conversationId,
+        }}
+        onGetChatFlowExecuteId={(executeId: string) => {
+          // Help backend @zhangshiqi.live compatibility logic
+          // Do not use the newly given executeId when there is already a polling in progress
+          if (
+            runService.globalState.viewStatus === WorkflowExecStatus.EXECUTING
+          ) {
+            return;
+          }
+          runService.clearTestRun();
+          runService.getRTProcessResult({ executeId });
+        }}
+        topSlot={(isChatError?: boolean) => (
+          <TestFormFloatButton isChatError={isChatError} />
+        )}
+        defaultText={defaultText}
+        {...restProps}
+      />
+    </div>
+  ) : (
+    <div className={css['test-form-right-empty']}>
+      <Empty
+        image={
+          <IllustrationNoContent style={{width: 112, height: 112}}/>
         }
-        runService.clearTestRun();
-        runService.getRTProcessResult({ executeId });
-      }}
-      topSlot={(isChatError?: boolean) => (
-        <TestFormFloatButton isChatError={isChatError} />
-      )}
-      defaultText={defaultText}
-      {...restProps}
-    />
+        description={I18n.t('workflow_testrun_chatflow_desc')}
+      />
+    </div>
   );
 };
 
@@ -144,7 +157,11 @@ const ChatflowFormPanel = ({ node }: ChatFlowTestFormPanelPropsWanwu) => {
     // Open by default
     init();
   }, []);
-  return visible ? <ChatFlowTestForm node={node} /> : null;
+  return (
+    <div className={visible ? '' : css['hide-chatflow-form']}>
+      <ChatFlowTestForm node={node} />
+    </div>
+  )
 };
 
 export const ChatFlowTestFormPanelWanwu: React.FC<ChatFlowTestFormPanelPropsWanwu> = ({
@@ -156,18 +173,22 @@ export const ChatFlowTestFormPanelWanwu: React.FC<ChatFlowTestFormPanelPropsWanw
   );
 
   return (
-    <div className={css['test-form-wrapper-wanwu']}>
-      <ChatFlowTestFormProvider>
-        <FormPanelLayout className={css['test-form-wanwu']}>
-          <TestFormSheetHeaderWanwu />
-          <ConversationSelectWanwu />
+    <ChatFlowTestFormProvider>
+      <div className={css['test-form-content-wanwu']}>
+        <div className={css['test-form-left']}>
+          <FormPanelLayout className={css['test-form-wanwu']}>
+            <TestFormSheetHeaderWanwu />
+            <ConversationSelectWanwu />
+            <ChatflowFormPanel node={node} />
+          </FormPanelLayout>
+        </div>
+        <div className={css['test-form-right']}>
           <ChatFlowTestRunHistory
             projectInfo={projectInfo}
             showInputArea={true}
           />
-          <ChatflowFormPanel node={node} />
-        </FormPanelLayout>
-      </ChatFlowTestFormProvider>
-    </div>
+        </div>
+      </div>
+    </ChatFlowTestFormProvider>
   );
 };
