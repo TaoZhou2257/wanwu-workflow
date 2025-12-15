@@ -126,6 +126,7 @@ func Register(r *hertz_server.Hertz) {
 				_project_conversation := _workflow_api.Group("/project_conversation", _project_conversationMw()...)
 				_project_conversation.GET("/list", append(_listprojectconversationdefMw(), coze.ListProjectConversationDef)...)
 				_project_conversation.POST("/create_by_wanwu", append(_createprojectconversationdefMw(), coze.CreateProjectConversationDefByWanwu)...)
+				_project_conversation.POST("/delete", append(_deleteprojectconversationdefMw(), coze.DeleteProjectConversationDef)...)
 			}
 			{
 				_upload1 := _workflow_api.Group("/upload", _upload1Mw()...)
@@ -162,7 +163,7 @@ func Register(r *hertz_server.Hertz) {
 				_conversation1.POST("/create", append(_openapicreateconversationMw(), coze.OpenAPICreateConversationByWanwu)...)
 				// 加上create_by_wanwu 跳过coze的openapi鉴权（别删）
 				_conversation1.POST("/create_by_wanwu", append(_openapicreateconversationMw(), coze.OpenAPICreateConversationByWanwu)...)
-				
+
 			}
 			// --- wanwu adapt ---
 			_workflow.POST("/list_schema_by_wanwu", []app.HandlerFunc{coze.ListWorkFlowOpenAPIV3SchemaByWanwu}...)
