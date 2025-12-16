@@ -120,6 +120,7 @@ export const Conversations: React.FC<ConversationsProps> = ({
   }, [staticList, dynamicList]);
 
   const handleChange = (newValue: string, findItem?: ConversationItem) => {
+    if (newValue) setCurrentValue(newValue);
     if (findItem) {
       chatflowService.setSelectConversationItem(findItem);
     }
@@ -138,7 +139,6 @@ export const Conversations: React.FC<ConversationsProps> = ({
       const findItem = list.find(item => item.label === defaultName);
       // The conversation_name of the start node is selected by default, if not, Default default session is selected by default
       handleChange(findItem?.value || list[0]?.value, findItem || list[0]);
-      setCurrentValue(findItem?.value || list[0]?.value)
     }
   };
 
@@ -284,7 +284,10 @@ export const Conversations: React.FC<ConversationsProps> = ({
         project_id: projectId,
         unique_id: item.value
       });
-      await fetchList();
+      const list = await fetchList();
+      if (currentValue === item?.value && list?.length) {
+        handleChange(list[0]?.value, list[0]);
+      }
     } catch (err) {
       const { statusText, data } = err?.response || {};
       Toast.error(data?.msg || statusText || 'Server Error');
@@ -384,7 +387,6 @@ export const Conversations: React.FC<ConversationsProps> = ({
             )}
             onClick={() => {
               if (item?.value) {
-                setCurrentValue(item.value)
                 handleChange(item.value as string, item);
               }
             }}
