@@ -1822,6 +1822,17 @@ export interface CreateConversationWanwuResponse {
   data?: any;
 }
 
+export interface DeleteConversationWanwuRequest {
+  project_id: string;
+  unique_id: string;
+}
+
+export interface DeleteConversationWanwuResponse {
+  code?: Int64;
+  msg?: string;
+  data?: any;
+}
+
 export interface GetApiDetailRequest {
   /** 插件的唯一标识符。用于指定要查询哪个插件下的 API 详情。 */
   pluginID?: string;

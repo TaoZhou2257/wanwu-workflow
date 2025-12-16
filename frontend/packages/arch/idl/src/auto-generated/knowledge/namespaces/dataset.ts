@@ -362,6 +362,7 @@ export interface ListDatasetRequest {
 export interface ListSelectRequest {
   page?: number;
   pageSize?: number;
+  knowledgeId?: any;
 }
 
 export interface ListSelectResponse {

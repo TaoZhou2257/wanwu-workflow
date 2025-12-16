@@ -17,11 +17,13 @@
 import React, {useEffect, useState, useMemo, useRef, useCallback} from 'react';
 
 import { debounce } from 'lodash-es';
+import cs from 'classnames';
 import { useService } from '@flowgram-adapter/free-layout-editor';
 import { CONVERSATION_NAME, WORKFLOW_NAME_REGEX, workflowApi } from '@coze-workflow/base';
 import { patPermissionApi } from '@coze-arch/bot-api';
 import { I18n } from '@coze-arch/i18n';
-import { Typography, Select, Button, Popover, Form, type useFormApi, Toast } from '@coze-arch/coze-design';
+import { Typography, Select, Button, IconButton, Popover, Form, type useFormApi, Toast } from '@coze-arch/coze-design';
+import { IconCozTrashCan } from '@coze-arch/coze-design/icons';
 import { CreateMethod, CreateEnv } from '@coze-arch/bot-api/workflow_api';
 import { ChatflowService } from '@/services';
 
@@ -94,6 +96,7 @@ export const Conversations: React.FC<ConversationsProps> = ({
   const chatflowService = useService<ChatflowService>(ChatflowService);
 
   const [visible, setVisible] = useState<boolean>(false);
+  const [currentValue, setCurrentValue] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
   const [staticList, setStaticList] = useState<
@@ -117,6 +120,7 @@ export const Conversations: React.FC<ConversationsProps> = ({
   }, [staticList, dynamicList]);
 
   const handleChange = (newValue: string, findItem?: ConversationItem) => {
+    if (newValue) setCurrentValue(newValue);
     if (findItem) {
       chatflowService.setSelectConversationItem(findItem);
     }
@@ -249,7 +253,6 @@ export const Conversations: React.FC<ConversationsProps> = ({
     const nameItem = [...(staticList || []), ...(dynamicList || [])].find(
       item => item.label === conversationName,
     );
-    console.log(Boolean(nameItem), '=-=======')
     return Boolean(nameItem)
   }
 
@@ -274,9 +277,26 @@ export const Conversations: React.FC<ConversationsProps> = ({
     closePopover();
   };
 
+  const onRemove = async (e, item) => {
+    e.stopPropagation();
+    try {
+      await workflowApi.DeleteConversationWanwu({
+        project_id: projectId,
+        unique_id: item.value
+      });
+      const list = await fetchList();
+      if (currentValue === item?.value && list?.length) {
+        handleChange(list[0]?.value, list[0]);
+      }
+    } catch (err) {
+      const { statusText, data } = err?.response || {};
+      Toast.error(data?.msg || statusText || 'Server Error');
+    }
+  }
+
   return (
     <>
-      <Select
+      {/*<Select
         value={value}
         dropdownClassName={styles.dropdown}
         filter
@@ -311,51 +331,82 @@ export const Conversations: React.FC<ConversationsProps> = ({
         >
           {(dynamicList || []).map(item => RenderCustomOption(item))}
         </Select.OptGroup>
-      </Select>
-      <Popover
-        position="bottomRight"
-        trigger="custom"
-        onClickOutSide={closePopover}
-        visible={visible}
-        content={
-          <div className={styles['conversation-popover-container']}>
-            <Form getFormApi={v => (formApiRef.current = v)}>
-              <Form.Input
-                className={styles['conversation-popover-input']}
-                label={I18n.t('wf_chatflow_conversation_name')}
-                required
-                field="conversation_name"
-                data-testid="workflow-conversations-name"
-                maxLength={30}
-                rules={[
-                  {
-                    required: true,
-                    message: I18n.t('wf_chatflow_conversation_name_hint'),
-                  },
-                  {
-                    pattern: WORKFLOW_NAME_REGEX,
-                    message: I18n.t('wf_chatflow_conversation_name_limit')
-                  }
-                ]}
-              />
-              <div className="text-center mt-[8px]">
-                <Button
-                  color="highlight"
-                  onClick={handleSubmit}
-                >
-                  {I18n.t('workflow_confirm_modal_ok')}
-                </Button>
-              </div>
-            </Form>
+      </Select>*/}
+      <div className={styles['conversation-create-wrapper']}>
+        <Popover
+          position="bottomRight"
+          trigger="custom"
+          onClickOutSide={closePopover}
+          visible={visible}
+          content={
+            <div className={styles['conversation-popover-container']}>
+              <Form getFormApi={v => (formApiRef.current = v)}>
+                <Form.Input
+                  className={styles['conversation-popover-input']}
+                  label={I18n.t('wf_chatflow_conversation_name')}
+                  required
+                  field="conversation_name"
+                  data-testid="workflow-conversations-name"
+                  maxLength={30}
+                  rules={[
+                    {
+                      required: true,
+                      message: I18n.t('wf_chatflow_conversation_name_hint'),
+                    },
+                    {
+                      pattern: WORKFLOW_NAME_REGEX,
+                      message: I18n.t('wf_chatflow_conversation_name_limit')
+                    }
+                  ]}
+                />
+                <div className="text-center mt-[8px]">
+                  <Button
+                    color="highlight"
+                    onClick={handleSubmit}
+                  >
+                    {I18n.t('workflow_confirm_modal_ok')}
+                  </Button>
+                </div>
+              </Form>
+            </div>
+          }
+        >
+          <div>
+            <Button color="green" onClick={() => setVisible(true)}>
+              {I18n.t('wf_chatflow_11')}
+            </Button>
           </div>
-        }
-      >
-        <div>
-          <Button color="green" onClick={() => setVisible(true)}>
-            {I18n.t('wf_chatflow_11')}
-          </Button>
-        </div>
-      </Popover>
+        </Popover>
+      </div>
+      <div className={styles['conversation-list-wrapper']}>
+        {[...(staticList || []), ...(dynamicList || [])].map(item => (
+          <div
+            className={cs(
+              styles['conversation-list-item'],
+              currentValue === item?.value ? styles['conversation-list-item-active'] : null
+            )}
+            onClick={() => {
+              if (item?.value) {
+                handleChange(item.value as string, item);
+              }
+            }}
+          >
+            <div className={styles['conversation-item-left']}>
+              <div className={styles['conversation-item-icon']}></div>
+              <Typography.Text ellipsis={{showTooltip: true}}>
+                {item.label}
+              </Typography.Text>
+            </div>
+            <div>
+              <IconButton
+                className={styles['conversation-item-right-icon']}
+                icon={<IconCozTrashCan/>}
+                onClick={(e) => onRemove(e, item)}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
     </>
   );
 };

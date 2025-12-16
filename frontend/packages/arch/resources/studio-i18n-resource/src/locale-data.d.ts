@@ -15955,6 +15955,8 @@ export type I18nKeysNoOptionsType =
   | 'workflow_detail_title_source'
   | 'workflow_detail_title_testrun'
   | 'workflow_detail_title_testrun_desc'
+  | 'workflow_testrun_chatflow_desc'
+  | 'workflow_testrun_chatflow_add_conversation_hint'
   | 'workflow_detail_title_testrun_batch_title'
   | 'workflow_detail_title_testrun_cancel'
   | 'workflow_detail_title_testrun_checkresult'

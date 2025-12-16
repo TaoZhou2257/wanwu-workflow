@@ -64,6 +64,13 @@
   font-size: 12px;
 }
 
+.conversation-create-wrapper {
+  border-bottom: 1px solid var(--coz-stroke-primary);
+  margin: 0 20px;
+  padding: 12px 0;
+  text-align: center;
+}
+
 .conversation-popover-container {
   width: 320px;
   padding: 10px;
@@ -71,5 +78,47 @@
     border: 1px solid var(--Stroke-COZ-stroke-plus, rgba(68, 83, 130, 25%));
     border-radius: var(--default, 8px);
     background: #fff;
+  }
+}
+
+.conversation-list-wrapper {
+  padding: 10px 20px;
+  .conversation-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 10px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+  }
+  .conversation-item-left {
+    display: flex;
+    align-items: center;
+    height: 32px;
+  }
+  .conversation-item-right-icon {
+    display: none;
+    background-color: transparent !important;
+  }
+  .conversation-item-icon {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #ccc;
+    margin-right: 8px;
+  }
+  .conversation-list-item:hover,
+  .conversation-list-item-active {
+    background-color: rgba(var(--coze-brand-1), var(--coze-brand-1-alpha));
+    cursor: pointer;
+    span {
+      color: rgba(var(--coze-brand-5), 1);
+    }
+    .conversation-item-icon {
+      background-color: rgba(var(--coze-brand-5), 1);
+    }
+    .conversation-item-right-icon {
+      display: block;
+    }
   }
 }
