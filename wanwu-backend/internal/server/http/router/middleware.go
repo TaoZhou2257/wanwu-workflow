@@ -309,6 +309,10 @@ func _createprojectconversationdefMw() []app.HandlerFunc {
 	return nil
 }
 
+func _deleteprojectconversationdefMw() []app.HandlerFunc {
+	return nil
+}
+
 func _getworkflowuploadauthtokenMw() []app.HandlerFunc {
 	// your code...
 	return nil
