@@ -47,7 +47,6 @@ export const ConversationSelectWanwu = () => {
   return (
     <div className={css['conversation-select']}>
       <OnlyConversationSelect
-        sessionInfo={sessionInfo}
         projectId={projectId}
         value={value}
         onChange={setValue}

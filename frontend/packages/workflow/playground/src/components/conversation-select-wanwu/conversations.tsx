@@ -72,7 +72,6 @@ interface ConversationsProps {
   value?: string;
   onChange?: (value: string) => void;
   projectId?: string | ValueType;
-  sessionInfo?: any;
 }
 
 interface ConversationItem {
@@ -86,7 +85,6 @@ export const Conversations: React.FC<ConversationsProps> = ({
   value,
   onChange,
   projectId: propsProjectId,
-  sessionInfo,
   ...props
 }) => {
   const globalState = useGlobalState();
@@ -286,6 +284,7 @@ export const Conversations: React.FC<ConversationsProps> = ({
         project_id: projectId,
         unique_id: item.value
       });
+      await fetchList();
     } catch (err) {
       const { statusText, data } = err?.response || {};
       Toast.error(data?.msg || statusText || 'Server Error');
@@ -396,15 +395,13 @@ export const Conversations: React.FC<ConversationsProps> = ({
                 {item.label}
               </Typography.Text>
             </div>
-            {sessionInfo.name !== item.label && (
-              <div>
-                <IconButton
-                  className={styles['conversation-item-right-icon']}
-                  icon={<IconCozTrashCan/>}
-                  onClick={(e) => onRemove(e, item)}
-                />
-              </div>
-            )}
+            <div>
+              <IconButton
+                className={styles['conversation-item-right-icon']}
+                icon={<IconCozTrashCan/>}
+                onClick={(e) => onRemove(e, item)}
+              />
+            </div>
           </div>
         ))}
       </div>
