@@ -20,7 +20,7 @@ import { useMemo, type FC } from 'react';
 import semver from 'semver';
 import dayjs from 'dayjs';
 import classNames from 'classnames';
-import { type VersionMetaInfo, OperateType } from '@coze-workflow/base/api';
+import { OperateType } from '@coze-workflow/base/api';
 import { I18n } from '@coze-arch/i18n';
 import { IconCozMore } from '@coze-arch/coze-design/icons';
 import {
@@ -36,7 +36,7 @@ import { type WorkflowCommitListProps } from './type';
 
 export interface CommitItemProps {
   className?: string;
-  data: VersionMetaInfo;
+  data: any;
   /** Is it selected? */
   isActive?: boolean;
   readonly?: WorkflowCommitListProps['readonly'];
@@ -114,8 +114,8 @@ export const CommitItem: FC<CommitItemProps> = ({
 
   const time = useMemo(
     () =>
-      data.create_time
-        ? dayjs(data.create_time).format('YYYY-MM-DD HH:mm:ss')
+      data.created_at
+        ? dayjs(data.created_at).format('YYYY-MM-DD HH:mm:ss')
         : '',
     [data],
   );
@@ -144,7 +144,7 @@ export const CommitItem: FC<CommitItemProps> = ({
             {data.env}
           </Tag>
         )}
-        {data.type === OperateType.PublishOperate && (
+        {(// data.type === OperateType.PublishOperate &&
           <Tag size="small" color={data.offline ? 'primary' : 'green'}>
             {semver.valid(data.version)
               ? data.version
@@ -187,10 +187,10 @@ export const CommitItem: FC<CommitItemProps> = ({
         </Space>
       )}
 
-      {data.type === OperateType.PublishOperate && data.desc ? (
+      {data.version_description ? (
         <div>
           <Text ellipsis={{ rows: 4, showTooltip: true }}>
-            {I18n.t('Description')}: {data.desc}
+            {I18n.t('Description')}: {data.version_description}
           </Text>
         </div>
       ) : null}
