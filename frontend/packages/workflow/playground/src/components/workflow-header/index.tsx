@@ -66,13 +66,12 @@ const WorkFlowHeader: React.FC = () => {
           <>
             {!readonly && <CreditButton />}
 
-            <HistoryButton />
-
             <CollaboratorsButton />
 
             <SubmitButton />
           </>
         )}
+        <HistoryButton />
 
         <PublishButton />
 

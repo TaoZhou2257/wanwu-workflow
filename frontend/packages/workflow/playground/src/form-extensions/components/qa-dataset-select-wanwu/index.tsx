@@ -126,8 +126,9 @@ export const DatasetSelect = ({
       setCurrentKeyList(metaDataKeyList)
       setCurrentMetaData(metaDataFilterParams || DEFAULT_METADATA)
       setVisible(true)
-    } catch(err) {
-      Toast.error(err?.response?.data?.msg || 'Server Error');
+    } catch (err) {
+      const { statusText, data } = err?.response || {};
+      Toast.error(data?.msg || statusText || 'Server Error');
     }
   }
 

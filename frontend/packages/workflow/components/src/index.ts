@@ -17,7 +17,7 @@
 /* eslint-disable @coze-arch/no-batch-import-or-export */
 export { CreateWorkflowModal } from './workflow-edit';
 export { FlowShortcutsHelp } from './flow-shortcuts-help';
-export { WorkflowCommitList } from './workflow-commit-list';
+export { WorkflowCommitList } from './workflow-commit-list-wanwu';
 export * from './expression-editor';
 export { useWorkflowModal } from './hooks/use-workflow-modal';
 export { useWorkflowList } from './hooks/use-workflow-list';

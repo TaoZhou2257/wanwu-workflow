@@ -1794,6 +1794,7 @@
   "bmv_view_incompatible_changes": "View Incompatible Changes",
   "bmv_view_solutions": "View solutions",
   "bmv_view_version": "View Version",
+  "bmv_view_export": "Export",
   "bmv_white_list": "Whitelist",
   "bmv_workflow_detail_node_nodata": "No data available",
   "bmv_workflow_detail_node_output_action": "Action",

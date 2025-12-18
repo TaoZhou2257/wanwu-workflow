@@ -33,6 +33,7 @@ import {
   VCSCanvasType,
 } from '@coze-workflow/base/api';
 import { reporter } from '@coze-arch/logger';
+import { Toast } from '@coze-arch/coze-design';
 import { getFlags } from '@coze-arch/bot-flags';
 import { type PublishWorkflowRequest } from '@coze-arch/bot-api/workflow_api';
 
@@ -135,6 +136,9 @@ export class WorkflowOperationService {
 
       return published;
     } catch (error) {
+      const { statusText, data } = error?.response || {};
+      Toast.error(data?.msg || statusText || 'Server Error');
+
       reporter.errorEvent({
         eventName: 'workflow_publish_fail',
         namespace: 'workflow',

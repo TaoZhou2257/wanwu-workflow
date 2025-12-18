@@ -1875,6 +1875,7 @@
   "bmv_view_incompatible_changes": "查看不兼容修改",
   "bmv_view_solutions": " 查看解决方案",
   "bmv_view_version": "查看版本",
+  "bmv_view_export": "导出",
   "bmv_white_list": "白名单",
   "bmv_workflow_detail_node_nodata": " 暂无数据",
   "bmv_workflow_detail_node_output_action": " 操作",

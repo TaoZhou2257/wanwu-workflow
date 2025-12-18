@@ -3688,6 +3688,8 @@ export interface PublishWanwuWorkflowRequest {
   appType?: string;
   appId?: string;
   publishType?: string;
+  version?: string;
+  desc?: string;
 }
 
 export interface PublishWanwuWorkflowResponse {
