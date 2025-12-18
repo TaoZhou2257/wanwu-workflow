@@ -13,6 +13,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	appworkflow "github.com/coze-dev/coze-studio/backend/application/workflow"
+	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
 	user_entity "github.com/coze-dev/coze-studio/backend/domain/user/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/pkg/ctxcache"
@@ -173,17 +174,17 @@ func GetWorkflowDetailInfoByWanwu(ctx context.Context, c *app.RequestContext) {
 }
 
 // GetCanvasInfoByWanwu 参考GetCanvasInfo 增加返回图标判断
-// @router /api/workflow_api/canvas [POST]
+// @router /api/workflow_api/canvas/draft [POST]
 func GetCanvasInfoByWanwu(ctx context.Context, c *app.RequestContext) {
 	var err error
-	var req workflow.GetCanvasInfoRequest
+	var req appworkflow.ExportWorkflowRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
 		invalidParamRequestResponse(c, err.Error())
 		return
 	}
-
-	resp, err := appworkflow.SVC.GetCanvasInfo(ctx, &req)
+	req.Type = workflowModel.FromDraft
+	resp, err := appworkflow.SVC.GetCanvasInfoByWanwu(ctx, &req)
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
 		return
@@ -281,6 +282,120 @@ func OpenAPIChatFlowRunByWanwu(ctx context.Context, c *app.RequestContext) {
 	}
 	sendChatFlowStreamRunSSE(ctx, w, sr)
 
+}
+
+// GetWorkflowVersionListByWanwu 获取工作流版本列表
+// @router /api/workflow_api/version_list [POST]
+func GetWorkflowVersionListByWanwu(ctx context.Context, c *app.RequestContext) {
+	var req appworkflow.GetWorkflowRequest
+	err := c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+	resp, err := appworkflow.SVC.GetWorkflowVersionListByWanwu(ctx, req.WorkflowID)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+	c.JSON(consts.StatusOK, resp)
+}
+
+// UpdateWorkflowVersionDescriptionByWanwu 更新版本描述
+// @router /api/workflow_api/version/description [PUT]
+func UpdateWorkflowVersionDescriptionByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req appworkflow.UpdateWorkflowVersionDescriptionRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	resp, err := appworkflow.SVC.UpdateWorkflowVersionDescriptionByWanwu(ctx, &req)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+	c.JSON(consts.StatusOK, resp)
+}
+
+// RollbackWorkflowVersionByWanwu 回滚工作流版本
+// @router /api/workflow_api/revert [POST]
+func RollbackWorkflowVersionByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req appworkflow.RollbackWorkflowVersionRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+	resp, err := appworkflow.SVC.RollbackWorkflowVersionByWanwu(ctx, &req)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+
+	c.JSON(consts.StatusOK, resp)
+}
+
+// GetWorkflowLatestVersionCanvasInfoByWanwu 获取已发布工作流最新版本信息
+// @router /api/workflow_api/canvas [POST]
+func GetWorkflowLatestVersionCanvasInfoByWanwu(ctx context.Context, c *app.RequestContext) {
+	var req appworkflow.ExportWorkflowRequest
+	err := c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+	resp, err := appworkflow.SVC.GetCanvasInfoByWanwu(ctx, &req)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+	workflowDefaultIconURL(resp.Data.Workflow)
+	c.JSON(consts.StatusOK, resp)
+}
+
+// RunWorkFlowLatestVersionByWanwu 运行已发布最新版工作流
+// @router /v1/workflow/run_by_wanwu [POST]
+func RunWorkFlowLatestVersionByWanwu(ctx context.Context, c *app.RequestContext) {
+
+	var err error
+	var req workflow.WorkFlowTestRunRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	resp, err := appworkflow.SVC.LatestVersionRunByWanwu(ctx, &req)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+
+	c.JSON(consts.StatusOK, resp)
+}
+
+// GetHistorySchemaByWanwu 获取历史工作流schema .
+// @router /api/workflow_api/history_schema [POST]
+func GetHistorySchemaByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req workflow.GetHistorySchemaRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	resp, err := appworkflow.SVC.GetWorkflowVersionSchema(ctx, &req)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+
+	c.JSON(consts.StatusOK, resp)
 }
 
 // CreateProjectConversationDefByWanwu 参考CreateProjectConversationDef

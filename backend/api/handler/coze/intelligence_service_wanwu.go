@@ -11,6 +11,8 @@ import (
 	"github.com/coze-dev/coze-studio/backend/api/model/app/intelligence/common"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	appworkflow "github.com/coze-dev/coze-studio/backend/application/workflow"
+	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
+	"github.com/coze-dev/coze-studio/backend/pkg/ctxcache"
 )
 
 // GetDraftIntelligenceListByWanwu 参考GetDraftIntelligenceList
@@ -44,9 +46,10 @@ func GetDraftIntelligenceListByWanwu(ctx context.Context, c *app.RequestContext)
 
 	// 根据workflow id，获取workflow信息，用于设置当前workflow对应的唯一ntelligence相关信息
 	workflowIDStr := strconv.Itoa(workflowID)
-	resp, err := appworkflow.SVC.GetCanvasInfo(ctx, &workflow.GetCanvasInfoRequest{
+	resp, err := appworkflow.SVC.GetCanvasInfoByWanwu(ctx, &appworkflow.ExportWorkflowRequest{
+		WorkflowID: workflowIDStr,
 		SpaceID:    strconv.Itoa(int(req.SpaceID)),
-		WorkflowID: &workflowIDStr,
+		Type:       workflowModel.FromDraft,
 	})
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
@@ -78,9 +81,11 @@ func GetDraftIntelligenceInfoByWanwu(ctx context.Context, c *app.RequestContext)
 	// req.IntelligenceID 即 workflow id
 	// 根据workflow id，获取workflow信息，用于设置当前workflow对应的唯一ntelligence相关信息
 	workflowIDStr := strconv.Itoa(int(req.IntelligenceID))
-	resp, err := appworkflow.SVC.GetCanvasInfo(ctx, &workflow.GetCanvasInfoRequest{
-		SpaceID:    c.Request.Header.Get("X-Org-Id"),
-		WorkflowID: &workflowIDStr,
+	spaceID, _ := ctxcache.Get[string](ctx, "X-Org-Id")
+	resp, err := appworkflow.SVC.GetCanvasInfoByWanwu(ctx, &appworkflow.ExportWorkflowRequest{
+		SpaceID:    spaceID,
+		WorkflowID: workflowIDStr,
+		Type:       workflowModel.FromDraft,
 	})
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)

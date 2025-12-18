@@ -85,7 +85,7 @@ func Register(r *hertz_server.Hertz) {
 			_workflow_api.GET("/apiDetail", append(_getapidetailMw(), coze.GetApiDetail)...)
 			_workflow_api.POST("/batch_delete", append(_batchdeleteworkflowMw(), coze.BatchDeleteWorkflow)...)
 			_workflow_api.POST("/cancel", append(_cancelworkflowMw(), coze.CancelWorkFlow)...)
-			_workflow_api.POST("/canvas", append(_getcanvasinfoMw(), coze.GetCanvasInfoByWanwu)...)
+			_workflow_api.POST("/canvas/draft", append(_getcanvasinfoMw(), coze.GetCanvasInfoByWanwu)...)
 			_workflow_api.POST("/copy", append(_copyworkflowMw(), coze.CopyWorkflowByWanwu)...)
 			_workflow_api.POST("/copy_wk_template", append(_copywktemplateapiMw(), coze.CopyWkTemplateApi)...)
 			_workflow_api.POST("/create", append(_createworkflowMw(), coze.CreateWorkflowByWanwu)...)
@@ -95,7 +95,7 @@ func Register(r *hertz_server.Hertz) {
 			_workflow_api.GET("/get_node_execute_history", append(_getnodeexecutehistoryMw(), coze.GetNodeExecuteHistory)...)
 			_workflow_api.GET("/get_process", append(_getworkflowprocessMw(), coze.GetWorkFlowProcess)...)
 			_workflow_api.POST("/get_trace", append(_gettracesdkMw(), coze.GetTraceSDK)...)
-			_workflow_api.POST("/history_schema", append(_gethistoryschemaMw(), coze.GetHistorySchema)...)
+			_workflow_api.POST("/history_schema", append(_gethistoryschemaMw(), coze.GetHistorySchemaByWanwu)...)
 			_workflow_api.POST("/list_publish_workflow", append(_listpublishworkflowMw(), coze.ListPublishWorkflow)...)
 			_workflow_api.POST("/list_spans", append(_listrootspansMw(), coze.ListRootSpans)...)
 			_workflow_api.POST("/llm_fc_setting_detail", append(_getllmnodefcsettingdetailMw(), coze.GetLLMNodeFCSettingDetail)...)
@@ -116,6 +116,10 @@ func Register(r *hertz_server.Hertz) {
 			_workflow_api.POST("/workflow_detail", append(_getworkflowdetailMw(), coze.GetWorkflowDetail)...)
 			_workflow_api.POST("/workflow_detail_info", append(_getworkflowdetailinfoMw(), coze.GetWorkflowDetailInfoByWanwu)...)
 			_workflow_api.POST("/workflow_references", append(_getworkflowreferencesMw(), coze.GetWorkflowReferences)...)
+			_workflow_api.POST("/version_list", append(_getworkflowversionlistMw(), coze.GetWorkflowVersionListByWanwu)...)
+			_workflow_api.PUT("/version_description", append(_updateworkflowversiondescriptionMw(), coze.UpdateWorkflowVersionDescriptionByWanwu)...)
+			_workflow_api.POST("/revert", append(_rollbackworkflowversionMw(), coze.RollbackWorkflowVersionByWanwu)...)
+			_workflow_api.POST("/canvas", append(_getworkflowlatestversioncanvasinfoMw(), coze.GetWorkflowLatestVersionCanvasInfoByWanwu)...)
 			{
 				_chat_flow_role := _workflow_api.Group("/chat_flow_role", _chat_flow_roleMw()...)
 				_chat_flow_role.POST("/create", append(_createchatflowroleMw(), coze.CreateChatFlowRole)...)
@@ -138,7 +142,6 @@ func Register(r *hertz_server.Hertz) {
 			_workflow_api.POST("/workflow_select_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowSelectByWanwu}...)
 			_workflow_api.POST("/import", []app.HandlerFunc{coze.ImportWorkFlow}...)
 			_workflow_api.POST("/export", []app.HandlerFunc{coze.ExportWorkFlow}...)
-
 		}
 	}
 	{
@@ -170,6 +173,7 @@ func Register(r *hertz_server.Hertz) {
 			_workflow.GET("/:workflow_id/schema_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowOpenAPIV3SchemaByWanwu}...)
 			_workflow.POST("/:workflow_id/run_by_wanwu", append(_openapirunflowMw(), coze.OpenAPIRunWorkFlowByWanwu)...)
 			_workflow.POST("/chat_by_wanwu", []app.HandlerFunc{coze.OpenAPIChatFlowRunByWanwu}...)
+			_workflow.POST("/run_by_wanwu", []app.HandlerFunc{coze.RunWorkFlowLatestVersionByWanwu}...)
 		}
 	}
 }

@@ -398,3 +398,19 @@ func _geticonMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _getworkflowversionlistMw() []app.HandlerFunc {
+	return nil
+}
+
+func _updateworkflowversiondescriptionMw() []app.HandlerFunc {
+	return nil
+}
+
+func _rollbackworkflowversionMw() []app.HandlerFunc {
+	return nil
+}
+
+func _getworkflowlatestversioncanvasinfoMw() []app.HandlerFunc {
+	return nil
+}

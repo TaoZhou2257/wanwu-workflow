@@ -492,6 +492,7 @@ func (w *ApplicationService) GetCanvasInfo(ctx context.Context, req *workflow.Ge
 			SubmitCommitID: wf.CommitID,
 			DraftCommitID:  wf.CommitID,
 			Type:           vcsType,
+			CanEdit:        true,
 		},
 		WorkflowVersion: wf.LatestPublishedVersion,
 	}

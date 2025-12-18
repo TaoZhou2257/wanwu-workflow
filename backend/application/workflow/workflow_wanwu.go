@@ -2,14 +2,17 @@ package workflow
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path"
 	"runtime/debug"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cloudwego/eino/schema"
+	"github.com/coze-dev/coze-studio/backend/api/model/base"
 	"github.com/coze-dev/coze-studio/backend/api/model/playground"
 	pluginAPI "github.com/coze-dev/coze-studio/backend/api/model/plugin_develop"
 	"github.com/coze-dev/coze-studio/backend/api/model/plugin_develop/common"
@@ -18,6 +21,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	"github.com/coze-dev/coze-studio/backend/application/user"
 	"github.com/coze-dev/coze-studio/backend/bizpkg/debugutil"
+	model "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
 	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
 	search "github.com/coze-dev/coze-studio/backend/domain/search/entity"
 	user_entity "github.com/coze-dev/coze-studio/backend/domain/user/entity"
@@ -26,6 +30,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/pkg/ctxcache"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
 	"github.com/coze-dev/coze-studio/backend/pkg/i18n"
+	"github.com/coze-dev/coze-studio/backend/pkg/lang/maps"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/slices"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ternary"
@@ -557,7 +562,7 @@ func (w *ApplicationService) ListWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Cont
 		ids = append(ids, mustParseInt64(workflowID))
 	}
 
-	wfs, _, err := GetWorkflowDomainSVC().MGet(ctx, &vo.MGetPolicy{MetaQuery: vo.MetaQuery{IDs: ids}})
+	wfs, _, err := GetWorkflowDomainSVC().MGet(ctx, &vo.MGetPolicy{MetaQuery: vo.MetaQuery{IDs: ids}, QType: workflowModel.FromLatestVersion})
 	if err != nil {
 		return nil, err
 	}
@@ -585,7 +590,7 @@ func (w *ApplicationService) GetWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Conte
 		}
 	}()
 
-	wf, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{ID: mustParseInt64(workflowID)})
+	wf, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{ID: mustParseInt64(workflowID), QType: workflowModel.FromLatestVersion})
 	if err != nil {
 		return nil, err
 	}
@@ -724,6 +729,7 @@ func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID s
 	meta, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{
 		ID:       mustParseInt64(workflowID),
 		MetaOnly: true,
+		QType:    workflowModel.FromLatestVersion,
 	})
 	if err != nil {
 		return nil, "", err
@@ -738,9 +744,9 @@ func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID s
 		ctxcache.Store(ctx, "X-Org-Id", strconv.Itoa(int(meta.SpaceID)))
 	}
 
-	// if meta.LatestPublishedVersion == nil {
-	// 	return nil, vo.NewError(errno.ErrWorkflowNotPublished)
-	// }
+	if meta.LatestPublishedVersion == nil {
+		return nil, "", vo.NewError(errno.ErrWorkflowNotPublished)
+	}
 
 	// if err = checkUserSpace(ctx, userID, meta.SpaceID); err != nil {
 	// 	return nil, err
@@ -766,9 +772,9 @@ func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID s
 	// }
 
 	exeCfg := workflowModel.ExecuteConfig{
-		ID:   meta.ID,
-		From: workflowModel.FromDraft,
-		// Version:  *meta.LatestPublishedVersion,
+		ID:       meta.ID,
+		From:     workflowModel.FromLatestVersion,
+		Version:  *meta.LatestPublishedVersion,
 		Operator: meta.CreatorID,
 		Mode:     workflowModel.ExecuteModeRelease,
 		// AppID:         appID,
@@ -913,6 +919,311 @@ func (w *ApplicationService) GetPlaygroundPluginListByWanwu(ctx context.Context,
 	}, nil
 }
 
+// LatestVersionRunByWanwu 参考 TestRun
+// 执行已发布的工作流
+func (w *ApplicationService) LatestVersionRunByWanwu(ctx context.Context, req *workflow.WorkFlowTestRunRequest) (_ *workflow.WorkFlowTestRunResponse, err error) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowExecuteFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	uID := ctxutil.MustGetUIDFromCtx(ctx)
+
+	if err := checkUserSpace(ctx, uID, mustParseInt64(req.GetSpaceID())); err != nil {
+		return nil, err
+	}
+
+	var appID, agentID *int64
+	if req.IsSetProjectID() {
+		appID = ptr.Of(mustParseInt64(req.GetProjectID()))
+	}
+	if req.IsSetBotID() {
+		agentID = ptr.Of(mustParseInt64(req.GetBotID()))
+	}
+
+	exeCfg := workflowModel.ExecuteConfig{
+		ID:           mustParseInt64(req.GetWorkflowID()),
+		From:         workflowModel.FromLatestVersion,
+		CommitID:     req.GetCommitID(),
+		Operator:     uID,
+		Mode:         workflowModel.ExecuteModeDebug,
+		AppID:        appID,
+		AgentID:      agentID,
+		ConnectorID:  consts.CozeConnectorID,
+		ConnectorUID: strconv.FormatInt(uID, 10),
+		TaskType:     workflowModel.TaskTypeForeground,
+		SyncPattern:  workflowModel.SyncPatternAsync,
+		BizType:      workflowModel.BizTypeWorkflow,
+		Cancellable:  true,
+	}
+
+	if exeCfg.AppID != nil && exeCfg.AgentID != nil {
+		return nil, errors.New("project_id and bot_id cannot be set at the same time")
+	}
+
+	exeID, err := GetWorkflowDomainSVC().AsyncExecute(ctx, exeCfg, maps.ToAnyValue(req.Input))
+	if err != nil {
+		return nil, err
+	}
+
+	return &workflow.WorkFlowTestRunResponse{
+		Data: &workflow.WorkFlowTestRunData{
+			WorkflowID: req.WorkflowID,
+			ExecuteID:  fmt.Sprintf("%d", exeID),
+		},
+	}, nil
+}
+
+// GetWorkflowVersionListByWanwu 获取工作流的所有版本列表
+func (w *ApplicationService) GetWorkflowVersionListByWanwu(ctx context.Context, workflowID string) (
+	_ *GetWorkflowVersionListResponse, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+	}()
+	versionInfos, err := GetWorkflowDomainSVC().GetWorkflowVersionListByWanwu(ctx, mustParseInt64(workflowID))
+	if err != nil {
+		return nil, err
+	}
+	response := GetWorkflowVersionListResponse{
+		Data: &WorkflowVersionListData{
+			WorkflowID:  workflowID,
+			VersionList: make([]*WorkflowVersion, 0, len(versionInfos)),
+			Total:       int32(len(versionInfos)),
+		},
+	}
+	for _, versionInfo := range versionInfos {
+		wv := &WorkflowVersion{
+			Version:            versionInfo.Version,
+			VersionDescription: versionInfo.VersionDescription,
+			CreatedAt:          versionInfo.VersionCreatedAt.UnixMilli(),
+			CommitID:           workflowID + "_" + versionInfo.Version,
+			Type:               workflow.OperateType_PublishOperate,
+		}
+		response.Data.VersionList = append(response.Data.VersionList, wv)
+	}
+
+	return &response, nil
+}
+
+func (w *ApplicationService) UpdateWorkflowVersionDescriptionByWanwu(ctx context.Context, req *UpdateWorkflowVersionDescriptionRequest) (_ *workflow.UpdateWorkflowMetaResponse, err error) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+	}()
+	err = GetWorkflowDomainSVC().UpdateWorkflowVersionDescriptionByWanwu(ctx, mustParseInt64(req.WorkflowID), req.VersionDescription)
+	if err != nil {
+		return nil, err
+	}
+	return &workflow.UpdateWorkflowMetaResponse{}, nil
+}
+
+func (w *ApplicationService) RollbackWorkflowVersionByWanwu(ctx context.Context, req *RollbackWorkflowVersionRequest) (
+	_ *workflow.SaveWorkflowResponse, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+
+	var version string
+	if req.CommitID != "" {
+		if idx := strings.LastIndex(req.CommitID, "_"); idx != -1 && idx < len(req.CommitID)-1 {
+			version = req.CommitID[idx+1:]
+		} else {
+			return nil, fmt.Errorf("invalid commit_id format: %s", req.CommitID)
+		}
+	}
+	policy := &vo.GetPolicy{
+		ID:      mustParseInt64(req.WorkflowID),
+		QType:   ternary.IFElse(len(version) > 0, workflowModel.FromSpecificVersion, workflowModel.FromDraft),
+		Version: version,
+	}
+
+	wfEntity, err := GetWorkflowDomainSVC().Get(ctx, policy)
+	if err != nil {
+		return nil, err
+	}
+	if err := GetWorkflowDomainSVC().Save(ctx, mustParseInt64(req.WorkflowID), wfEntity.Canvas); err != nil {
+		return nil, err
+	}
+
+	return &workflow.SaveWorkflowResponse{
+		Data: &workflow.SaveWorkflowData{},
+	}, nil
+}
+
+func (w *ApplicationService) ExportWorkFlowByWanwu(ctx context.Context, req *ExportWorkflowRequest) (
+	_ *workflow.GetHistorySchemaResponse, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+	var qType workflowModel.Locator
+	if req.Version != "" {
+		qType = workflowModel.FromSpecificVersion
+	} else {
+		qType = workflowModel.FromDraft
+	}
+
+	policy := &vo.GetPolicy{
+		ID:      mustParseInt64(req.WorkflowID),
+		QType:   qType,
+		Version: req.Version,
+	}
+
+	wfEntity, err := GetWorkflowDomainSVC().Get(ctx, policy)
+	if err != nil {
+		return nil, err
+	}
+	return &workflow.GetHistorySchemaResponse{
+		Data: &workflow.GetHistorySchemaData{
+			Name:     wfEntity.Name,
+			Describe: wfEntity.Desc,
+			Schema:   wfEntity.Canvas,
+		},
+	}, nil
+}
+
+func (w *ApplicationService) GetWorkflowVersionSchema(ctx context.Context, req *workflow.GetHistorySchemaRequest) (
+	resp *workflow.GetHistorySchemaResponse, err error) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+	if req.GetSpaceID() == "" {
+		return nil, vo.WrapError(errno.ErrInvalidParameter, fmt.Errorf("space_id is required"))
+	}
+	if req.GetWorkflowID() == "" {
+		return nil, vo.WrapError(errno.ErrInvalidParameter, fmt.Errorf("workflow_id is required"))
+	}
+
+	var version string
+	if req.CommitID != nil {
+		commitID := *req.CommitID
+		if idx := strings.LastIndex(commitID, "_"); idx != -1 && idx < len(commitID)-1 {
+			version = commitID[idx+1:]
+		} else {
+			return nil, fmt.Errorf("invalid commit_id format: %s", req.CommitID)
+		}
+	}
+	policy := &vo.GetPolicy{
+		ID:      mustParseInt64(req.GetWorkflowID()),
+		QType:   workflowModel.FromSpecificVersion,
+		Version: version,
+	}
+
+	wfEntity, err := GetWorkflowDomainSVC().Get(ctx, policy)
+	return &workflow.GetHistorySchemaResponse{
+		Data: &workflow.GetHistorySchemaData{
+			Name:       wfEntity.Name,
+			Describe:   wfEntity.Desc,
+			URL:        wfEntity.IconURL,
+			Schema:     wfEntity.Canvas,
+			FlowMode:   wfEntity.Mode,
+			WorkflowID: req.GetWorkflowID(),
+			CommitID:   req.GetWorkflowID() + "_" + version,
+		},
+	}, nil
+}
+
+// GetCanvasInfoByWanwu 参考GetCanvasInfo
+func (w *ApplicationService) GetCanvasInfoByWanwu(ctx context.Context, req *ExportWorkflowRequest) (
+	_ *workflow.GetCanvasInfoResponse, err error,
+) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+	switch req.Type {
+	case workflowModel.FromDraft:
+		return w.GetCanvasInfo(ctx, &workflow.GetCanvasInfoRequest{
+			SpaceID:    req.SpaceID,
+			WorkflowID: ptr.Of(req.WorkflowID),
+		})
+
+	case workflowModel.FromSpecificVersion:
+		return nil, fmt.Errorf("invalid type")
+	}
+
+	wf, err := GetWorkflowDomainSVC().Get(ctx, &vo.GetPolicy{
+		ID:    mustParseInt64(req.WorkflowID),
+		QType: workflowModel.FromLatestVersion,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var devStatus workflow.WorkFlowDevStatus
+	var vcsType workflow.VCSCanvasType
+	pluginID := "0"
+	updateTime := time.Time{}
+
+	canvasData := &workflow.CanvasData{
+		Workflow: &workflow.Workflow{
+			WorkflowID:       strconv.FormatInt(wf.ID, 10),
+			Name:             wf.Name,
+			Desc:             wf.Desc,
+			URL:              wf.IconURL,
+			IconURI:          wf.IconURI,
+			Status:           devStatus,
+			Type:             wf.ContentType,
+			CreateTime:       wf.CreatedAt.Unix(),
+			UpdateTime:       updateTime.Unix(),
+			Tag:              wf.Tag,
+			TemplateAuthorID: ternary.IFElse(wf.AuthorID > 0, ptr.Of(strconv.FormatInt(wf.AuthorID, 10)), nil),
+			SpaceID:          ptr.Of(strconv.FormatInt(wf.SpaceID, 10)),
+			SchemaJSON:       ptr.Of(wf.Canvas),
+			Creator: &workflow.Creator{
+				ID:   strconv.FormatInt(wf.CreatorID, 10),
+				Self: ternary.IFElse[bool](wf.CreatorID == ptr.From(ctxutil.GetUIDFromCtx(ctx)), true, false),
+			},
+			FlowMode:         wf.Mode,
+			ProjectID:        i64PtrToStringPtr(wf.AppID),
+			PersistenceModel: workflow.PersistenceModel_VCS, // the front-end validation logic, this field returns VCS, developers don't need to pay attention
+			PluginID:         pluginID,
+		},
+		VcsData: &workflow.VCSCanvasData{
+			CanEdit:        true,
+			SubmitCommitID: wf.CommitID,
+			DraftCommitID:  wf.CommitID,
+			Type:           vcsType,
+		},
+		WorkflowVersion: wf.LatestPublishedVersion,
+	}
+
+	return &workflow.GetCanvasInfoResponse{
+		Data: canvasData,
+	}, nil
+}
+
 // -- internal ---
 type cozeWorkflowSelectByWanwuResp struct {
 	Code int64 `json:"code"`
@@ -924,4 +1235,68 @@ type cozeWorkflowSelectByWanwuResp struct {
 
 type appId struct {
 	AppId string `json:"appId"` // 应用id
+}
+
+type GetWorkflowVersionListResponse struct {
+	Data     *WorkflowVersionListData `thrift:"data,1,required" form:"data,required" json:"data,required" query:"data,required"`
+	Code     int64                    `thrift:"code,253,required" form:"code,required" json:"code,required" query:"code,required"`
+	Msg      string                   `thrift:"msg,254,required" form:"msg,required" json:"msg,required" query:"msg,required"`
+	BaseResp *base.BaseResp           `thrift:"BaseResp,255,required" form:"BaseResp,required" json:"BaseResp,required" query:"BaseResp,required"`
+}
+
+type WorkflowVersionListData struct {
+	WorkflowID  string             `thrift:"workflow_id,1" form:"workflow_id" json:"workflow_id" query:"workflow_id"`
+	VersionList []*WorkflowVersion `thrift:"version_list,2" form:"version_list" json:"version_list" query:"version_list"`
+	Total       int32              `thrift:"total,3" form:"total" json:"total" query:"total"`
+}
+
+type WorkflowVersion struct {
+	Version            string               `thrift:"version,1" form:"version" json:"version" query:"version"`
+	VersionDescription string               `thrift:"version_description,2" form:"version_description" json:"version_description" query:"version_description"`
+	CreatedAt          int64                `thrift:"created_at,3" form:"created_at" json:"created_at" query:"created_at"`
+	CommitID           string               `thrift:"commit_id,3,optional" form:"commit_id" json:"commit_id,omitempty" query:"commit_id"`
+	Type               workflow.OperateType `thrift:"type,4,required" form:"type,required" json:"type,required" query:"type,required"`
+}
+
+type UpdateWorkflowVersionDescriptionRequest struct {
+	WorkflowID         string `thrift:"workflow_id,1,required" form:"workflow_id,required" json:"workflow_id,required" query:"workflow_id,required"`
+	VersionDescription string `thrift:"version_description,8,optional" form:"version_description" json:"version_description,omitempty" query:"version_description"`
+}
+
+type RollbackWorkflowVersionRequest struct {
+	WorkflowID string  `thrift:"workflow_id,1,required" form:"workflow_id,required" json:"workflow_id,required" query:"workflow_id,required"`
+	Version    *string `thrift:"version,6,optional" form:"version" json:"version,omitempty" query:"version"`
+	CommitID   string  `thrift:"commit_id,3,optional" form:"commit_id" json:"commit_id,omitempty" query:"commit_id"`
+}
+
+type GetWorkflowRequest struct {
+	WorkflowID string `thrift:"workflow_id,1,required" form:"workflow_id,required" json:"workflow_id,required" query:"workflow_id,required"`
+}
+
+type RunWorkFlowLatestVersionByWanwuReq struct {
+	WorkflowID string         `json:"workflow_id,required" validate:"required"`
+	Input      map[string]any `json:"input,omitempty"`
+}
+
+type GetWorkflowLatestVersionCanvasResponse struct {
+	Data     *WorkflowLatestVersionCanvasInfo `thrift:"data,1,required" json:"data,required"`
+	Code     int64                            `thrift:"code,253,required" json:"code,required"`
+	Msg      string                           `thrift:"msg,254,required" json:"msg,required"`
+	BaseResp *base.BaseResp                   `thrift:"BaseResp,255,required" json:"BaseResp,required"`
+}
+
+type WorkflowLatestVersionCanvasInfo struct {
+	Name               string `thrift:"name,1" json:"name"`
+	Describe           string `thrift:"describe,2" json:"describe"`
+	WorkflowID         string `thrift:"workflow_id,3" json:"workflow_id"`
+	Schema             string `thrift:"schema,4" json:"schema"`
+	Version            string `thrift:"version,5" json:"version"`
+	VersionDescription string `thrift:"version_description,6" json:"version_description"`
+}
+
+type ExportWorkflowRequest struct {
+	WorkflowID string `thrift:"workflow_id,1,required" form:"workflow_id,required" json:"workflow_id,required" query:"workflow_id,required"`
+	SpaceID    string `form:"space_id,required" json:"space_id" query:"space_id,required"`
+	Version    string `thrift:"version,6,optional" form:"version" json:"version,omitempty" query:"version"`
+	Type       model.Locator
 }

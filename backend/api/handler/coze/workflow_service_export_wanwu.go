@@ -2,6 +2,7 @@ package coze
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -77,24 +78,24 @@ type importWorkflowRequest struct {
 // @router /api/workflow_api/export [POST]
 func ExportWorkFlow(ctx context.Context, c *app.RequestContext) {
 	var err error
-	var req workflow.GetCanvasInfoRequest
+	var req appworkflow.ExportWorkflowRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
 		invalidParamRequestResponse(c, err.Error())
 		return
 	}
-	resp, err := appworkflow.SVC.GetCanvasInfo(ctx, &req)
+	resp, err := appworkflow.SVC.ExportWorkFlowByWanwu(ctx, &req)
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
 		return
 	}
-	if resp.Data.Workflow.SchemaJSON == nil {
-		internalServerErrorResponse(ctx, c, err)
+	if resp.Data.Schema == "" {
+		internalServerErrorResponse(ctx, c, errors.New("exported workflow schema is empty"))
 		return
 	}
 	// 解析原始schema
 	var schema vo.Canvas
-	if err := sonic.Unmarshal([]byte(*resp.Data.Workflow.SchemaJSON), &schema); err != nil {
+	if err := sonic.Unmarshal([]byte(resp.Data.Schema), &schema); err != nil {
 		internalServerErrorResponse(ctx, c, fmt.Errorf("failed to parse schema JSON: %v", err))
 		return
 	}
@@ -110,8 +111,8 @@ func ExportWorkFlow(ctx context.Context, c *app.RequestContext) {
 	}
 	// 创建导出数据
 	exportData := workflowExport{
-		WorkflowName: resp.Data.Workflow.Name,
-		WorkflowDesc: resp.Data.Workflow.Desc,
+		WorkflowName: resp.Data.Name,
+		WorkflowDesc: resp.Data.Describe,
 		Schema:       schemaStr,
 	}
 	response := map[string]any{
