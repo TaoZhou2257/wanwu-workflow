@@ -37,8 +37,6 @@ const WorkflowHistory = () => {
     workflowId: globalState.workflowId,
   });
 
-  console.lgo(showHistory, vcsPermission, '-----------------------showHistory')
-
   if (!showHistory) {
     return null;
   }
