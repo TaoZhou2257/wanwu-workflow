@@ -20,6 +20,7 @@ import { logger } from '@coze-arch/logger';
 
 import { emitAPIErrorEvent, APIErrorEvent } from './eventbus';
 import { ApiError, reportHttpError, ReportEventNames } from './api-error';
+import { authorHeadersWanwu } from "./api-header-wanwu";
 
 interface UnauthorizedResponse {
   data: {
@@ -136,12 +137,14 @@ axiosInstance.interceptors.request.use(config => {
     }
     return config.headers[key];
   };
-
-  const accessCert = JSON.parse(localStorage.getItem("access_cert") || '{}')
-  const { token, userInfo = {} } = accessCert.user || {}
-  setHeader('Authorization', config.headers['x-authorization'] || "Bearer " + token);
-  setHeader('x-user-id', userInfo.uid);
-  setHeader('x-org-id', userInfo.orgId);
+  const headers = authorHeadersWanwu();
+  for (let key in headers) {
+    if (key === 'Authorization') {
+      setHeader(key, config.headers['x-authorization'] || headers[key]);
+    } else {
+      setHeader(key, headers[key]);
+    }
+  }
   setHeader('x-requested-with', 'XMLHttpRequest');
   delete config.headers['x-authorization']
   if (
