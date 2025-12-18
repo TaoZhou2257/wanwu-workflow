@@ -19,6 +19,7 @@ import { type CozeAPI } from '@coze/api';
 
 import { type IBuilderChatProps } from '../type';
 import { getConnectorId } from '../helper/get-connector-id';
+import { isRunPage } from '../../../../../../../workflow/base';
 export const createOrGetConversation = async (
   apiSdk: CozeAPI | undefined,
   props: IBuilderChatProps,
@@ -51,7 +52,7 @@ export const createOrGetConversation = async (
             app_id: props.project?.id,
             conversation_name: props?.project?.conversationName,
             get_or_create: true,
-            draft_mode: props?.project?.mode === 'draft',
+            draft_mode: isRunPage() ? false : props?.project?.mode === 'draft',
             workflow_id: props?.workflow?.id,
             connector_id: getConnectorId(props),
           },

@@ -232,7 +232,7 @@ export const Conversations: React.FC<ConversationsProps> = ({
       {
         app_id: projectId,
         get_or_create: true,
-        draft_mode: true,
+        draft_mode: false,
         workflow_id: globalState.workflowId,
         connector_id: chatflowDraftConnectorId,
         ...params
