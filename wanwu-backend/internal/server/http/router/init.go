@@ -85,7 +85,8 @@ func Register(r *hertz_server.Hertz) {
 			_workflow_api.GET("/apiDetail", append(_getapidetailMw(), coze.GetApiDetail)...)
 			_workflow_api.POST("/batch_delete", append(_batchdeleteworkflowMw(), coze.BatchDeleteWorkflow)...)
 			_workflow_api.POST("/cancel", append(_cancelworkflowMw(), coze.CancelWorkFlow)...)
-			_workflow_api.POST("/canvas/draft", append(_getcanvasinfoMw(), coze.GetCanvasInfoByWanwu)...)
+			_workflow_api.POST("/canvas", append(_getcanvasinfoMw(), coze.GetLatestVersionCanvasInfoByWanwu)...)
+			_workflow_api.POST("/canvas/draft", append(_getcanvasinfoMw(), coze.GetDraftCanvasInfoByWanwu)...)
 			_workflow_api.POST("/copy", append(_copyworkflowMw(), coze.CopyWorkflowByWanwu)...)
 			_workflow_api.POST("/copy_wk_template", append(_copywktemplateapiMw(), coze.CopyWkTemplateApi)...)
 			_workflow_api.POST("/create", append(_createworkflowMw(), coze.CreateWorkflowByWanwu)...)
@@ -119,7 +120,7 @@ func Register(r *hertz_server.Hertz) {
 			_workflow_api.POST("/version_list", append(_getworkflowversionlistMw(), coze.GetWorkflowVersionListByWanwu)...)
 			_workflow_api.PUT("/version_description", append(_updateworkflowversiondescriptionMw(), coze.UpdateWorkflowVersionDescriptionByWanwu)...)
 			_workflow_api.POST("/revert", append(_rollbackworkflowversionMw(), coze.RollbackWorkflowVersionByWanwu)...)
-			_workflow_api.POST("/canvas", append(_getworkflowlatestversioncanvasinfoMw(), coze.GetWorkflowLatestVersionCanvasInfoByWanwu)...)
+
 			{
 				_chat_flow_role := _workflow_api.Group("/chat_flow_role", _chat_flow_roleMw()...)
 				_chat_flow_role.POST("/create", append(_createchatflowroleMw(), coze.CreateChatFlowRole)...)
@@ -151,7 +152,7 @@ func Register(r *hertz_server.Hertz) {
 			{
 				_message := _conversation0.Group("/message", _messageMw()...)
 				_message.POST("/list", append(_getapimessagelistMw(), coze.GetApiMessageList)...)
-				_message.POST("/list_by_wanwu", append(_getapimessagelistMw(), coze.GetApiMessageList)...)
+				_message.POST("/list_by_wanwu", append(_getapimessagelistMw(), coze.GetApiMessageList)...) // 跳过coze的openapi鉴权
 			}
 		}
 		{
@@ -164,8 +165,7 @@ func Register(r *hertz_server.Hertz) {
 			{
 				_conversation1 := _workflow.Group("/conversation", _conversation1Mw()...)
 				_conversation1.POST("/create", append(_openapicreateconversationMw(), coze.OpenAPICreateConversationByWanwu)...)
-				// 加上create_by_wanwu 跳过coze的openapi鉴权（别删）
-				_conversation1.POST("/create_by_wanwu", append(_openapicreateconversationMw(), coze.OpenAPICreateConversationByWanwu)...)
+				_conversation1.POST("/create_by_wanwu", append(_openapicreateconversationMw(), coze.OpenAPICreateConversationByWanwu)...) // 跳过coze的openapi鉴权
 
 			}
 			// --- wanwu adapt ---

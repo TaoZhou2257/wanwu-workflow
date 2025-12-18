@@ -44,12 +44,12 @@ func GetDraftIntelligenceListByWanwu(ctx context.Context, c *app.RequestContext)
 	}
 	workflowID, _ := strconv.Atoi(parsedParams.Get("workflow_id"))
 
-	// 根据workflow id，获取workflow信息，用于设置当前workflow对应的唯一ntelligence相关信息
+	// 根据workflow id，获取workflow信息，用于设置当前workflow对应的唯一intelligence相关信息
 	workflowIDStr := strconv.Itoa(workflowID)
 	resp, err := appworkflow.SVC.GetCanvasInfoByWanwu(ctx, &appworkflow.ExportWorkflowRequest{
 		WorkflowID: workflowIDStr,
 		SpaceID:    strconv.Itoa(int(req.SpaceID)),
-		Type:       workflowModel.FromDraft,
+		QType:      workflowModel.FromDraft,
 	})
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
@@ -79,13 +79,13 @@ func GetDraftIntelligenceInfoByWanwu(ctx context.Context, c *app.RequestContext)
 	}
 
 	// req.IntelligenceID 即 workflow id
-	// 根据workflow id，获取workflow信息，用于设置当前workflow对应的唯一ntelligence相关信息
+	// 根据workflow id，获取workflow信息，用于设置当前workflow对应的唯一intelligence相关信息
 	workflowIDStr := strconv.Itoa(int(req.IntelligenceID))
 	spaceID, _ := ctxcache.Get[string](ctx, "X-Org-Id")
 	resp, err := appworkflow.SVC.GetCanvasInfoByWanwu(ctx, &appworkflow.ExportWorkflowRequest{
 		SpaceID:    spaceID,
 		WorkflowID: workflowIDStr,
-		Type:       workflowModel.FromDraft,
+		QType:      workflowModel.FromDraft,
 	})
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)

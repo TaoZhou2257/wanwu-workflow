@@ -2,13 +2,13 @@ package coze
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	appworkflow "github.com/coze-dev/coze-studio/backend/application/workflow"
+	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
 )
@@ -84,18 +84,25 @@ func ExportWorkFlow(ctx context.Context, c *app.RequestContext) {
 		invalidParamRequestResponse(c, err.Error())
 		return
 	}
-	resp, err := appworkflow.SVC.ExportWorkFlowByWanwu(ctx, &req)
+
+	if req.Version != "" {
+		req.QType = workflowModel.FromSpecificVersion
+	} else {
+		req.QType = workflowModel.FromDraft
+	}
+
+	resp, err := appworkflow.SVC.GetCanvasInfoByWanwu(ctx, &req)
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
 		return
 	}
-	if resp.Data.Schema == "" {
-		internalServerErrorResponse(ctx, c, errors.New("exported workflow schema is empty"))
+	if resp.Data.Workflow.SchemaJSON == nil {
+		internalServerErrorResponse(ctx, c, err)
 		return
 	}
 	// 解析原始schema
 	var schema vo.Canvas
-	if err := sonic.Unmarshal([]byte(resp.Data.Schema), &schema); err != nil {
+	if err := sonic.Unmarshal([]byte(*resp.Data.Workflow.SchemaJSON), &schema); err != nil {
 		internalServerErrorResponse(ctx, c, fmt.Errorf("failed to parse schema JSON: %v", err))
 		return
 	}
@@ -111,8 +118,8 @@ func ExportWorkFlow(ctx context.Context, c *app.RequestContext) {
 	}
 	// 创建导出数据
 	exportData := workflowExport{
-		WorkflowName: resp.Data.Name,
-		WorkflowDesc: resp.Data.Describe,
+		WorkflowName: resp.Data.Workflow.Name,
+		WorkflowDesc: resp.Data.Workflow.Desc,
 		Schema:       schemaStr,
 	}
 	response := map[string]any{

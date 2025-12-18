@@ -410,7 +410,3 @@ func _updateworkflowversiondescriptionMw() []app.HandlerFunc {
 func _rollbackworkflowversionMw() []app.HandlerFunc {
 	return nil
 }
-
-func _getworkflowlatestversioncanvasinfoMw() []app.HandlerFunc {
-	return nil
-}
