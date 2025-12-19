@@ -52,7 +52,7 @@ export const DatasetSelect = ({
   const libraryCardTestID = getNodeSetterId('dataset-select-card');
 
   // When initializing, it will be worn to the default value: [null]
-  const value = useMemo(() => _value?.filter?.(d => !!d) || [], [_value]);
+  const value:any = useMemo(() => _value?.filter?.(d => !!d) || [], [_value]);
 
   const { dataSets, cacheDataSetInfo } = useDataSetInfos({ ids: value.map(item => item.dataset_id) });
   const res = useWorkflowNode();
@@ -134,8 +134,9 @@ export const DatasetSelect = ({
       setCurrentKeyList(metaDataKeyList)
       setCurrentMetaData(metaDataFilterParams || DEFAULT_METADATA)
       setVisible(true)
-    } catch(err) {
-      Toast.error(err?.response?.data?.msg || 'Server Error');
+    } catch (err) {
+      const { statusText, data } = err?.response || {};
+      Toast.error(data?.msg || statusText || 'Server Error');
     }
   }
 

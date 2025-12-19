@@ -85,7 +85,7 @@ export const useSelectMcpModal = ({
     page_offset: number;
   }) => {
     const { page_offset } = reqParams;
-    const { data } = await MemoryApi.GetMcpSelect();
+    const { data }: { data: any } = await MemoryApi.GetMcpSelect();
     return {
       list: data?.list || [],
       nextOffset: page_offset + 1,
@@ -101,11 +101,11 @@ export const useSelectMcpModal = ({
       setToolLoading(true)
       setToolList([])
 
-      const { data } = await MemoryApi.GetMcpToolSelect(reqParams);
+      const { data }: { data: any } = await MemoryApi.GetMcpToolSelect(reqParams) || {};
       setToolList(data?.tools || [])
     } catch (err:any) {
-      Toast.error({content: err?.response?.data?.msg || 'Server Error'})
-      // logger.error(err?.response?.msg || 'Server Error');
+      const { statusText, data } = err?.response || {};
+      Toast.error(data?.msg || statusText || 'Server Error');
     } finally {
       setToolLoading(false)
     }
@@ -125,7 +125,7 @@ export const useSelectMcpModal = ({
     },
   );
 
-  const handleAddMcp = (item: McpInfo) => {
+  const handleAddMcp = (item) => {
     if (onAddMcp && item.mcpId) {
       onAddMcp?.(item, reload);
     }
@@ -161,7 +161,7 @@ export const useSelectMcpModal = ({
         activeKey={activeKey}
         onChange={handleChange}
       >
-        {data?.list.map((item, index) => (
+        {data?.list.map((item:any, index) => (
           <Collapse.Panel
             header={item.name}
             itemKey={item.mcpId}

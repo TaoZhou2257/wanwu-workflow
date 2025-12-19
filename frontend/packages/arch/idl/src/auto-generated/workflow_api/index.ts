@@ -327,11 +327,31 @@ export default class WorkflowApiService<T> {
   }
 
   /**
-   * POST /api/workflow_api/canvas
+   * POST /api/workflow_api/canvas/draft
    *
    * 获取流程编辑态详情，包括画布信息、节点信息、边信息、变量信息、权限信息、版本信息等
    */
   GetCanvasInfo(
+    req: workflow.GetCanvasInfoRequest,
+    options?: T,
+  ): Promise<workflow.GetCanvasInfoResponse> {
+    const _req = req;
+    const url = this.genBaseURL('/api/workflow_api/canvas/draft');
+    const method = 'POST';
+    const data = {
+      space_id: _req['space_id'],
+      workflow_id: _req['workflow_id'],
+      Base: _req['Base'],
+    };
+    return this.request({ url, method, data }, options);
+  }
+
+  /**
+   * POST /api/workflow_api/canvas
+   *
+   * 工作流、对话流调试页面获取详情
+   */
+  GetRunPageCanvasInfoWanwu(
     req: workflow.GetCanvasInfoRequest,
     options?: T,
   ): Promise<workflow.GetCanvasInfoResponse> {
@@ -548,6 +568,8 @@ export default class WorkflowApiService<T> {
       appId: _req['appId'],
       appType: _req['appType'],
       publishType: _req['publishType'],
+      version: _req['version'],
+      desc: _req['desc'],
     };
     return this.request({ url, method, data }, options);
   }
@@ -998,6 +1020,25 @@ export default class WorkflowApiService<T> {
       draft_mode: _req['draft_mode'],
       workflow_id: _req['workflow_id'],
       connector_id: _req['connector_id'],
+    };
+    return this.request({ url, method, data }, options);
+  }
+
+  /**
+   * DELETE /user/api/v1/chatflow/conversation/delete
+   *
+   * 对话流删除会话
+   */
+  DeleteConversationWanwu(
+    req?: workflow.DeleteConversationWanwuRequest,
+    options?: T,
+  ): Promise<workflow.DeleteConversationWanwuResponse> {
+    const _req = req || {};
+    const url = this.genBaseURL('/user/api/v1/chatflow/conversation/delete');
+    const method = 'DELETE';
+    const data = {
+      project_id: _req['project_id'],
+      unique_id: _req['unique_id'],
     };
     return this.request({ url, method, data }, options);
   }

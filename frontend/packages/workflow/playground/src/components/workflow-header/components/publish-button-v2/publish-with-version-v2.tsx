@@ -293,9 +293,9 @@ const PublishForm: React.FC<{
       await formApiRef.current.validate();
       const data = formApiRef.current.getValues();
       const next: any = {
-        publishType: data.publishType,
         appType: "workflow",
-        appId: workflowId
+        appId: workflowId,
+        ...data,
       };
 
       onSubmit(next);
@@ -370,6 +370,58 @@ const PublishForm: React.FC<{
         </div>
       ) : null}
       <Form getFormApi={v => (formApiRef.current = v)}>
+        <Form.Input
+          label={I18n.t('ocean_deploy_list_pkg_version')}
+          required
+          placeholder="v0.0.1"
+          field="version"
+          data-testid="workflow-publish-version-name"
+          rules={[
+            {
+              required: true,
+              message: I18n.t('mockset_field_is_required', {
+                field: I18n.t('ocean_deploy_list_pkg_version'),
+              }),
+            },
+            {
+              validator(_, value) {
+                if (!value) {
+                  return true;
+                }
+                return !!/^v\d+\.\d+\.\d+$/.test(value);
+              },
+              message: I18n.t('workflow_version_number_error1'),
+            },
+          ]}
+        />
+        <Form.TextArea
+          autosize={{
+            minRows: 1,
+            maxRows: 10,
+          }}
+          label={I18n.t('card_builder_builder_publish_changelog_label')}
+          placeholder={I18n.t(
+            'workflow_version_update_placeholder',
+            {},
+            '请描述本次版本更新内容',
+          )}
+          field="desc"
+          data-testid="workflow-publish-version-description"
+          rules={[
+            {
+              required: true,
+              message: I18n.t('mockset_field_is_required', {
+                field: I18n.t('card_builder_builder_publish_changelog_label'),
+              }),
+            },
+            {
+              max: 800,
+              message: I18n.t(
+                'project_resource_sidebar_warning_length_exceeds',
+              ),
+            },
+          ]}
+        />
         <Form.RadioGroup
           rules={[{ required: true }]}
           field="publishType"

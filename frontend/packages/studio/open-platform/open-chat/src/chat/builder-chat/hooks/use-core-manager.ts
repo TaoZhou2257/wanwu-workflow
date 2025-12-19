@@ -26,6 +26,7 @@ import { openApiHostByRegionWithToken } from '@/util/env';
 import { type IBuilderChatProps } from '../type';
 import { getConnectorId } from '../helper/get-connector-id';
 import { useGetAppDataCombineWithProps } from '../context/builder-chat-context';
+import { isRunPage } from '../../../../../../../workflow/base';
 
 export const useCoreManager = (
   props: IBuilderChatProps,
@@ -54,7 +55,7 @@ export const useCoreManager = (
                 bodyData.version =
                   refProps?.current?.project?.version || undefined;
                 bodyData.execute_mode =
-                  refProps?.current?.project?.mode === 'draft'
+                  refProps?.current?.project?.mode === 'draft' && !isRunPage()
                     ? 'DEBUG'
                     : undefined;
                 bodyData.app_id =
@@ -112,7 +113,7 @@ export const useCoreManager = (
                       refProps?.current?.project?.conversationName,
                     get_or_create: false,
                     workflow_id: refProps?.current?.workflow?.id,
-                    draft_mode: refProps?.current?.project?.mode === 'draft',
+                    draft_mode: isRunPage() ? false : refProps?.current?.project?.mode === 'draft',
                     connector_id: getConnectorId(props),
                   };
                 }

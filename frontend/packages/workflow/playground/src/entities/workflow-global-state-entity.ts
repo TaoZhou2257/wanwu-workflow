@@ -40,7 +40,7 @@ import {
   PersistenceModel,
   BindBizType,
 } from '@coze-workflow/base/api';
-import { isGeneralWorkflow } from '@coze-workflow/base';
+import { isGeneralWorkflow, isRunPage } from '@coze-workflow/base';
 import { REPORT_EVENTS } from '@coze-arch/report-events';
 import { reporter } from '@coze-arch/logger';
 import { I18n, type I18nKeysNoOptionsType } from '@coze-arch/i18n';
@@ -457,7 +457,15 @@ export class WorkflowGlobalStateEntity extends ConfigEntity<WorkflowGlobalState>
     workflowId: string,
     spaceId: string,
   ): Promise<WorkflowInfo> {
-    const { data } = await workflowApi.GetCanvasInfo(
+    const { data } = isRunPage() ? await workflowApi.GetRunPageCanvasInfoWanwu(
+      {
+        workflow_id: workflowId,
+        space_id: spaceId,
+      },
+      {
+        __disableErrorToast: true,
+      },
+    ) : await workflowApi.GetCanvasInfo(
       {
         workflow_id: workflowId,
         space_id: spaceId,
