@@ -38,6 +38,7 @@ const WorkFlowHeader: React.FC = () => {
   const globalState = useGlobalState();
   const { readonly, info, playgroundProps, workflowId } = globalState;
 
+  const isPublished = info.plugin_id !== '0';
   return (
     <div className={styles.container}>
       <div
@@ -71,7 +72,8 @@ const WorkFlowHeader: React.FC = () => {
             <SubmitButton />
           </>
         )}
-        <HistoryButton />
+
+        {isPublished && <HistoryButton />}
 
         <PublishButton />
 
