@@ -48,9 +48,12 @@ export const WaitGenerating = () => {
   );
 
   const { waiting } = useWaitingStore(
-    useShallow(state => ({
-      waiting: !!state.waiting && !state.responding?.response.length,
-    })),
+    useShallow(state => {
+      console.log(state.waiting, state, '-----------------------123')
+      return ({
+        waiting: !!state.waiting && !state.responding?.response.length,
+      })
+    }),
   );
 
   const { functionCallLength, llmLength } = useMessagesStore(
@@ -70,6 +73,7 @@ export const WaitGenerating = () => {
     : !llmLength;
 
   const { selectable } = usePreference();
+  console.log(waiting, '--------------------------------waiting')
 
   if (!waiting) {
     return null;

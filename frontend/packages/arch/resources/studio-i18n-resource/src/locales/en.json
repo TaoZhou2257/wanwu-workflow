@@ -14011,7 +14011,7 @@
   "workflow_publish_multibranch_workflow_picture": "Icon",
   "workflow_publish_not_testrun_ insist": "Still publish",
   "workflow_publish_not_testrun_content": "No test run before release. It is recommended to ensure that the workflow is running normally before release.",
-  "workflow_publish_type": "发布类型",
+  "workflow_publish_type": "发布范围",
   "workflow_publish_type_private": "私密发布为工具：仅自己可见",
   "workflow_publish_type_org": "公开发布为工具：组织内可见",
   "workflow_publish_type_public": "公开发布为工具：所有人可见",
