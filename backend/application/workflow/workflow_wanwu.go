@@ -784,8 +784,8 @@ type RunWorkFlowLatestVersionByWanwuReq struct {
 }
 
 type ExportWorkflowRequest struct {
-	WorkflowID string `thrift:"workflow_id,1,required" form:"workflow_id,required" json:"workflow_id,required" query:"workflow_id,required"`
-	SpaceID    string `form:"space_id,required" json:"space_id" query:"space_id,required"`
-	Version    string `thrift:"version,6,optional" form:"version" json:"version,omitempty" query:"version"`
-	QType      model.Locator
+	WorkflowID string        `thrift:"workflow_id,1,required" form:"workflow_id,required" json:"workflow_id,required" query:"workflow_id,required"`
+	SpaceID    string        `form:"space_id,required" json:"space_id" query:"space_id,required"`
+	Version    string        `thrift:"version,6,optional" form:"version" json:"version,omitempty" query:"version"`
+	QType      model.Locator `form:"qType" json:"qType" query:"qType"`
 }
