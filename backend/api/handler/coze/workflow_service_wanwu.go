@@ -10,6 +10,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	appworkflow "github.com/coze-dev/coze-studio/backend/application/workflow"
+	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
 )
 
 // CreateWorkflowByWanwu 参考CreateWorkflow
@@ -24,6 +25,26 @@ func CreateWorkflowByWanwu(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp, err := appworkflow.SVC.CreateWorkflowByWanwu(ctx, &req)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+
+	c.JSON(consts.StatusOK, resp)
+}
+
+// UpdateWorkflowMetaByWanwu 参考UpdateWorkflowMeta
+// @router /api/workflow_api/update_meta_by_wanwu [POST]
+func UpdateWorkflowMetaByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req workflow.UpdateWorkflowMetaRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+	resp, err := appworkflow.SVC.UpdateWorkflowMetaByWanwu(ctx, &req)
+
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
 		return
@@ -144,47 +165,58 @@ func GetWorkflowDetailInfoByWanwu(ctx context.Context, c *app.RequestContext) {
 	c.JSON(consts.StatusOK, response)
 }
 
-// GetCanvasInfoByWanwu 参考GetCanvasInfo 增加返回图标判断
-// @router /api/workflow_api/canvas [POST]
-func GetCanvasInfoByWanwu(ctx context.Context, c *app.RequestContext) {
-	var err error
-	var req workflow.GetCanvasInfoRequest
-	err = c.BindAndValidate(&req)
+// GetDraftCanvasInfoByWanwu 参考GetCanvasInfo 获取工作流草稿信息
+// @router /api/workflow_api/canvas/draft [POST]
+func GetDraftCanvasInfoByWanwu(ctx context.Context, c *app.RequestContext) {
+	var req appworkflow.ExportWorkflowRequest
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		invalidParamRequestResponse(c, err.Error())
 		return
 	}
-
-	resp, err := appworkflow.SVC.GetCanvasInfo(ctx, &req)
+	req.QType = workflowModel.FromDraft
+	resp, err := appworkflow.SVC.GetCanvasInfoByWanwu(ctx, &req)
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
 		return
 	}
+	// 增加返回图标判断
 	workflowDefaultIconURL(resp.Data.Workflow)
-
 	c.JSON(consts.StatusOK, resp)
 }
 
-// OpenAPIGetWorkflowInfoByWanwu 参考OpenAPIGetWorkflowInfo
-// 0. FIXME 前端运行该接口，不会在header中带orgId，需要在该方法中设置ctxcache
-// @router /v1/workflows/:workflow_id [GET]
-func OpenAPIGetWorkflowInfoByWanwu(ctx context.Context, c *app.RequestContext) {
-	var err error
-
-	if err = processOpenAPIGetWorkflowInfoRequest(ctx, c); err != nil {
+// GetLatestVersionCanvasInfoByWanwu 参考GetCanvasInfo 获取已发布工作流最新版本信息
+// @router /api/workflow_api/canvas [POST]
+func GetLatestVersionCanvasInfoByWanwu(ctx context.Context, c *app.RequestContext) {
+	var req appworkflow.ExportWorkflowRequest
+	err := c.BindAndValidate(&req)
+	if err != nil {
 		invalidParamRequestResponse(c, err.Error())
 		return
 	}
+	req.QType = workflowModel.FromLatestVersion
+	resp, err := appworkflow.SVC.GetCanvasInfoByWanwu(ctx, &req)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+	// 增加返回图标判断
+	workflowDefaultIconURL(resp.Data.Workflow)
+	c.JSON(consts.StatusOK, resp)
+}
 
-	var req workflow.OpenAPIGetWorkflowInfoRequest
-
+// RunWorkFlowLatestVersionByWanwu 运行已发布最新版工作流
+// @router /v1/workflow/run_by_wanwu [POST]
+func RunWorkFlowLatestVersionByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req workflow.WorkFlowTestRunRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
 		invalidParamRequestResponse(c, err.Error())
 		return
 	}
 
-	resp, err := appworkflow.SVC.OpenAPIGetWorkflowInfoByWanwu(ctx, &req)
+	resp, err := appworkflow.SVC.LatestVersionRunByWanwu(ctx, &req)
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
 		return

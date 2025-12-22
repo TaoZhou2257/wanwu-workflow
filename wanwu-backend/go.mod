@@ -13,7 +13,8 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.71.0
 replace github.com/getkin/kin-openapi => github.com/getkin/kin-openapi v0.118.0
 
 require (
-	github.com/UnicomAI/wanwu v0.2.5
+	github.com/UnicomAI/wanwu v0.2.8
+	github.com/cloudwego/eino v0.4.8
 	github.com/cloudwego/hertz v0.10.2
 	github.com/coze-dev/coze-studio/backend v0.0.0-00010101000000-000000000000
 	github.com/hertz-contrib/cors v0.1.0
@@ -51,7 +52,6 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
-	github.com/cloudwego/eino v0.4.8 // indirect
 	github.com/cloudwego/eino-ext/components/embedding/ark v0.1.0 // indirect
 	github.com/cloudwego/eino-ext/components/embedding/gemini v0.0.0-20250814083140-54b99ff82f8e // indirect
 	github.com/cloudwego/eino-ext/components/embedding/ollama v0.0.0-20250728060543-79ec300857b8 // indirect

@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
-	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	appworkflow "github.com/coze-dev/coze-studio/backend/application/workflow"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
@@ -57,7 +57,8 @@ func GetWorkFlowOpenAPIV3SchemaByWanwu(ctx context.Context, c *app.RequestContex
 // 0. FIXME 智能体运行该接口，不会在header中带userId、orgId，需要在该方法中设置ctxcache
 // 1. 将workflow_id从 body => path
 // 2. 将body参数{...} marsharl到req.Parameters上
-// 3. 返回resp.Data unmarshal的结构体
+// 3. ctx中设置WANWU_WORKFLOW_OPENAPI_RUN_RECORD_EXECUTE_HISTORY
+// 4. 返回resp.Data unmarshal的结构体
 // @router /v1/workflow/:workflow_id/run_by_wanwu [POST]
 func OpenAPIRunWorkFlowByWanwu(ctx context.Context, c *app.RequestContext) {
 	var err error
@@ -84,7 +85,11 @@ func OpenAPIRunWorkFlowByWanwu(ctx context.Context, c *app.RequestContext) {
 	}
 	req.Parameters = parameters
 
-	resp, err := appworkflow.SVC.OpenAPIRunByWanwu(ctx, workflowID, &req)
+	if os.Getenv("WANWU_WORKFLOW_OPENAPI_RUN_SKIP_EXECUTE_HISTORY") == "1" {
+		ctx = context.WithValue(ctx, "WANWU_WORKFLOW_OPENAPI_RUN_SKIP_EXECUTE_HISTORY", true)
+	}
+
+	resp, tPlan, err := appworkflow.SVC.OpenAPIRunByWanwu(ctx, workflowID, &req)
 	if err != nil {
 		var se vo.WorkflowError
 		if errors.As(err, &se) {
@@ -102,21 +107,26 @@ func OpenAPIRunWorkFlowByWanwu(ctx context.Context, c *app.RequestContext) {
 		internalServerErrorResponse(ctx, c, err)
 		return
 	}
-
-	var respData map[string]any
-	if resp.Data != nil {
-		if err = sonic.Unmarshal([]byte(*resp.Data), &respData); err != nil {
-			logs.CtxErrorf(ctx, "unmarshal resp.Data (%v) err: %v", resp.Data, err)
-			c.JSON(consts.StatusOK, resp.Data)
+	if tPlan == vo.ReturnVariables {
+		var respData map[string]any
+		if resp.Data != nil {
+			if err = sonic.Unmarshal([]byte(*resp.Data), &respData); err != nil {
+				logs.CtxErrorf(ctx, "unmarshal resp.Data (%v) err: %v", resp.Data, err)
+				c.JSON(consts.StatusOK, resp.Data)
+				return
+			}
+			c.JSON(consts.StatusOK, respData)
 			return
 		}
-		c.JSON(consts.StatusOK, respData)
+	} else {
+		c.JSON(consts.StatusOK, resp.Data)
 		return
 	}
+
 	internalServerErrorResponse(ctx, c, errors.New("empty response"))
 }
 
-// OpenAPICreateConversationByWanwu参考 OpenAPICreateConversation
+// OpenAPICreateConversationByWanwu 参考OpenAPICreateConversation
 // @router /v1/workflow/conversation/create_by_wanwu [POST]
 func OpenAPICreateConversationByWanwu(ctx context.Context, c *app.RequestContext) {
 	var err error
@@ -126,25 +136,13 @@ func OpenAPICreateConversationByWanwu(ctx context.Context, c *app.RequestContext
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-	userID := ctxutil.GetApiAuthFromCtx(ctx).UserID
-	newAppID, _ := appworkflow.SVC.IDGenerator.GenID(ctx)
-	// 创建conversation template草稿
-	_, err = appworkflow.GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
-		AppID:   newAppID,
-		UserID:  userID,
-		SpaceID: mustParseInt64(*req.SpaceID),
-		Name:    *req.ConversationMame,
-	})
-	if err != nil {
-		internalServerErrorResponse(ctx, c, err)
-		return
+	// appID非空，用于对话流调试(appID == workflowID)
+	// appID为空，自动生成一个新的，用于应用广场新建对话流
+	if req.AppID == nil {
+		newAppID, _ := appworkflow.SVC.IDGenerator.GenID(ctx)
+		req.AppID = ptr.Of(strconv.FormatInt(newAppID, 10))
 	}
-	req.AppID = ptr.Of(strconv.FormatInt(newAppID, 10))
-	resp, err := appworkflow.SVC.OpenAPICreateConversation(ctx, &req)
-	// 将appId返回给bff
-	resp.ConversationData.MetaData = map[string]string{
-		"appId": strconv.FormatInt(newAppID, 10),
-	}
+	resp, err := appworkflow.SVC.OpenAPICreateConversationByWanwu(ctx, &req)
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
 		return

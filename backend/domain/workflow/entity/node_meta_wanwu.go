@@ -9,6 +9,7 @@ const (
 	NodeTypeWanWuMCPTool            NodeType = "WanWuMCPTool"
 	NodeTypeWanWuGUI                NodeType = "WanWuGUI"
 	NodeTypeWanWuTool               NodeType = "WanWuTool"
+	NodeTypeWanWuQARetriever        NodeType = "WanWuQARetriever"
 )
 
 // Wanwu NodeTypeMetas Init
@@ -161,6 +162,24 @@ func init() {
 		},
 		EnUSName:        "Multi File generator",
 		EnUSDescription: "Parse documents content.",
+	}
+
+	NodeTypeMetas[NodeTypeWanWuQARetriever] = &NodeTypeMeta{
+		ID:         1012,
+		Key:        NodeTypeWanWuQARetriever,
+		DisplayKey: "QAset",
+		Name:       "问答库检索",
+		Category:   "data",
+		Desc:       "在选定的问答库中，根据输入变量召回最匹配的信息，并以列表形式返回",
+		Color:      "#FF811A",
+		// IconURL:      "https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg",
+		SupportBatch: false,
+		ExecutableMeta: ExecutableMeta{
+			PreFillZero: true,
+			PostFillNil: true,
+		},
+		EnUSName:        "Question and answer retrieval",
+		EnUSDescription: "In the selected qa pairs, the best matching information is recalled based on the input variable and returned as an Array.",
 	}
 
 }

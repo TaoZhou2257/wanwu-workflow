@@ -304,6 +304,15 @@ func _listprojectconversationdefMw() []app.HandlerFunc {
 	return nil
 }
 
+func _createprojectconversationdefMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _deleteprojectconversationdefMw() []app.HandlerFunc {
+	return nil
+}
+
 func _getworkflowuploadauthtokenMw() []app.HandlerFunc {
 	// your code...
 	return nil
@@ -387,5 +396,17 @@ func _developerMw() []app.HandlerFunc {
 }
 func _geticonMw() []app.HandlerFunc {
 	// your code...
+	return nil
+}
+
+func _getworkflowversionlistMw() []app.HandlerFunc {
+	return nil
+}
+
+func _updateworkflowversiondescriptionMw() []app.HandlerFunc {
+	return nil
+}
+
+func _rollbackworkflowversionMw() []app.HandlerFunc {
 	return nil
 }

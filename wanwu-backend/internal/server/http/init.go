@@ -4,7 +4,6 @@ import (
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/config"
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/server/http/middleware"
 	"github.com/UnicomAI/wanwu-workflow/wanwu-backend/internal/server/http/router"
-	jwt_util "github.com/UnicomAI/wanwu/pkg/jwt-util"
 	hertz_server "github.com/cloudwego/hertz/pkg/app/server"
 	hertz_config "github.com/cloudwego/hertz/pkg/common/config"
 	coze_middleware "github.com/coze-dev/coze-studio/backend/api/middleware"
@@ -12,8 +11,6 @@ import (
 )
 
 func Init() {
-	jwt_util.InitUserJWT(config.Cfg().JWT.SigningKey)
-
 	opts := []hertz_config.Option{
 		hertz_server.WithHostPorts(config.Cfg().Server.HttpEndpoint),
 		hertz_server.WithMaxRequestBodySize(config.Cfg().Server.MaxReqBodySize),

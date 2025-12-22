@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	openapi3_util "github.com/UnicomAI/wanwu/pkg/openapi3-util"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/canvas/convert"
@@ -18,7 +19,6 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/schema"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
-	openapi3_util "github.com/coze-dev/coze-studio/backend/pkg/wanwu-openapi3-util"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -189,7 +189,7 @@ func toolRequest(toolId, toolType, userApiKey string) (string, *openapi3_util.Au
 			return "", nil, fmt.Errorf("request %v err: %v", url, err)
 		}
 		if resp.StatusCode() >= 300 {
-			return "", nil, fmt.Errorf("request %v http status %v msg: %v", url, resp.StatusCode(), resp.String())
+			return "", nil, fmt.Errorf("request %v http status %v msg: %v", url, resp.StatusCode(), res.Msg)
 		}
 		marshal, err := sonic.Marshal(res.Data)
 		if err != nil {
@@ -220,7 +220,7 @@ func toolRequest(toolId, toolType, userApiKey string) (string, *openapi3_util.Au
 			return "", nil, fmt.Errorf("request %v err: %v", url, err)
 		}
 		if resp.StatusCode() >= 300 {
-			return "", nil, fmt.Errorf("request %v http status %v msg: %v", url, resp.StatusCode(), resp.String())
+			return "", nil, fmt.Errorf("request %v http status %v msg: %v", url, resp.StatusCode(), res.Msg)
 		}
 		marshal, err := sonic.Marshal(res.Data)
 		if err != nil {

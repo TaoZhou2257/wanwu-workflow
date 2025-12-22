@@ -499,6 +499,10 @@ func (w *ApplicationService) OpenAPIChatFlowRun(ctx context.Context, req *workfl
 		if err != nil {
 			return nil, err
 		}
+		// 防止 JSON "null" 导致 map 变成 nil
+		if parameters == nil {
+			parameters = make(map[string]any)
+		}
 	}
 
 	var (

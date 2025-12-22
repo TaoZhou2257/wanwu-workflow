@@ -2,7 +2,7 @@
  * author wangliang
  */
 
-package knowledge
+package wanwu_qa
 
 import (
 	"context"
@@ -32,7 +32,7 @@ const (
 	metaTypeTime   = "time"
 )
 
-type WanWuRetrieveConfig struct {
+type WanWuQARetrieveConfig struct {
 	KnowledgeInfos []*RetrieveKnowledgeInfo
 	RetrieveParams *RetrieveParams
 }
@@ -48,29 +48,25 @@ type RetrieveParams struct {
 	TopK                        int64   `json:"topK"`                           //topK 获取最高的几行
 	Threshold                   float64 `json:"threshold"`                      //threshold 过滤分数阈值
 	Rewrite                     bool    `json:"rewrite"`                        //是否开启重写
-	UseGraph                    bool    `json:"useGraph"`                       // 是否开启知识图谱
 }
 
 type HitParams struct {
-	UserId                string                 `json:"userId"`
-	Question              string                 `json:"question" validate:"required"`
-	KnowledgeIdList       []string               `json:"knowledgeIdList" validate:"required"`
-	Threshold             float64                `json:"threshold"`
-	TopK                  int64                  `json:"topK"`
-	RerankModelId         string                 `json:"rerank_model_id"`               // rerankId
-	RerankMod             string                 `json:"rerank_mod"`                    // rerank_model:重排序模式，weighted_score：权重搜索
-	RetrieveMethod        string                 `json:"retrieve_method"`               // hybrid_search:混合搜索， semantic_search:向量搜索， full_text_search：文本搜索
-	Weight                *WeightParams          `json:"weights"`                       // 权重搜索下的权重配置
-	RewriteQuery          bool                   `json:"rewrite_query"`                 // 查询重写
-	ReturnMeta            bool                   `json:"return_meta"`                   // 展示角标
-	TermWeightCoefficient *float64               `json:"term_weight_coefficient"`       // 展示角标
-	MetaFilter            bool                   `json:"metadata_filtering"`            // 元数据过滤开关
-	MetaFilterConditions  []*MetadataFilterParam `json:"metadata_filtering_conditions"` // 元数据过滤条件
-	UseGraph              bool                   `json:"use_graph"`                     // 知识图谱
+	UserId                      string                  `json:"userId"`
+	Question                    string                  `json:"question" validate:"required"`
+	KnowledgeIdList             []string                `json:"knowledgeIdList" validate:"required"`
+	ReturnMeta                  bool                    `json:"returnMeta"`
+	Threshold                   float64                 `json:"threshold"`
+	TopK                        int64                   `json:"topK"`
+	RetrieveMethod              string                  `json:"retrieveMethod"`
+	RerankMod                   string                  `json:"rerankMod"`
+	RerankModelId               string                  `json:"rerankModelId"`
+	MetadataFiltering           bool                    `json:"metadataFiltering"`
+	MetadataFilteringConditions []*QAMetadataFilterItem `json:"metadataFilteringConditions"`
+	Weight                      *WeightParams           `json:"weights"`
 }
 
-type MetadataFilterParam struct {
-	FilterKnowledgeName string                `json:"filtering_kb_name"`
+type QAMetadataFilterItem struct {
+	FilteringQaBaseName string                `json:"filtering_qa_base_name"`
 	LogicalOperator     string                `json:"logical_operator"`
 	MetaList            []*MetadataFilterItem `json:"conditions"` // 元数据过滤列表
 }
@@ -108,10 +104,10 @@ type MetaFilterParams struct {
 	Value     string `json:"value"`
 }
 
-func (r *WanWuRetrieveConfig) Adapt(_ context.Context, n *vo.Node, _ ...nodes.AdaptOption) (*schema.NodeSchema, error) {
+func (r *WanWuQARetrieveConfig) Adapt(_ context.Context, n *vo.Node, _ ...nodes.AdaptOption) (*schema.NodeSchema, error) {
 	ns := &schema.NodeSchema{
 		Key:     vo.NodeKey(n.ID),
-		Type:    entity.NodeTypeWanWuKnowledgeRetriever,
+		Type:    entity.NodeTypeWanWuQARetriever,
 		Name:    n.Data.Meta.Title,
 		Configs: r,
 	}
@@ -209,14 +205,6 @@ func (r *WanWuRetrieveConfig) Adapt(_ context.Context, n *vo.Node, _ ...nodes.Ad
 		retrieveParams.Rewrite = rewrite
 	}
 
-	if content, ok := getDesignatedParamContent("useGraph"); ok {
-		useGraph, err := cast.ToBoolE(content)
-		if err != nil {
-			return nil, err
-		}
-		retrieveParams.UseGraph = useGraph
-	}
-
 	r.RetrieveParams = retrieveParams
 
 	if err := convert.SetInputsForNodeSchema(n, ns); err != nil {
@@ -230,7 +218,7 @@ func (r *WanWuRetrieveConfig) Adapt(_ context.Context, n *vo.Node, _ ...nodes.Ad
 	return ns, nil
 }
 
-func (r *WanWuRetrieveConfig) Build(_ context.Context, _ *schema.NodeSchema, _ ...schema.BuildOption) (any, error) {
+func (r *WanWuQARetrieveConfig) Build(_ context.Context, _ *schema.NodeSchema, _ ...schema.BuildOption) (any, error) {
 	if len(r.KnowledgeInfos) == 0 {
 		return nil, errors.New("knowledge ids are required")
 	}
@@ -257,17 +245,8 @@ type RagKnowledgeHitResp struct {
 }
 
 type HitData struct {
-	Prompt     string `json:"prompt"`
-	SearchList []any  `json:"searchList"`
-	Score      []any  `json:"score"` //实际是[]float
-}
-
-// ChunkSearchList HitData 的SearchList
-type ChunkSearchList struct {
-	Title    string      `json:"title"`
-	Snippet  string      `json:"snippet"`
-	KbName   string      `json:"kb_name"`
-	MetaData interface{} `json:"meta_data"`
+	SearchList []any `json:"searchList"`
+	Score      []any `json:"score"` //实际是[]float
 }
 
 func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[string]any, error) {
@@ -282,39 +261,31 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 	retrieveParams := kr.retrieveParams
 	priorityMatch := retrieveParams.PriorityMatch
 
-	var termWeightCoefficient *float64 = nil
-	if retrieveParams.RerankKeywordPrioritySwitch {
-		termWeightCoefficient = &retrieveParams.RerankKeywordPriority
-	}
 	params, err := buildMetaDataFilterParams(kr.knowledgeInfos)
 	if err != nil {
 		return nil, err
 	}
 	req := &HitParams{
-		Question:              query,
-		KnowledgeIdList:       buildKnowledgeIdList(kr.knowledgeInfos),
-		TopK:                  retrieveParams.TopK,
-		Threshold:             retrieveParams.Threshold,
-		RerankModelId:         buildRerankId(priorityMatch, retrieveParams.RerankModelId),
-		RetrieveMethod:        buildRetrieveMethod(retrieveParams.MatchType),
-		RerankMod:             buildRerankMod(priorityMatch),
-		Weight:                buildWeight(priorityMatch, retrieveParams.SemanticsPriority, retrieveParams.KeywordPriority),
-		RewriteQuery:          retrieveParams.Rewrite,
-		UserId:                userIdStr,
-		ReturnMeta:            true,
-		TermWeightCoefficient: termWeightCoefficient,
-		MetaFilter:            len(params) > 0,
-		MetaFilterConditions:  params,
-		UseGraph:              retrieveParams.UseGraph,
+		Question:                    query,
+		KnowledgeIdList:             buildKnowledgeIdList(kr.knowledgeInfos),
+		TopK:                        retrieveParams.TopK,
+		Threshold:                   retrieveParams.Threshold,
+		RerankModelId:               buildRerankId(priorityMatch, retrieveParams.RerankModelId),
+		RetrieveMethod:              buildRetrieveMethod(retrieveParams.MatchType),
+		RerankMod:                   buildRerankMod(priorityMatch),
+		Weight:                      buildWeight(priorityMatch, retrieveParams.SemanticsPriority, retrieveParams.KeywordPriority),
+		UserId:                      userIdStr,
+		ReturnMeta:                  true,
+		MetadataFiltering:           len(params) > 0,
+		MetadataFilteringConditions: params,
 	}
 
-	response, err := ragKnowledgeSearch(ctx, req)
+	response, err := ragQASearch(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 	result := make(map[string]any)
 	result[wanWuOutput] = map[string]any{
-		"prompt":     response.Data.Prompt,
 		"score":      response.Data.Score,
 		"searchList": response.Data.SearchList,
 	}
@@ -322,18 +293,18 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 	return result, nil
 }
 
-// ragKnowledgeSearch rag命中测试
-func ragKnowledgeSearch(ctx context.Context, knowledgeHitParams *HitParams) (*RagKnowledgeHitResp, error) {
+// ragQASearch rag命中测试
+func ragQASearch(ctx context.Context, knowledgeHitParams *HitParams) (*RagKnowledgeHitResp, error) {
 	paramsByte, err := sonic.Marshal(knowledgeHitParams)
 	if err != nil {
-		logs.CtxErrorf(ctx, "ragKnowledgeSearch params marsh error %v", err)
+		logs.CtxErrorf(ctx, "ragQASearch params marsh error %v", err)
 		return nil, err
 	}
 	result, err := http_client.GetDefaultClient().PostJson(ctx, &http_client.HttpRequestParams{
-		Url:        os.Getenv("WANWU_KNOWLEDGE_SEARCH_URL"),
+		Url:        os.Getenv("WANWU_QA_SEARCH_URL"),
 		Body:       paramsByte,
 		Timeout:    time.Duration(10) * time.Second,
-		MonitorKey: "rag_knowledge_hit",
+		MonitorKey: "rag_qa_hit",
 		LogLevel:   http_client.LogAll,
 	})
 	if err != nil {
@@ -341,7 +312,7 @@ func ragKnowledgeSearch(ctx context.Context, knowledgeHitParams *HitParams) (*Ra
 	}
 	var resp RagKnowledgeHitResp
 	if err := sonic.Unmarshal(result, &resp); err != nil {
-		logs.CtxErrorf(ctx, "ragKnowledgeSearch result Unmarshal error %v", err)
+		logs.CtxErrorf(ctx, "ragQASearch result Unmarshal error %v", err)
 		return nil, err
 	}
 	if resp.Code != successCode {
@@ -432,8 +403,8 @@ func buildKnowledgeIdList(knowledgeInfos []*RetrieveKnowledgeInfo) []string {
 }
 
 // buildMetaDataFilterParams 构造元数据过滤参数
-func buildMetaDataFilterParams(knowledgeInfos []*RetrieveKnowledgeInfo) ([]*MetadataFilterParam, error) {
-	var ragMetaDataFilterParams []*MetadataFilterParam
+func buildMetaDataFilterParams(knowledgeInfos []*RetrieveKnowledgeInfo) ([]*QAMetadataFilterItem, error) {
+	var ragMetaDataFilterParams []*QAMetadataFilterItem
 	for _, k := range knowledgeInfos {
 		if k.MetaDataFilterParams == nil || !k.MetaDataFilterParams.FilterEnable ||
 			len(k.MetaDataFilterParams.MetaFilterParams) == 0 {
@@ -444,8 +415,8 @@ func buildMetaDataFilterParams(knowledgeInfos []*RetrieveKnowledgeInfo) ([]*Meta
 			logs.Errorf("buildMetaDataFilterParams error %v", err)
 			return nil, err
 		}
-		ragMetaDataFilterParams = append(ragMetaDataFilterParams, &MetadataFilterParam{
-			FilterKnowledgeName: k.RagName,
+		ragMetaDataFilterParams = append(ragMetaDataFilterParams, &QAMetadataFilterItem{
+			FilteringQaBaseName: k.RagName,
 			LogicalOperator:     k.MetaDataFilterParams.FilterLogicType,
 			MetaList:            item,
 		})

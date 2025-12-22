@@ -143,9 +143,11 @@ icons:
     url: /api/static/icon/icon-GUI-v2.jpg
   - id: 1011
     url: /api/static/icon/icon-KnowledgeQuery-v2.jpg
+  - id: 1012
+    url: /api/static/icon/icon-Question-Answer.png
   - id: 1059
     url: /api/static/icon/icon-from_json.png
-  
+
 workflow:
   # ！！！同步于：backend/conf/workflow/config.yaml
   # ！！！同步于：backend/conf/workflow/config.yaml

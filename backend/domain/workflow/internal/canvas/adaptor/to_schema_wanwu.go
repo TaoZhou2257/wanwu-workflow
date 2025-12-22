@@ -8,6 +8,7 @@ import (
 	wanwu_fileparser "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-fileparser"
 	wanwu_gui "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-gui"
 	wanwu_mcp "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-mcp"
+	wanwu_qa "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-qa"
 	wanwu_tool "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-tool"
 )
 
@@ -40,5 +41,8 @@ func RegisterWanwuAllNodeAdaptors() {
 
 	nodes.RegisterNodeAdaptor(entity.NodeTypeWanWuMultiFileParser, func() nodes.NodeAdaptor {
 		return &wanwu_fileparser.WanWuMultiFileParserConfig{}
+	})
+	nodes.RegisterNodeAdaptor(entity.NodeTypeWanWuQARetriever, func() nodes.NodeAdaptor {
+		return &wanwu_qa.WanWuQARetrieveConfig{}
 	})
 }
