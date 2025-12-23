@@ -8,7 +8,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	appworkflow "github.com/coze-dev/coze-studio/backend/application/workflow"
-	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
 )
@@ -84,13 +83,6 @@ func ExportWorkFlow(ctx context.Context, c *app.RequestContext) {
 		invalidParamRequestResponse(c, err.Error())
 		return
 	}
-
-	if req.Version != "" {
-		req.QType = workflowModel.FromSpecificVersion
-	} else {
-		req.QType = workflowModel.FromDraft
-	}
-
 	resp, err := appworkflow.SVC.GetCanvasInfoByWanwu(ctx, &req)
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
