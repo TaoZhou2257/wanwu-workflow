@@ -372,6 +372,14 @@ func _workflowsMw() []app.HandlerFunc {
 	return nil
 }
 
+func _filesMw() []app.HandlerFunc {
+	return nil
+}
+
+func _uploadfileopenMw() []app.HandlerFunc {
+	return nil
+}
+
 func _openapichatflowrunMw() []app.HandlerFunc {
 	return nil
 }
