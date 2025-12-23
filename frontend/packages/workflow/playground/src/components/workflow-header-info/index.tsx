@@ -22,6 +22,7 @@ import {
   IconCozCheckMarkCircleFillPalette,
 } from '@coze-arch/coze-design/icons';
 import { Typography, Tag, Tooltip, IconButton } from '@coze-arch/coze-design';
+import { IconCopy, IconCopySuccess } from '@coze-arch/bot-icons';
 
 import { WorkflowReferencesTip } from '../workflow-references/references-tip';
 import { ExecuteState } from '../test-run/execute-result/execute-result-side-sheet/components/execute-state';
@@ -29,6 +30,7 @@ import { useGlobalState } from '../../hooks';
 import { PublishStatus, EditModal } from './components';
 
 import css from './index.module.less';
+import React from "react";
 
 const { Text } = Typography;
 
@@ -129,6 +131,30 @@ export const WorkflowInfo = () => {
         ) : null}
 
         <ExecuteState />
+      </div>
+
+      <div className="mt-[-5px]">
+        <Text
+          className={css['workflow-uuid']}
+          copyable={{
+            content: info?.workflow_id || '',
+            render: (copied, doCopy) => {
+              if (copied) {
+                return <IconCopySuccess className={css['copy-icon']} />
+              } else {
+                return (
+                  <Tooltip
+                    content={I18n.t('Copy')}
+                  >
+                    <IconCopy className={css['copy-icon']} onClick={doCopy} />
+                  </Tooltip>
+                )
+              }
+            }
+          }}
+        >
+          uuid: {info?.workflow_id || '-'}
+        </Text>
       </div>
     </div>
   );
