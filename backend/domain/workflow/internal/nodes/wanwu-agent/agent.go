@@ -672,7 +672,12 @@ func (c *Config) Build(ctx context.Context, ns *schema2.NodeSchema, _ ...schema2
 	agent := &AgentNode{
 		AgentBaseParams: c.AgentBaseParams,
 		ModelParams: &ModelParams{
-			ModelID: strconv.FormatInt(c.LLMParams.ModelType, 10),
+			ModelID:          strconv.FormatInt(c.LLMParams.ModelType, 10),
+			Temperature:      float64PtrToFloat32Ptr(c.LLMParams.Temperature),
+			TopP:             float64PtrToFloat32Ptr(c.LLMParams.TopP),
+			FrequencyPenalty: float64ToFloat32Ptr(c.LLMParams.FrequencyPenalty),
+			PresencePenalty:  float64ToFloat32Ptr(c.LLMParams.PresencePenalty),
+			MaxTokens:        &c.LLMParams.MaxTokens,
 		},
 		KnowledgeParams: buildKnowledgeParams(ctx, c.KnowledgeInfos, c.RetrieveParams),
 		ToolParams:      c.ToolParams,
@@ -680,6 +685,19 @@ func (c *Config) Build(ctx context.Context, ns *schema2.NodeSchema, _ ...schema2
 	}
 
 	return agent, nil
+}
+
+func float64PtrToFloat32Ptr(src *float64) *float32 {
+	if src == nil {
+		return nil
+	}
+	v := float32(*src)
+	return &v
+}
+
+func float64ToFloat32Ptr(src float64) *float32 {
+	v := float32(src)
+	return &v
 }
 
 type AgentNode struct {
@@ -742,7 +760,12 @@ type AgentBaseParams struct {
 }
 
 type ModelParams struct {
-	ModelID string `json:"modelId"`
+	ModelID          string   `json:"modelId"`
+	Temperature      *float32 `json:"temperature,omitempty"`      //温度
+	TopP             *float32 `json:"topP,omitempty"`             //topP
+	FrequencyPenalty *float32 `json:"frequencyPenalty,omitempty"` //频率惩罚
+	PresencePenalty  *float32 `json:"presence_penalty,omitempty"` //存在惩罚
+	MaxTokens        *int     `json:"max_tokens,omitempty"`       //模型输出最大token数
 }
 
 type PluginToolInfo struct {
