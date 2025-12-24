@@ -150,6 +150,7 @@ type Inputs struct {
 	*Comment            // exclusive configurations for NodeTypeComment
 	*InputReceiver      // exclusive configurations for NodeTypeInputReceiver
 	*WanWuMCPTool       // exclusive configurations for NodeTypeWanWuMCPTool
+	*WanWuAgent         // exclusive configurations for NodeTypeWanWuAgent
 }
 
 type OutputEmitter struct {
