@@ -795,14 +795,13 @@ type SSEResponse struct {
 }
 
 func (a *AgentNode) Invoke(ctx context.Context, input map[string]any) (map[string]any, error) {
-	logs.CtxDebugf(ctx, "[AgentNode] Starting Invoke with input: %+v", input)
+	inputBytes, _ := json.Marshal(input)
+	logs.CtxDebugf(ctx, "[AgentNode] Starting Invoke with input: %s", string(inputBytes))
 
 	inputText, ok := input["query"].(string)
 	if !ok || inputText == "" {
 		return nil, errors.New("input field is required and must be a string")
 	}
-
-	logs.CtxDebugf(ctx, "[AgentNode] Extracted input text: %s", inputText)
 
 	req := &AgentChatRequest{
 		Input:           inputText,
@@ -813,7 +812,13 @@ func (a *AgentNode) Invoke(ctx context.Context, input map[string]any) (map[strin
 		ToolParams:      a.ToolParams,
 	}
 
-	logs.CtxDebugf(ctx, "[AgentNode] Built request: %+v", req)
+	uploadFileUrl, ok := input["file"].(string)
+	if ok && uploadFileUrl != "" {
+		req.UploadFile = append(req.UploadFile, uploadFileUrl)
+	}
+
+	reqBytes, _ := json.Marshal(req)
+	logs.CtxDebugf(ctx, "[AgentNode] Built invoke request: %s", string(reqBytes))
 
 	result, err := a.callAgentService(ctx, req)
 	if err != nil {
@@ -829,14 +834,13 @@ func (a *AgentNode) Invoke(ctx context.Context, input map[string]any) (map[strin
 }
 
 func (a *AgentNode) Stream(ctx context.Context, input map[string]any) (*schema.StreamReader[map[string]any], error) {
-	logs.CtxDebugf(ctx, "[AgentNode] Starting Stream with input: %+v", input)
+	inputBytes, _ := json.Marshal(input)
+	logs.CtxDebugf(ctx, "[AgentNode] Starting Stream with input: %s", string(inputBytes))
 
 	inputText, ok := input["query"].(string)
 	if !ok || inputText == "" {
 		return nil, errors.New("input field is required and must be a string")
 	}
-
-	logs.CtxDebugf(ctx, "[AgentNode] Extracted input text for streaming: %s", inputText)
 
 	req := &AgentChatRequest{
 		Input:           inputText,
@@ -847,7 +851,13 @@ func (a *AgentNode) Stream(ctx context.Context, input map[string]any) (*schema.S
 		ToolParams:      a.ToolParams,
 	}
 
-	logs.CtxDebugf(ctx, "[AgentNode] Built streaming request: %+v", req)
+	uploadFileUrl, ok := input["file"].(string)
+	if ok && uploadFileUrl != "" {
+		req.UploadFile = append(req.UploadFile, uploadFileUrl)
+	}
+
+	reqBytes, _ := json.Marshal(req)
+	logs.CtxDebugf(ctx, "[AgentNode] Built stream request: %s", string(reqBytes))
 
 	return a.streamAgentService(ctx, req)
 }
