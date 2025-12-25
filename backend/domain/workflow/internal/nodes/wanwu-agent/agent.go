@@ -202,6 +202,9 @@ func (c *Config) setLLMConfig(ctx context.Context, inputs *vo.Inputs, meta *vo.N
 }
 
 func (c *Config) setKnowledgeConfig(_ context.Context, inputs *vo.Inputs) error {
+	if len(inputs.DatasetParam) == 0 {
+		return nil
+	}
 	datasetListInfoParam := inputs.DatasetParam[0]
 	knowledgeInfos := datasetListInfoParam.Input.Value.Content.([]any)
 	knowledgeInfoList := make([]*RetrieveKnowledgeInfo, 0, len(knowledgeInfos))
