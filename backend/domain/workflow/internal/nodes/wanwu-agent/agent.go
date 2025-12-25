@@ -158,9 +158,9 @@ func (c *Config) Adapt(ctx context.Context, n *vo.Node, _ ...nodes.AdaptOption) 
 		return nil, err
 	}
 
-	ns.StreamConfigs = &schema2.StreamConfig{
-		CanGeneratesStream: true, //声明agent节点支持流式输出
-	}
+	// ns.StreamConfigs = &schema2.StreamConfig{
+	// 	CanGeneratesStream: true, //声明agent节点支持流式输出
+	// }
 
 	cB, err := json.Marshal(c)
 	if err != nil {
