@@ -1042,6 +1042,9 @@ func getWorkflowSchemas(ctx context.Context, workflowIDs []string) ([]byte, erro
 // - Temperature, TopP, RepetitionPenalty: RetrieveParams 配置中未包含。
 // - ReturnMeta: RetrieveParams 配置中未包含。
 func buildKnowledgeParams(ctx context.Context, knowledgeInfos []*RetrieveKnowledgeInfo, retrieveParams *RetrieveParams) *KnowledgeParams {
+	if len(knowledgeInfos) == 0 || retrieveParams == nil {
+		return nil
+	}
 	metaFilterConditions, _ := buildMetaDataFilterParams(knowledgeInfos)
 	userId := ctxutil.MustGetUIDFromCtx(ctx)
 	userIdStr := strconv.Itoa(int(userId))
