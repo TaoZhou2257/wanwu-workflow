@@ -373,7 +373,7 @@ const PublishForm: React.FC<{
         <Form.Input
           label={I18n.t('ocean_deploy_list_pkg_version')}
           required
-          placeholder="v0.0.1"
+          placeholder={I18n.t('workflow_version_number_placeholder_wanwu')}
           field="version"
           data-testid="workflow-publish-version-name"
           rules={[
@@ -390,7 +390,7 @@ const PublishForm: React.FC<{
                 }
                 return !!/^v\d+\.\d+\.\d+$/.test(value);
               },
-              message: I18n.t('workflow_version_number_error1'),
+              message: I18n.t('workflow_version_number_error1_wanwu'),
             },
           ]}
         />

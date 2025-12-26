@@ -14292,6 +14292,8 @@
   "workflow_variable_undefined": "Undefined",
   "workflow_vefaas_remind": "Code node service has been upgraded, please verify {name} before release",
   "workflow_version_add_model_content": "A new resource version from V{oldVersion} to V{newVersion} is available in the workflow. After you add the latest resource to the workflow, all nodes using it will be upgraded.",
+  "workflow_version_number_placeholder_wanwu": "格式v数字.数字.数字，例如v0.1.0",
+  "workflow_version_number_error1_wanwu": "版本号格式有误，应为v数字.数字.数字，例如v0.1.0",
   "workflow_version_number_error1": "Invalid version number format",
   "workflow_version_number_error2": "The version number cannot be less than or equal to the current version number",
   "workflow_version_origin_text": "Resource Library",
