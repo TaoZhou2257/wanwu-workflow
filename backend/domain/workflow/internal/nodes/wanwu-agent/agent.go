@@ -820,17 +820,21 @@ func (a *AgentNode) Invoke(ctx context.Context, input map[string]any) (map[strin
 	reqBytes, _ := json.Marshal(req)
 	logs.CtxDebugf(ctx, "[AgentNode] Built invoke request: %s", string(reqBytes))
 
-	result, err := a.callAgentService(ctx, req)
+	response, searchListStr, err := a.callAgentService(ctx, req)
 	if err != nil {
 		logs.CtxErrorf(ctx, "[AgentNode] Call agent service failed: %v", err)
 		return nil, err
 	}
 
-	logs.CtxDebugf(ctx, "[AgentNode] Invoke completed successfully with result: %s", result)
+	logs.CtxDebugf(ctx, "[AgentNode] Invoke completed successfully with result: %s", response)
 
-	return map[string]any{
-		AgentOutputKey: result,
-	}, nil
+	result := make(map[string]any)
+	result[AgentOutputKey] = map[string]any{
+		"response":   response,
+		"searchList": searchListStr,
+	}
+
+	return result, nil
 }
 
 func (a *AgentNode) Stream(ctx context.Context, input map[string]any) (*schema.StreamReader[map[string]any], error) {
@@ -862,10 +866,10 @@ func (a *AgentNode) Stream(ctx context.Context, input map[string]any) (*schema.S
 	return a.streamAgentService(ctx, req)
 }
 
-func (a *AgentNode) callAgentService(ctx context.Context, req *AgentChatRequest) (string, error) {
+func (a *AgentNode) callAgentService(ctx context.Context, req *AgentChatRequest) (string, string, error) {
 	reqBody, err := json.Marshal(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal request: %w", err)
+		return "", "", fmt.Errorf("failed to marshal request: %w", err)
 	}
 
 	agentURL := os.Getenv(WanWuAgentAPIUrlEnv)
@@ -873,7 +877,7 @@ func (a *AgentNode) callAgentService(ctx context.Context, req *AgentChatRequest)
 
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", agentURL, bytes.NewReader(reqBody))
 	if err != nil {
-		return "", fmt.Errorf("failed to create HTTP request: %w", err)
+		return "", "", fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
@@ -881,7 +885,7 @@ func (a *AgentNode) callAgentService(ctx context.Context, req *AgentChatRequest)
 
 	resp, err := a.HttpClient.Do(httpReq)
 	if err != nil {
-		return "", fmt.Errorf("failed to send HTTP request: %w", err)
+		return "", "", fmt.Errorf("failed to send HTTP request: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -889,11 +893,12 @@ func (a *AgentNode) callAgentService(ctx context.Context, req *AgentChatRequest)
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("agent service returned status %d: %s", resp.StatusCode, string(body))
+		return "", "", fmt.Errorf("agent service returned status %d: %s", resp.StatusCode, string(body))
 	}
 
 	scanner := bufio.NewScanner(resp.Body)
 	var result strings.Builder
+	var lastSSEResponse *SSEResponse
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -909,12 +914,15 @@ func (a *AgentNode) callAgentService(ctx context.Context, req *AgentChatRequest)
 			}
 
 			if sseResp.Code != 0 {
-				return "", fmt.Errorf("agent service error: code=%d, message=%s", sseResp.Code, sseResp.Message)
+				return "", "", fmt.Errorf("agent service error: code=%d, message=%s", sseResp.Code, sseResp.Message)
 			}
 
 			if sseResp.Response != "" {
 				result.WriteString(sseResp.Response)
 			}
+
+			// 保存最后一条SSE响应
+			lastSSEResponse = &sseResp
 
 			if sseResp.Finish == 1 {
 				logs.CtxDebugf(ctx, "[AgentNode] Stream finished")
@@ -924,13 +932,25 @@ func (a *AgentNode) callAgentService(ctx context.Context, req *AgentChatRequest)
 	}
 
 	if err := scanner.Err(); err != nil {
-		return "", fmt.Errorf("stream reading error: %w", err)
+		return "", "", fmt.Errorf("stream reading error: %w", err)
 	}
 
 	finalResult := result.String()
 	logs.CtxDebugf(ctx, "[AgentNode] Collected complete result: %s", finalResult)
 
-	return finalResult, nil
+	// 提取最后一条数据的search_list并转换为JSON字符串
+	var searchListJSON string
+	if lastSSEResponse != nil && len(lastSSEResponse.SearchList) > 0 {
+		searchListBytes, err := json.Marshal(lastSSEResponse.SearchList)
+		if err != nil {
+			logs.CtxWarnf(ctx, "[AgentNode] Failed to marshal search_list: %v", err)
+		} else {
+			searchListJSON = string(searchListBytes)
+			logs.CtxDebugf(ctx, "[AgentNode] Extracted search_list: %s", searchListJSON)
+		}
+	}
+
+	return finalResult, searchListJSON, nil
 }
 
 func (a *AgentNode) streamAgentService(ctx context.Context, req *AgentChatRequest) (*schema.StreamReader[map[string]any], error) {
