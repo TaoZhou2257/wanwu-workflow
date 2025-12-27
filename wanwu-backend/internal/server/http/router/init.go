@@ -175,7 +175,7 @@ func Register(r *hertz_server.Hertz) {
 			// --- wanwu adapt ---
 			_workflow.POST("/list_schema_by_wanwu", []app.HandlerFunc{coze.ListWorkFlowOpenAPIV3SchemaByWanwu}...)
 			_workflow.GET("/:workflow_id/schema_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowOpenAPIV3SchemaByWanwu}...)
-			_workflow.POST("/:workflow_id/run_by_wanwu", append(_openapirunflowMw(), coze.OpenAPIRunWorkFlowByWanwu)...)
+			_workflow.POST("/:workflow_id/run_by_wanwu", []app.HandlerFunc{coze.OpenAPIRunWorkFlowByWanwu}...)
 			_workflow.POST("/chat_by_wanwu", []app.HandlerFunc{coze.OpenAPIChatFlowRunByWanwu}...)
 			_workflow.POST("/run_by_wanwu", []app.HandlerFunc{coze.RunWorkFlowLatestVersionByWanwu}...)
 		}

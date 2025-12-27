@@ -114,6 +114,16 @@ func _getspacelistv2Mw() []app.HandlerFunc {
 	return nil
 }
 
+func _plugin_apiMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _getplaygroundpluginlistMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _workflow_apiMw() []app.HandlerFunc {
 	// your code...
 	return nil
@@ -164,6 +174,11 @@ func _getdeletestrategyMw() []app.HandlerFunc {
 	return nil
 }
 
+func _getexampleworkflowlistMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _getnodeexecutehistoryMw() []app.HandlerFunc {
 	// your code...
 	return nil
@@ -175,6 +190,11 @@ func _getworkflowprocessMw() []app.HandlerFunc {
 }
 
 func _gettracesdkMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _gethistoryschemaMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
@@ -274,6 +294,18 @@ func _getworkflowreferencesMw() []app.HandlerFunc {
 	return nil
 }
 
+func _getworkflowversionlistMw() []app.HandlerFunc {
+	return nil
+}
+
+func _updateworkflowversiondescriptionMw() []app.HandlerFunc {
+	return nil
+}
+
+func _rollbackworkflowversionMw() []app.HandlerFunc {
+	return nil
+}
+
 func _chat_flow_roleMw() []app.HandlerFunc {
 	// your code...
 	return nil
@@ -313,32 +345,21 @@ func _deleteprojectconversationdefMw() []app.HandlerFunc {
 	return nil
 }
 
+func _upload1Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _getworkflowuploadauthtokenMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
 
-func _plugin_apiMw() []app.HandlerFunc {
+func _developerMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
-
-func _getplaygroundpluginlistMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _getexampleworkflowlistMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _gethistoryschemaMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _upload1Mw() []app.HandlerFunc {
+func _geticonMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
@@ -360,23 +381,7 @@ func _getapimessagelistMw() []app.HandlerFunc {
 	return nil
 }
 
-func _conversation1Mw() []app.HandlerFunc {
-	return nil
-}
-
-func _openapicreateconversationMw() []app.HandlerFunc {
-	return nil
-}
-
 func _workflowsMw() []app.HandlerFunc {
-	return nil
-}
-
-func _filesMw() []app.HandlerFunc {
-	return nil
-}
-
-func _uploadfileopenMw() []app.HandlerFunc {
 	return nil
 }
 
@@ -388,33 +393,23 @@ func _openapigetworkflowinfoMw() []app.HandlerFunc {
 	return nil
 }
 
+func _filesMw() []app.HandlerFunc {
+	return nil
+}
+
+func _uploadfileopenMw() []app.HandlerFunc {
+	return nil
+}
+
 func _workflowMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
 
-func _openapirunflowMw() []app.HandlerFunc {
-	// your code...
+func _conversation1Mw() []app.HandlerFunc {
 	return nil
 }
 
-func _developerMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-func _geticonMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _getworkflowversionlistMw() []app.HandlerFunc {
-	return nil
-}
-
-func _updateworkflowversiondescriptionMw() []app.HandlerFunc {
-	return nil
-}
-
-func _rollbackworkflowversionMw() []app.HandlerFunc {
+func _openapicreateconversationMw() []app.HandlerFunc {
 	return nil
 }

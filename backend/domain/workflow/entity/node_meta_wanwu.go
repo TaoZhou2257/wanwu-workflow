@@ -188,7 +188,7 @@ func init() {
 		Key:          NodeTypeWanWuAgent,
 		DisplayKey:   "Agent",
 		Name:         "智能体",
-		Category:     "utilities",
+		Category:     "",
 		Desc:         "调用智能体服务执行任务",
 		Color:        "#5C62FF",
 		SupportBatch: false,

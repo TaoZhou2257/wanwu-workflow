@@ -36,7 +36,7 @@ import (
 	coze_conversation_conversation "github.com/coze-dev/coze-studio/backend/domain/conversation/conversation/service"
 	coze_conversation_message_repo "github.com/coze-dev/coze-studio/backend/domain/conversation/message/repository"
 	coze_conversation_message "github.com/coze-dev/coze-studio/backend/domain/conversation/message/service"
-	coze_cross_upload_service "github.com/coze-dev/coze-studio/backend/domain/upload/service"
+	coze_upload_service "github.com/coze-dev/coze-studio/backend/domain/upload/service"
 	coze_workflow "github.com/coze-dev/coze-studio/backend/domain/workflow"
 	coze_workflow_service "github.com/coze-dev/coze-studio/backend/domain/workflow/service"
 	coze_infra_cache "github.com/coze-dev/coze-studio/backend/infra/cache"
@@ -125,8 +125,9 @@ func Init(ctx context.Context, infra Infra) error {
 	coze_app_conversation.ConversationSVC.MessageDomainSVC = m
 	// init cross domain user
 	coze_cross_user.SetDefaultSVC(crossuserImpl.DefaultMock())
+	// init cross domain upload
 	coze_cross_upload.SetDefaultWanwuSVC(coze_cross_upload_impl.NewWanwuUploader(infra.Storage))
-	coze_cross_upload.SetDefaultSVC(coze_cross_upload_impl.InitDomainService(coze_cross_upload_service.NewUploadSVC(infra.DB, idGen, infra.Storage)))
+	coze_cross_upload.SetDefaultSVC(coze_cross_upload_impl.InitDomainService(coze_upload_service.NewUploadSVC(infra.DB, idGen, infra.Storage)))
 	// init token callback handler
 	callbacks.AppendGlobalHandlers(coze_workflow_service.GetTokenCallbackHandler())
 
