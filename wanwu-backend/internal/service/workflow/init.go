@@ -128,6 +128,7 @@ func Init(ctx context.Context, infra Infra) error {
 	// init cross domain upload
 	coze_cross_upload.SetDefaultWanwuSVC(coze_cross_upload_impl.NewWanwuUploader(infra.Storage))
 	coze_cross_upload.SetDefaultSVC(coze_cross_upload_impl.InitDomainService(coze_upload_service.NewUploadSVC(infra.DB, idGen, infra.Storage)))
+	coze_app_conversation.OpenapiMessageSVC.UploaodDomainSVC = coze_upload_service.NewUploadSVC(infra.DB, idGen, infra.Storage)
 	// init token callback handler
 	callbacks.AppendGlobalHandlers(coze_workflow_service.GetTokenCallbackHandler())
 
