@@ -123,12 +123,13 @@ func Init(ctx context.Context, infra Infra) error {
 	})
 	coze_cross_message.SetDefaultSVC(coze_cross_message_impl.InitDomainService(m))
 	coze_app_conversation.ConversationSVC.MessageDomainSVC = m
+	cozeUploadSVC := coze_upload_service.NewUploadSVC(infra.DB, idGen, infra.Storage)
+	coze_app_conversation.OpenapiMessageSVC.UploaodDomainSVC = cozeUploadSVC
 	// init cross domain user
 	coze_cross_user.SetDefaultSVC(crossuserImpl.DefaultMock())
 	// init cross domain upload
 	coze_cross_upload.SetDefaultWanwuSVC(coze_cross_upload_impl.NewWanwuUploader(infra.Storage))
-	coze_cross_upload.SetDefaultSVC(coze_cross_upload_impl.InitDomainService(coze_upload_service.NewUploadSVC(infra.DB, idGen, infra.Storage)))
-	coze_app_conversation.OpenapiMessageSVC.UploaodDomainSVC = coze_upload_service.NewUploadSVC(infra.DB, idGen, infra.Storage)
+	coze_cross_upload.SetDefaultSVC(coze_cross_upload_impl.InitDomainService(cozeUploadSVC))
 	// init token callback handler
 	callbacks.AppendGlobalHandlers(coze_workflow_service.GetTokenCallbackHandler())
 
