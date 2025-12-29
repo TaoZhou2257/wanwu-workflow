@@ -22,6 +22,7 @@ import { type FieldProps } from '@/form';
 import { type NodeInputNameProps } from './node-input-name/type';
 import { InputsTreeField } from './inputs-tree-field';
 import { InputsField } from './inputs-field';
+import { type ValueExpressionInputProps } from '../value-expression-input';
 
 interface InputsSectionProps extends FieldProps<InputValueVO[]> {
   title?: string;
@@ -36,6 +37,7 @@ interface InputsSectionProps extends FieldProps<InputValueVO[]> {
   literalDisabled?: boolean;
   nameProps?: Partial<NodeInputNameProps>;
   customReadonly?: boolean;
+  inputProps?: ValueExpressionInputProps;
 }
 
 export const InputsParametersField = ({
@@ -53,6 +55,7 @@ export const InputsParametersField = ({
   nameProps,
   customReadonly,
   testId,
+  inputProps,
 }: InputsSectionProps) =>
   isTree ? (
     <InputsTreeField
@@ -78,5 +81,6 @@ export const InputsParametersField = ({
       nameProps={nameProps}
       customReadonly={customReadonly}
       testId={testId}
+      inputProps={inputProps}
     />
   );

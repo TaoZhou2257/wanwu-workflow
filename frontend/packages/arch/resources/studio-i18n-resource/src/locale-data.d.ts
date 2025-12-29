@@ -16589,6 +16589,8 @@ export type I18nKeysNoOptionsType =
   | 'workflow_variable_select_voice'
   | 'workflow_variable_type_voice'
   | 'workflow_variable_undefined'
+  | 'workflow_version_number_placeholder_wanwu'
+  | 'workflow_version_number_error1_wanwu'
   | 'workflow_version_number_error1'
   | 'workflow_version_number_error2'
   | 'workflow_version_origin_text'

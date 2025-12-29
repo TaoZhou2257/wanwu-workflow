@@ -30,7 +30,7 @@ import { KnowledgeApi } from '@coze-arch/bot-api';
 import { Toast } from "@coze-arch/coze-design";
 
 import { LibrarySelect } from '../qa-library-select-wanwu';
-import { MetadataFilterModal, DEFAULT_METADATA } from './metadata-filter-modal-wanwu'
+import { MetadataFilterModal, DEFAULT_METADATA } from '../dataset-select-wanwu/metadata-filter-modal-wanwu'
 
 interface ValueProps {
   dataset_id?: string,
@@ -51,7 +51,7 @@ export const DatasetSelect = ({
   const libraryCardTestID = getNodeSetterId('dataset-select-card');
 
   // When initializing, it will be worn to the default value: [null]
-  const value = useMemo(() => _value?.filter?.(d => !!d) || [], [_value]);
+  const value:any = useMemo(() => _value?.filter?.(d => !!d) || [], [_value]);
 
   const { dataSets, cacheDataSetInfo } = useQADataSetInfos({ ids: value.map(item => item.dataset_id) });
   const res = useWorkflowNode();
