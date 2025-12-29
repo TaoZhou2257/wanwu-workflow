@@ -26,6 +26,7 @@ export enum StandardNodeType {
   JsonParserWanwu = '1059',
   GuiAgentWanwu = '1010',
   QADatasetWanwu = '1012',
+  Agent = '1013',
 
   Start = '1',
   End = '2',
@@ -113,6 +114,7 @@ export enum StandardNodeType {
 
   JsonStringify = '58',
   JsonParser = '59',
+  
 }
 
 /**

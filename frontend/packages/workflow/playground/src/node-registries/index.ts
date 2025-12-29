@@ -55,3 +55,4 @@ export { PLUGIN_NODE_REGISTRY } from './plugin-wanwu';
 export { SUB_WORKFLOW_NODE_REGISTRY } from './sub-workflow-wanwu';
 export { VARIABLE_NODE_REGISTRY } from './variable';
 export { JSON_STRINGIFY_NODE_REGISTRY } from './json-stringify';
+export { AGENT_NODE_REGISTRY } from "./agent";

@@ -132,8 +132,12 @@ export const useSelectMcpModal = ({
   };
 
   const handleRemoveMcp = (item: McpInfo) => {
-    if (onRemoveMcp && item.mcpId) {
+    /*if (onRemoveMcp && item.mcpId) {
       onRemoveMcp?.(item.mcpId, reload);
+    }*/
+    /*这里删除的是mcp工具下面的工具节点，mcpId是mcp工具的id，name是工具节点的唯一值,所以改为那么*/
+    if (onRemoveMcp && item.name) {
+      onRemoveMcp?.(item.name, reload);
     }
   };
 
@@ -172,15 +176,20 @@ export const useSelectMcpModal = ({
                 <McpListItem
                   title={it.name}
                   description={it.description}
+                  //当前toolList中不存在mcpId，所以不能根据it.mcpId判断是否添加,需要根据it.name判断是否添加过
                   isAdd={
                     Boolean(
-                      it.mcpId &&
+                      // it.mcpId &&
+                      item.mcpId &&
                       workflowAddList?.length &&
-                      workflowAddList?.includes(item.mcpId),
+                      // workflowAddList?.includes(item.mcpId),
+                      workflowAddList?.includes(it.name)
                     )
                   }
                   onAdd={() => handleAddMcp({...it, serverUrl: item.serverUrl, mcpId: item.mcpId, id: item.mcpId})}
-                  onRemove={() => handleRemoveMcp(item)}
+                  // onRemove={() => handleRemoveMcp(item)}
+                  //需要删除的是工具节点，所以根据it.name判断是否删除过
+                  onRemove={() => handleRemoveMcp(it)}
                   key={item.name + index}
                 />
               ))}

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { IconCozPlus } from '@coze-arch/coze-design/icons';
-import { IconButton } from '@coze-arch/coze-design';
-
+import { IconCozPlus, IconCozSetting } from '@coze-arch/coze-design/icons';
+import { IconButton, Tooltip } from '@coze-arch/coze-design';
+import { I18n } from '@coze-arch/i18n';
 import { FieldEmpty } from '@/form';
 
 import { type Library } from './types';
@@ -35,8 +35,11 @@ interface LibrarySelectProps {
   onEditLibrary?: (id: string) => void;
   onDeleteLibrary?: (id: string) => void;
   onAddLibrary?: () => void;
+  onSettingLibrary?: () => void;
   onClickLibrary?: (id: string) => void;
   renderLibrary?: RenderLibrary;
+  settingLibraryTooltip?: string;
+  hideSettingButton?: boolean;
   emptyText?: string;
   hideAddButton?: boolean;
   addButtonTestID?: string;
@@ -51,7 +54,10 @@ export const LibrarySelect = ({
   onAddLibrary,
   onClickLibrary,
   renderLibrary,
+  onSettingLibrary,
+  settingLibraryTooltip,
   emptyText = '',
+  hideSettingButton = true,
   hideAddButton = false,
   addButtonTestID = '',
   libraryCardTestID = '',
@@ -69,6 +75,22 @@ export const LibrarySelect = ({
           size="small"
           data-testid={addButtonTestID}
         />
+      </div>
+    )}
+    {readonly || hideSettingButton ? (
+      <></>
+    ) : (
+      <div className="absolute right-[36px] top-[-32px]">
+        <Tooltip content={settingLibraryTooltip || I18n.t('basic_setting')} autoAdjustOverflow>
+          <IconButton
+            color="highlight"
+            onClick={onSettingLibrary}
+            theme="borderless"
+            icon={<IconCozSetting />}
+            size="small"
+            data-testid={`${libraryCardTestID}.setting`}
+          />
+        </Tooltip>
       </div>
     )}
     <div className="flex flex-col gap-[4px]">
