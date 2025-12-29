@@ -34,6 +34,7 @@ import { MultiFileParseWanwuContent } from '@/node-registries/multi-file-parse-w
 import { FileGenerateWanwuContent } from '@/node-registries/file-generate-wanwu';
 import { JsonParserWanwuContent } from '@/node-registries/json-parser-wanwu';
 import { GuiAgentWanwuContent } from '@/node-registries/gui-agent-wanwu';
+import { AgentContent } from '@/node-registries/agent';
 import { IntentContent } from '@/node-registries/intent';
 import { InputContent } from '@/node-registries/input';
 import { ImageCanvasContent } from '@/node-registries/image-canvas';
@@ -107,6 +108,7 @@ const ContentMap = {
   [StandardNodeType.Api]: PluginContent,
   [StandardNodeType.Variable]: VariableContent,
   [StandardNodeType.JsonStringify]: JsonStringifyContent,
+  [StandardNodeType.Agent]: AgentContent
 };
 
 /**

@@ -89,6 +89,7 @@ export function transformOnInit(value) {
   );
   // compatible with old versions of knowledge base data structures
   const newKnowledgeList = formatKnowledgeList(datasetParam[0]?.input.value.content || [])
+
   formData.inputs.datasetParameters.datasetParam = newKnowledgeList as string[];
   // In the case of initial creation/stock data, the topK and threshold are empty, and the initial default value is processed in the dataset-settings component
   formData.inputs.datasetParameters.datasetSetting = {

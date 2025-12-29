@@ -28,7 +28,6 @@ const QADatasetSetting = () => {
   );
 
   const { dataSets, isReady } = useQADataSetInfos({ ids: selectDataSet.map(item => item.dataset_id) });
-
   return (
     <BaseDatasetSetting
       dataSetInfo={value as DataSetInfo}

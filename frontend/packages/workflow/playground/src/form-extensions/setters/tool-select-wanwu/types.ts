@@ -13,24 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+export interface Tool {
+  actionID: string;
+  actionName: string;
+  toolType: string;
+  apiKey: string;
+  toolId: string;
+  toolName: string;
+}
 
-import React from 'react';
+export type ToolSelectValue = Tool[];
 
-import { DatasetSelect as BaseDatasetSelect } from '@/form-extensions/components/dataset-select';
-import { useField, withField } from '@/form';
+export interface DatabaseSelectContextProps {
+  changeTool: (id: string) => void;
+  clearTool: () => void;
+  readonly?: boolean;
+}
 
-const DatasetSelect = () => {
-  const { value, onChange, readonly, onBlur } = useField<string[]>();
-  return (
-    <BaseDatasetSelect
-      value={value as string[]}
-      onChange={v => {
-        onChange(v);
-        onBlur?.();
-      }}
-      readonly={!!readonly}
-    />
-  );
-};
-
-export const DatasetSelectField = withField(DatasetSelect);
+export const TOOL_TAB = {
+  TOOL: 'tool',
+  WORKFLOW: 'workflow',
+  DATABASE: 'database',
+  MCP: 'mcp',
+} as const;

@@ -75,6 +75,7 @@ import {
   UPDATE_MESSAGE_NODE_REGISTRY,
   DELETE_MESSAGE_NODE_REGISTRY,
 } from './chat';
+import { AGENT_NODE_REGISTRY } from "@/node-registries";
 
 export const NODES_V2 = [
   JSON_STRINGIFY_NODE_REGISTRY,
@@ -133,5 +134,6 @@ export const NODES_V2 = [
   TEXT_PROCESS_NODE_REGISTRY,
   DATABASE_NODE_REGISTRY,
   VARIABLE_NODE_REGISTRY,
+  AGENT_NODE_REGISTRY
 ];
 export const NODE_V2_TYPES = NODES_V2.map(r => r.type);

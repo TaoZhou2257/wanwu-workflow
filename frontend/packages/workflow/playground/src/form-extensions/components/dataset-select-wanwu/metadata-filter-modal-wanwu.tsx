@@ -105,7 +105,7 @@ export const MetadataFilterModal = ({
 
   const formatMetaDataValue = () => {
     // merge metaDataValueList to currentMetaData
-    const metaFilterParams = JSON.parse(JSON.stringify(currentMetaData.metaFilterParams))
+    const metaFilterParams = JSON.parse(JSON.stringify(currentMetaData.metaFilterParams ?? []))
     const newMetaFilterParams = metaFilterParams.map((item, index) => ({...item, value: metaDataValueList[index]}))
     const newCurrentMetaData = {...currentMetaData, metaFilterParams: newMetaFilterParams}
     setCurrentMetaData(newCurrentMetaData)
@@ -190,7 +190,7 @@ export const MetadataFilterModal = ({
                     });
                     return
                   }
-                  const metaFilterParams = JSON.parse(JSON.stringify(currentMetaData.metaFilterParams))
+                  const metaFilterParams = JSON.parse(JSON.stringify(currentMetaData.metaFilterParams ?? []))
                   const newMetaFilterItem = {
                     condition: conditionList[currentKeyList[0]?.type || STRING]?.[0]?.key || '',
                     key: currentKeyList[0]?.key || '',
@@ -240,7 +240,7 @@ export const MetadataFilterModal = ({
                                   value={value}
                                   onChange={(v: any) => {
                                     // key change -> change type\condition\value
-                                    const metaFilterParams = JSON.parse(JSON.stringify(currentMetaData.metaFilterParams))
+                                    const metaFilterParams = JSON.parse(JSON.stringify(currentMetaData.metaFilterParams ?? []))
                                     const keyObj = currentKeyList.find(item => item.key === v) || {}
                                     metaFilterParams[index].key = v
                                     metaFilterParams[index].type = keyObj.type || STRING
@@ -273,7 +273,7 @@ export const MetadataFilterModal = ({
                                   className="w-[80px]"
                                   value={value}
                                   onChange={(v: any) => {
-                                    const metaFilterParams = JSON.parse(JSON.stringify(currentMetaData.metaFilterParams))
+                                    const metaFilterParams = JSON.parse(JSON.stringify(currentMetaData.metaFilterParams ?? []))
                                     metaFilterParams[index].condition = v
                                     setCurrentMetaData({...currentMetaData, metaFilterParams})
                                   }}
@@ -336,13 +336,22 @@ export const MetadataFilterModal = ({
                                 <IconCozTrashCan
                                   onClick={() => {
                                     // delete current value object
-                                    const metaFilterParams = JSON.parse(JSON.stringify(currentMetaData.metaFilterParams))
+                                    const metaFilterParams = JSON.parse(JSON.stringify(currentMetaData.metaFilterParams ?? []))
                                     metaFilterParams.splice(index, 1)
                                     setCurrentMetaData({...currentMetaData, metaFilterParams})
                                     // delete current value
                                     const newMetaDataValueList = [...metaDataValueList]
                                     newMetaDataValueList.splice(index, 1)
                                     setMetaDataValueList(newMetaDataValueList)
+                                    
+                                    // 新增：如果删除后没有过滤条件了，自动提交空数组
+                                    if (!metaFilterParams?.length) {
+                                      const metaDataFilterParams = formatMetaDataValue()
+                                      metaDataFilterParams.filterEnable = false
+                                      metaDataFilterParams.metaFilterParams = []
+                                      metaDataFilterParams.filterLogicType ='and'
+                                      onSubmit?.(metaDataFilterParams)
+                                    }
                                   }}
                                 />
                               );
@@ -352,7 +361,7 @@ export const MetadataFilterModal = ({
                       }}
                     />
                   </div>
-                  <div className="text-center mt-[20px]">
+                  <div className="text-center mt-[20px] pb-[20px]">
                     <Button
                       color="brand"
                       onClick={() => {

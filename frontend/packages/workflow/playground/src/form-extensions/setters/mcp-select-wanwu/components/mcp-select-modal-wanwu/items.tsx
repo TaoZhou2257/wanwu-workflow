@@ -72,7 +72,7 @@ export const McpListItem: FC<IProps> = props => {
   return (
     <div
       onClick={onClick}
-      className="w-[620px] flex items-center py-[16px] border-t-0 border-l-0 border-r-0 border-b-[1px] border-solid coz-stroke-primary last:border-b-0 cursor-pointer"
+      className="w-full flex items-center py-[16px] pr-[10px] border-t-0 border-l-0 border-r-0 border-b-[1px] border-solid coz-stroke-primary last:border-b-0 cursor-pointer"
     >
       <div className="flex flex-col ml-[12px] min-w-0 flex-grow">
         <p className="text-[14px] font-medium leading-[20px] coz-fg-primary mb-[4px]">

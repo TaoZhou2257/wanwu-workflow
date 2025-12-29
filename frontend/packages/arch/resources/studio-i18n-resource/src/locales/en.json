@@ -14454,5 +14454,8 @@
   "workspace_subtitle_project": "Project",
   "{placeholder0}_plugin": "{placeholder0} Plugin",
   "{placeholder0}_success": "{placeholder0} success",
-  "workflow_node_from_cn_store": "From coze.cn store"
+  "workflow_node_from_cn_store": "From coze.cn store",
+  "workflow_agnet_tool_select_title": "Tools",
+  "workflow_agnet_tool_database_empty": "Add tools to this node",
+  "workflow_agnet_tool_mcp_setting_apikey": "Edit API KEY"
 }
