@@ -2,6 +2,7 @@ package coze
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"os"
 	"strings"
@@ -11,6 +12,8 @@ import (
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	appworkflow "github.com/coze-dev/coze-studio/backend/application/workflow"
 	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
+	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
+	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
 )
 
 // CreateWorkflowByWanwu 参考CreateWorkflow
@@ -57,11 +60,39 @@ func UpdateWorkflowMetaByWanwu(ctx context.Context, c *app.RequestContext) {
 // @router /api/workflow_api/copy [POST]
 func CopyWorkflowByWanwu(ctx context.Context, c *app.RequestContext) {
 	var err error
-	var req workflow.CopyWorkflowRequest
+	var req appworkflow.CopyWorkflowRequest
+	var canvasReq appworkflow.ExportWorkflowRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
 		invalidParamRequestResponse(c, err.Error())
 		return
+	}
+	if req.QType == workflowModel.FromLatestVersion {
+		canvasReq.QType = workflowModel.FromLatestVersion
+		canvasReq.WorkflowID = req.WorkflowID
+		canvasReq.SpaceID = req.SpaceID
+		canvas, err := appworkflow.SVC.GetCanvasInfoByWanwu(ctx, &canvasReq)
+		if err != nil {
+			internalServerErrorResponse(ctx, c, err)
+			return
+		}
+		// 解析原始schema
+		var schema vo.Canvas
+		if err := sonic.Unmarshal([]byte(*canvas.Data.Workflow.SchemaJSON), &schema); err != nil {
+			internalServerErrorResponse(ctx, c, fmt.Errorf("failed to parse schema JSON: %v", err))
+			return
+		}
+		// 清理所有节点的用户自定义参数
+		if err := cleanWorkflowSchema(&schema); err != nil {
+			internalServerErrorResponse(ctx, c, fmt.Errorf("failed to clean workflow schema: %v", err))
+			return
+		}
+		var schemaStr string
+		if schemaStr, err = sonic.MarshalString(schema); err != nil {
+			internalServerErrorResponse(ctx, c, fmt.Errorf("failed to marshal workflow schema string: %v", err))
+			return
+		}
+		req.SchemaJSON = &schemaStr
 	}
 	resp, err := appworkflow.SVC.CopyWorkflowByWanwu(ctx, &req)
 	if err != nil {
