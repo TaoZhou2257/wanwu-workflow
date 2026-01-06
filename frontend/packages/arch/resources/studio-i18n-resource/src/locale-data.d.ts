@@ -16557,6 +16557,8 @@ export type I18nKeysNoOptionsType =
   | 'workflow_trigger_user_create_userid'
   | 'workflow_trigger_user_create_userid_tooltips'
   | 'workflow_trigger_user_noproject'
+  | 'workflow_api_root_url_wanwu'
+  | 'workflow_api_key_wanwu'
   | 'workflow_unpublish_change'
   | 'workflow_update_condition_title'
   | 'workflow_update_fields'

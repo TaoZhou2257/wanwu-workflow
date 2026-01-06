@@ -15,6 +15,8 @@
  */
 
 /* eslint-disable complexity */
+import React from "react";
+
 import isNil from 'lodash-es/isNil';
 import { I18n } from '@coze-arch/i18n';
 import {
@@ -30,7 +32,6 @@ import { useGlobalState } from '../../hooks';
 import { PublishStatus, EditModal } from './components';
 
 import css from './index.module.less';
-import React from "react";
 
 const { Text } = Typography;
 

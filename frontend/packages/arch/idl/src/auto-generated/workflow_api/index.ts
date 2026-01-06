@@ -532,6 +532,25 @@ export default class WorkflowApiService<T> {
   }
 
   /**
+   * POST /user/api/v1/appspace/app/url
+   *
+   * 获取工作流、对话流 api 根地址
+   */
+  GetWorkflowApiRootUrlWanwu(
+    req: workflow.WorkflowRequestWanwu,
+    options?: T,
+  ): Promise<workflow.WorkflowResponseWanwu> {
+    const _req = req;
+    const url = this.genBaseURL('/user/api/v1/appspace/app/url');
+    const method = 'GET';
+    const params = {
+      appId: _req['appId'],
+      appType: _req['appType'],
+    };
+    return this.request({ url, method, params }, options);
+  }
+
+  /**
    * POST /api/workflow_api/publish
    *
    * 发布流程。该接口的用途是发布非 project 内部的流程。
