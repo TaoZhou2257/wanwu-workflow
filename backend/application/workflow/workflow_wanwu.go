@@ -206,7 +206,7 @@ func (w *ApplicationService) UpdateWorkflowMetaByWanwu(ctx context.Context, req 
 }
 
 // CopyWorkflowByWanwu 参考CopyWorkflow，适配了chatflow
-func (w *ApplicationService) CopyWorkflowByWanwu(ctx context.Context, req *workflow.CopyWorkflowRequest) (
+func (w *ApplicationService) CopyWorkflowByWanwu(ctx context.Context, req *CopyWorkflowRequest) (
 	resp *workflow.CopyWorkflowResponse, err error,
 ) {
 	defer func() {
@@ -218,7 +218,7 @@ func (w *ApplicationService) CopyWorkflowByWanwu(ctx context.Context, req *workf
 			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
 		}
 	}()
-	spaceID, err := strconv.ParseInt(req.GetSpaceID(), 10, 64)
+	spaceID, err := strconv.ParseInt(req.SpaceID, 10, 64)
 	if err != nil {
 		return nil, err
 	}
@@ -226,15 +226,16 @@ func (w *ApplicationService) CopyWorkflowByWanwu(ctx context.Context, req *workf
 	if err = checkUserSpace(ctx, ctxutil.MustGetUIDFromCtx(ctx), spaceID); err != nil {
 		return nil, err
 	}
-
-	workflowID, err := strconv.ParseInt(req.GetWorkflowID(), 10, 64)
+	workflowID, err := strconv.ParseInt(req.WorkflowID, 10, 64)
 	if err != nil {
 		return nil, err
 	}
-
-	wf, err := w.copyWorkflow(ctx, workflowID, vo.CopyWorkflowPolicy{
+	policy := vo.CopyWorkflowPolicy{
+		TargetSpaceID:            &spaceID,
+		ModifiedCanvasSchema:     req.SchemaJSON,
 		ShouldModifyWorkflowName: true,
-	})
+	}
+	wf, err := w.copyWorkflow(ctx, workflowID, policy)
 	if err != nil {
 		return nil, err
 	}
@@ -787,5 +788,12 @@ type ExportWorkflowRequest struct {
 	WorkflowID string        `thrift:"workflow_id,1,required" form:"workflow_id,required" json:"workflow_id,required" query:"workflow_id,required"`
 	SpaceID    string        `form:"space_id,required" json:"space_id" query:"space_id,required"`
 	Version    string        `thrift:"version,6,optional" form:"version" json:"version,omitempty" query:"version"`
+	QType      model.Locator `form:"qType" json:"qType" query:"qType"`
+}
+
+type CopyWorkflowRequest struct {
+	WorkflowID string        `thrift:"workflow_id,1,required" form:"workflow_id,required" json:"workflow_id,required" query:"workflow_id,required"`
+	SpaceID    string        `thrift:"space_id,2,required" form:"space_id,required" json:"space_id,required" query:"space_id,required"`
+	SchemaJSON *string       `thrift:"schema_json,19,optional" form:"schema_json" json:"schema_json,omitempty" query:"schema_json"`
 	QType      model.Locator `form:"qType" json:"qType" query:"qType"`
 }
