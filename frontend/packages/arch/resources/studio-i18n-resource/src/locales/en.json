@@ -14257,7 +14257,7 @@
   "workflow_trigger_user_create_userid_tooltips": "The user to which the trigger belongs. You can use the system variable sys_uuid to uniquely identify the user.",
   "workflow_trigger_user_noproject": "This node is available only in projects",
   "workflow_api_root_url_wanwu": "API根地址",
-  "workflow_api_key_wanwu": "API秘钥",
+  "workflow_api_key_wanwu": "API密钥",
   "workflow_unpublish_change": "There are unpublished changes",
   "workflow_update_condition_title": "Update condition",
   "workflow_update_fields": "Update field",
