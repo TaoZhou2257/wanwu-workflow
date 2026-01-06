@@ -47,8 +47,10 @@ export const useLibraryCreateDatabaseModal = ({
 
   const resourceNavigate = useDataNavigate();
 
-  const spaceId = useSpaceStore(store => store.getSpaceId());
-  const userId = userStoreService.useUserInfo()?.user_id_str;
+  const accessCert = JSON.parse(localStorage.getItem("access_cert") || '{}')
+  const { userInfo = {} } = accessCert.user || {}
+  const spaceId = userInfo.orgId; // useSpaceStore(store => store.getSpaceId());
+  const userId = userInfo.uid; // userStoreService.useUserInfo()?.user_id_str;
 
   const [databaseBaseInfo, setDatabaseBaseInfo] = useState<FormData>({
     name: '',
