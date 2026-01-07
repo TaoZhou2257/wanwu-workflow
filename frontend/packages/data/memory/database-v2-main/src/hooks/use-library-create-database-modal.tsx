@@ -26,6 +26,7 @@ import {
   type FormData,
 } from '@coze-data/database-v2-adapter/components/base-info-modal';
 import { useSpaceStore } from '@coze-arch/bot-studio-store';
+import { getUserInfoWanwu } from '@coze-arch/bot-http';
 import {
   BotTableRWMode,
   type SingleDatabaseResponse,
@@ -47,10 +48,9 @@ export const useLibraryCreateDatabaseModal = ({
 
   const resourceNavigate = useDataNavigate();
 
-  const accessCert = JSON.parse(localStorage.getItem("access_cert") || '{}')
-  const { userInfo = {} } = accessCert.user || {}
-  const spaceId = userInfo.orgId; // useSpaceStore(store => store.getSpaceId());
-  const userId = userInfo.uid; // userStoreService.useUserInfo()?.user_id_str;
+  const { userInfo } = getUserInfoWanwu();
+  const spaceId = userInfo?.orgId; // useSpaceStore(store => store.getSpaceId());
+  const userId = userInfo?.uid; // userStoreService.useUserInfo()?.user_id_str;
 
   const [databaseBaseInfo, setDatabaseBaseInfo] = useState<FormData>({
     name: '',

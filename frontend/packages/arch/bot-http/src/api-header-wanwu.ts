@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
+export const getUserInfoWanwu = () => {
+  const accessCert = JSON.parse(localStorage.getItem("access_cert") || '{}');
+  return accessCert.user || {};
+}
+
 export const authorHeadersWanwu = () => {
-  const accessCert = JSON.parse(localStorage.getItem("access_cert") || '{}')
-  const { token, userInfo = {} } = accessCert.user || {}
+  const { token, userInfo } = getUserInfoWanwu();
   return {
     "Authorization": 'Bearer ' + token,
-    "x-user-id": userInfo.uid,
-    "x-org-id": userInfo.orgId,
-  }
+    "x-user-id": userInfo?.uid,
+    "x-org-id": userInfo?.orgId,
+  };
 }
