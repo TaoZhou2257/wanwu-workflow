@@ -92,7 +92,7 @@ export const DatabaseDetail = ({
   onAfterEditRecords,
   databaseId,
 }: DatabaseDetailProps) => {
-  const { userInfo = {} } = getUserInfoWanwu()
+  const { userInfo = {} } = getUserInfoWanwu();
   const userId = userInfo?.uid; // userStoreService.useUserInfo()?.user_id_str;
 
   const [basicInfoVisible, setBasicInfoVisible] = useState(false);
