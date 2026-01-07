@@ -1,6 +1,6 @@
 import { InputParameters, Outputs } from '../common/components';
 
-export function AgentContent() {
+export function AgentWanwuContent() {
   return (
     <>
       <InputParameters />
