@@ -91,7 +91,9 @@ export const DatabaseDetail = ({
   onAfterEditRecords,
   databaseId,
 }: DatabaseDetailProps) => {
-  const userId = userStoreService.useUserInfo()?.user_id_str;
+  const accessCert = JSON.parse(localStorage.getItem("access_cert") || '{}')
+  const { userInfo = {} } = accessCert.user || {}
+  const userId = userInfo.uid; // userStoreService.useUserInfo()?.user_id_str;
 
   const [basicInfoVisible, setBasicInfoVisible] = useState(false);
   const [createTableVisible, setCreateTableVisible] = useState(false);
