@@ -101,9 +101,9 @@ const repairResponseFormatInModelList = (modelList: Model[]) => {
       p => p?.name === RESPONSE_FORMAT_NAME,
     ) as ModelParameter;
 
-    // Reset the default value to JSON
+    // Reset the default value to Text
     Object.keys(newResponseFormat?.default_val ?? {}).forEach(k => {
-      newResponseFormat.default_val[k] = ResponseFormat.JSON;
+      newResponseFormat.default_val[k] = ResponseFormat.Text;
     });
 
     if (newResponseFormat) {
