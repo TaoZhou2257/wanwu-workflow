@@ -44,7 +44,7 @@ import {
   Banner,
 } from '@coze-arch/bot-semi';
 import { IconAdd } from '@coze-arch/bot-icons';
-import { isApiError } from '@coze-arch/bot-http';
+import { getUserInfoWanwu, isApiError } from '@coze-arch/bot-http';
 import {
   type UpdateDatabaseRequest,
   type AddDatabaseRequest,
@@ -319,10 +319,11 @@ export const DatabaseTableStructure = forwardRef<
     };
     if (!isModify) {
       try {
+        const { userInfo } = getUserInfoWanwu();
         resp = await MemoryApi.AddDatabase({
           ...params,
-          space_id: spaceId,
-          creator_id: creatorId,
+          space_id: spaceId || userInfo?.orgId,
+          creator_id: creatorId || userInfo?.uid,
           project_id: projectID,
         });
       } catch (error) {
