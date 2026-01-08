@@ -90,7 +90,7 @@ export function ToolButtonsBar({
           {I18n.t('db_optimize_022')}
         </span>
       </Button>
-      {tableType === TableType.DraftTable ? (
+      {/*{tableType === TableType.DraftTable ? (
         <Button
           color="secondary"
           icon={<IconCozImport />}
@@ -135,7 +135,7 @@ export function ToolButtonsBar({
             <IconCozArrowDown className="ml-[4px]" />
           </Button>
         </Dropdown>
-      )}
+      )}*/}
       <div className="ml-auto"></div>
       {tableType === TableType.DraftTable ? (
         <Button
