@@ -599,7 +599,7 @@ func (c *Config) Build(ctx context.Context, ns *schema2.NodeSchema, _ ...schema2
 		}
 	}
 	if c.UserPrompt == "" {
-		return nil, fmt.Errorf("llm node's user prompt is empty")
+		return nil, fmt.Errorf("用户提示词不能为空")
 	}
 	userPrompt := c.UserPrompt
 	switch format {

@@ -21,10 +21,10 @@ func GetIconForDatasetByWanwu(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-	baseUrl := os.Getenv("WANWU_EXTERNAL_SCHEME") + "://" + os.Getenv("WANWU_EXTERNAL_ENDPOINT")
 
-	resp := new(dataset.GetIconResponse)
+	baseUrl := os.Getenv("WANWU_EXTERNAL_SCHEME") + "://" + os.Getenv("WANWU_EXTERNAL_ENDPOINT")
 	url, _ := url.JoinPath(baseUrl, "/api/static/icon/icon-Database-v2.jpg")
+	resp := new(dataset.GetIconResponse)
 	resp.Icon = &dataset.Icon{
 		URL: url,
 		URI: "default_icon/default_database_icon.png",
