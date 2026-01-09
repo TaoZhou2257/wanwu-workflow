@@ -322,7 +322,7 @@ export const useSelectDatabaseModal = ({
   const renderFilter = () => (
     <div className="flex flex-row items-center w-full justify-between pr-[12px]">
       <div className={classNames(styles.select, 'flex flex-row flex-1')}>
-        <div className="flex flex-row items-center">
+        {/*<div className="flex flex-row items-center">
           <Select
             showArrow
             size="default"
@@ -340,7 +340,7 @@ export const useSelectDatabaseModal = ({
               />
             ) : null}
           </Select>
-        </div>
+        </div>*/}
         <div className="flex flex-row items-center ml-[12px]">
           <Select
             showArrow

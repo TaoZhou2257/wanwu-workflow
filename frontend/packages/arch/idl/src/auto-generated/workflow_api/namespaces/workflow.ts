@@ -3683,6 +3683,16 @@ export interface PublishWorkflowResponse {
   BaseResp: base.BaseResp;
 }
 
+export interface WorkflowRequestWanwu {
+  appType?: string;
+  appId?: string;
+}
+
+export interface WorkflowResponseWanwu {
+  data: any;
+  code: Int64;
+  msg?: string;
+}
 
 export interface PublishWanwuWorkflowRequest {
   appType?: string;
@@ -3697,7 +3707,6 @@ export interface PublishWanwuWorkflowResponse {
   code: Int64;
   msg?: string;
 }
-
 
 export interface PublishWorkflowV2Data {
   workflow_id?: string;

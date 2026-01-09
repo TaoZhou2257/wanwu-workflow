@@ -273,7 +273,6 @@ const PublishForm: React.FC<{
   const currentSelectCase = useRef<SetDefaultTestCaseReq | undefined>(
       undefined,
   );
-  const { workflowId } = useGlobalState();
 
   const trySaveDefaultCase = () => {
     try {
@@ -293,8 +292,6 @@ const PublishForm: React.FC<{
       await formApiRef.current.validate();
       const data = formApiRef.current.getValues();
       const next: any = {
-        appType: "workflow",
-        appId: workflowId,
         ...data,
       };
 

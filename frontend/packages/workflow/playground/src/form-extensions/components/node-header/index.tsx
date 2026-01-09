@@ -42,6 +42,7 @@ import {
 } from '@coze-workflow/feature-encapsulate';
 import { StandardNodeType } from '@coze-workflow/base/types';
 import { useNodeTestId } from '@coze-workflow/base';
+import { getUserInfoWanwu } from '@coze-arch/bot-http';
 import { I18n } from '@coze-arch/i18n';
 import {
   IconCozMore,
@@ -233,8 +234,8 @@ export const NodeHeader: React.FC<NodeHeaderProps> = ({
     node.flowNodeType === StandardNodeType.Api &&
     get(nodeData, 'pluginType') === PluginType.LOCAL;
 
-  const accessCert = JSON.parse(localStorage.getItem("access_cert") || '{}')
-  const docLinkList = accessCert?.user?.commonInfo?.data?.linkList || {}
+  const { commonInfo } = getUserInfoWanwu();
+  const docLinkList = commonInfo?.data?.linkList || {};
 
   return (
     <div

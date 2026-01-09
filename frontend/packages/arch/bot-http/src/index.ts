@@ -31,6 +31,6 @@ export {
   addGlobalResponseInterceptor,
   ErrorCodes,
 } from './axios';
-export { authorHeadersWanwu } from './api-header-wanwu';
+export { authorHeadersWanwu, getUserInfoWanwu } from './api-header-wanwu';
 export { ApiError, isApiError } from './api-error';
 export { type AxiosRequestConfig } from 'axios';

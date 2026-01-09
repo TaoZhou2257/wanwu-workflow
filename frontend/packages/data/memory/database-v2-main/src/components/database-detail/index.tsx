@@ -53,6 +53,7 @@ import {
   type DatabaseInfo,
   type UpdateDatabaseRequest,
 } from '@coze-arch/bot-api/memory';
+import { getUserInfoWanwu } from '@coze-arch/bot-http';
 import { MemoryApi } from '@coze-arch/bot-api';
 
 import { DatabaseTableStructureReadonly } from '../database-table-structure-readonly';
@@ -91,7 +92,8 @@ export const DatabaseDetail = ({
   onAfterEditRecords,
   databaseId,
 }: DatabaseDetailProps) => {
-  const userId = userStoreService.useUserInfo()?.user_id_str;
+  const { userInfo = {} } = getUserInfoWanwu();
+  const userId = userInfo?.uid; // userStoreService.useUserInfo()?.user_id_str;
 
   const [basicInfoVisible, setBasicInfoVisible] = useState(false);
   const [createTableVisible, setCreateTableVisible] = useState(false);

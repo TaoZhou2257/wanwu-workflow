@@ -16520,6 +16520,8 @@
   "workflow_trigger_user_create_userid": "用户id",
   "workflow_trigger_user_create_userid_tooltips": "用于设置触发器所属用户，可以使用变量-系统变量中的sys_uuid来唯一标识用户",
   "workflow_trigger_user_noproject": "该节点仅支持在项目下使用",
+  "workflow_api_root_url_wanwu": "API根地址",
+  "workflow_api_key_wanwu": "API密钥",
   "workflow_unpublish_change": "有尚未发布的修改",
   "workflow_update_condition_title": "更新条件",
   "workflow_update_fields": "更新字段",

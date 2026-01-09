@@ -23,6 +23,7 @@ import { WorkflowInfo } from '../workflow-header-info';
 import { useGlobalState } from '../../hooks';
 import { getWorkflowHeaderTestId } from './utils';
 import { PublishButton } from './components/publish-button-v2';
+import { WorkflowApiKeyWanwu } from '../workflow-api-key-wanwu'
 import {
   CollaboratorsButton,
   SubmitButton,
@@ -39,6 +40,7 @@ const WorkFlowHeader: React.FC = () => {
   const { readonly, info, playgroundProps, workflowId } = globalState;
 
   const isPublished = info.plugin_id !== '0';
+
   return (
     <div className={styles.container}>
       <div
@@ -60,6 +62,8 @@ const WorkFlowHeader: React.FC = () => {
       </div>
 
       <div className={styles.right}>
+        {isPublished && <WorkflowApiKeyWanwu />}
+
         {/* will support soon */}
         {IS_OPEN_SOURCE ? null : <ReferenceButton workflowId={workflowId} />}
 
