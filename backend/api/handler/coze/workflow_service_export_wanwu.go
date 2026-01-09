@@ -153,7 +153,7 @@ func cleanNode(node *vo.Node) {
 		cleanLoopNode(node)
 	case "22": // 意图识别节点
 		cleanIntentNode(node)
-	case "42", "43", "44", "46": // 数据库节点
+	case "12", "42", "43", "44", "46": // 数据库节点
 		cleanDatabaseNode(node)
 	case "1006": // 知识库检索节点
 		cleanKnowledgeNode(node)
