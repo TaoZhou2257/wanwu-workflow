@@ -264,7 +264,7 @@ func (w *ApplicationService) OpenAPIRunByWanwu(ctx context.Context, workflowID s
 		Mode:     workflowModel.ExecuteModeRelease,
 		// AppID:         appID,
 		// AgentID:       agentID,
-		ConnectorID:   consts.WebSDKConnectorID,
+		ConnectorID:   consts.APIConnectorID,
 		ConnectorUID:  strconv.FormatInt(meta.CreatorID, 10),
 		InputFailFast: true,
 		BizType:       workflowModel.BizTypeWorkflow,

@@ -74,6 +74,62 @@ func _getprojectvariablelistMw() []app.HandlerFunc {
 	return nil
 }
 
+func _databaseMw() []app.HandlerFunc {
+	return nil
+}
+
+func _adddatabaseMw() []app.HandlerFunc {
+	return nil
+}
+
+func _listdatabaseMw() []app.HandlerFunc {
+	return nil
+}
+
+func _getdatabasebyidMw() []app.HandlerFunc {
+	return nil
+}
+
+func _listdatabaserecordsMw() []app.HandlerFunc {
+	return nil
+}
+
+func _getconnectornameMw() []app.HandlerFunc {
+	return nil
+}
+
+func _updatedatabaserecordsMw() []app.HandlerFunc {
+	return nil
+}
+
+func _getdatabasetemplateMw() []app.HandlerFunc {
+	return nil
+}
+
+func _updatedatabaseMw() []app.HandlerFunc {
+	return nil
+}
+
+func _tableMw() []app.HandlerFunc {
+	return nil
+}
+
+func _resetbottableMw() []app.HandlerFunc {
+	return nil
+}
+
+func _knowledge0Mw() []app.HandlerFunc {
+	return nil
+}
+
+func _iconMw() []app.HandlerFunc {
+	return nil
+}
+
+func _geticonfordatasetMw() []app.HandlerFunc {
+	return nil
+}
+
 func _commonMw() []app.HandlerFunc {
 	// your code...
 	return nil
