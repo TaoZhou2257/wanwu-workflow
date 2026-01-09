@@ -659,7 +659,7 @@ func (w *ApplicationService) LatestVersionRunByWanwu(ctx context.Context, req *w
 		From:         workflowModel.FromLatestVersion, // 这里是最新发布版本
 		CommitID:     req.GetCommitID(),
 		Operator:     uID,
-		Mode:         workflowModel.ExecuteModeDebug,
+		Mode:         workflowModel.ExecuteModeRelease,// 发布模式（需要将应用广场运行的工作流中的数据库节点等资源指向正式环境）
 		AppID:        appID,
 		AgentID:      agentID,
 		ConnectorID:  consts.CozeConnectorID,

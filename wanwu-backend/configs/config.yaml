@@ -85,6 +85,8 @@ icons:
     url: /api/static/icon/icon-Workflow-v2.jpg
   - id: -9
     url: /api/static/icon/icon-Chatflow-v2.png
+  - id: 12
+    url: /api/static/icon/icon-Database-v2.jpg
   - id: 13
     url: /api/static/icon/icon-Output-v2.jpg
   - id: 15
@@ -111,8 +113,16 @@ icons:
     url: /api/static/icon/icon-clear-context.jpg
   - id: 39
     url: /api/static/icon/icon-create-conversation.jpg
+  - id: 42
+    url: /api/static/icon/icon-database-update.jpg
+  - id: 43
+    url: /api/static/icon/icon-database-select.jpg
+  - id: 44
+    url: /api/static/icon/icon-database-delete.jpg
   - id: 45
     url: /api/static/icon/icon-HTTP.png
+  - id: 46
+    url: /api/static/icon/icon-database-insert.jpg
   - id: 51
     url: /api/static/icon/icon-update-conversation.jpg
   - id: 52

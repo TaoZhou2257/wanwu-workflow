@@ -55,6 +55,28 @@ func Register(r *hertz_server.Hertz) {
 					_variable.GET("/meta_list", append(_getprojectvariablelistMw(), coze.GetProjectVariableListByWanwu)...)
 				}
 			}
+			{
+				_database := _memory.Group("/database", _databaseMw()...)
+				_database.POST("/add", append(_adddatabaseMw(), coze.AddDatabase)...)
+				_database.POST("/list", append(_listdatabaseMw(), coze.ListDatabaseByWanwu)...)
+				_database.POST("/get_by_id", append(_getdatabasebyidMw(), coze.GetDatabaseByIDByWanwu)...)
+				_database.POST("/list_records", append(_listdatabaserecordsMw(), coze.ListDatabaseRecords)...)
+				_database.POST("/get_connector_name", append(_getconnectornameMw(), coze.GetConnectorNameByWanwu)...)
+				_database.POST("/update_records", append(_updatedatabaserecordsMw(), coze.UpdateDatabaseRecords)...)
+				_database.POST("/get_template", append(_getdatabasetemplateMw(), coze.GetDatabaseTemplate)...)
+				_database.POST("/update", append(_updatedatabaseMw(), coze.UpdateDatabase)...)
+				{
+					_table := _database.Group("/table", _tableMw()...)
+					_table.POST("/reset", append(_resetbottableMw(), coze.ResetBotTable)...)
+				}
+			}
+		}
+		{
+			_knowledge0 := _api.Group("/knowledge", _knowledge0Mw()...)
+			{
+				_icon := _knowledge0.Group("/icon", _iconMw()...)
+				_icon.POST("/get", append(_geticonfordatasetMw(), coze.GetIconForDatasetByWanwu)...)
+			}
 		}
 		{
 			_common := _api.Group("/common", _commonMw()...)
