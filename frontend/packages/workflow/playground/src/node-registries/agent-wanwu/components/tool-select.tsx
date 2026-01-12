@@ -25,6 +25,7 @@ import { Section, Field, type FieldProps, useForm } from '@/form';
 
 type ToolSelectFieldProps = FieldProps<ToolSelectValue> & {
   afterChange?: (value?: ToolSelectValue) => void;
+  showDataset?: boolean | undefined;
 };
 
 export const ToolSelectField = ({
@@ -32,12 +33,19 @@ export const ToolSelectField = ({
   label,
   tooltip,
   afterChange,
+  showDataset,
   ...rest
 }: ToolSelectFieldProps) => {
   const { getNodeSetterId } = useNodeTestId();
   const form = useForm();
   return (
-    <Section title={I18n.t('workflow_agnet_tool_select_title' as any)}>
+    <Section
+      title={
+        showDataset
+          ? I18n.t('workflow_detail_knowledge_knowledge')
+          : I18n.t('workflow_agnet_tool_select_title' as any)
+      }
+    >
       <Field<ToolSelectValue> name={name} {...rest}>
         {({ value, onChange, readonly}) => (
           <ToolSelect 
@@ -50,6 +58,7 @@ export const ToolSelectField = ({
             addButtonTestID={getNodeSetterId(`${name}.addButton`)}
             libraryCardTestID={getNodeSetterId(`${name}.libraryCard`)}
             form={form}
+            showDataset={showDataset}
           />
         )}
       </Field>

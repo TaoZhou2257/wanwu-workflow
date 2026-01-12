@@ -41,6 +41,7 @@ interface ToolListProps {
   addButtonTestID?: string;
   libraryCardTestID?: string;
   form?: any;
+  showDataset?: boolean | undefined;
 }
 
 export const ToolSelect = ({
@@ -50,6 +51,7 @@ export const ToolSelect = ({
   addButtonTestID,
   libraryCardTestID,
   form,
+  showDataset,
 }: ToolListProps) => {
   const { spaceId, projectId, getProjectApi, playgroundProps } =
     useGlobalState();
@@ -261,13 +263,17 @@ export const ToolSelect = ({
   }, [value, toolInfoList]);
 
 
-  const isHideSettingButton = !libraries.some((lib: any) => lib?.kind === 'database');
+  const isHideSettingButton = !showDataset // !libraries.some((lib: any) => lib?.kind === 'database');
+  const newLibraries = showDataset
+    ? libraries.filter((item: any) => item?.kind === 'database')
+    : libraries.filter((item: any) => item?.kind !== 'database');
+  console.log(newLibraries, '=========================123')
 
   return (
     <>
       <LibrarySelect
         readonly={readonly}
-        libraries={libraries}
+        libraries={newLibraries}
         onAddLibrary={openSelectDatabaseModal}
         onSettingLibrary={() => {
           let datasettingValue = databaseSettingValue;
@@ -281,7 +287,7 @@ export const ToolSelect = ({
         hideSettingButton={isHideSettingButton}
         onDeleteLibrary={handleLibrarySelectDelete}
         onEditLibrary={(id: string) => {
-          const lib = (libraries || []).find((item: any) => item?.id === id);
+          const lib = (newLibraries || []).find((item: any) => item?.id === id);
           if (!canEdit(lib)) return;
           handleEditLibrary(lib);
         }}
@@ -317,7 +323,11 @@ export const ToolSelect = ({
             />
           )
         }}
-        emptyText={I18n.t('workflow_agnet_tool_database_empty' as any)}
+        emptyText={
+          showDataset
+            ? I18n.t('workflow_knowledge_node_empty')
+            : I18n.t('workflow_agnet_tool_database_empty' as any)
+        }
         addButtonTestID={addButtonTestID}
         libraryCardTestID={libraryCardTestID}
       />
@@ -342,6 +352,7 @@ export const ToolSelect = ({
         onRemoveTool={handleLibraryToolDelete}
         enterFrom={TOOL_TAB.WORKFLOW}
         projectID={projectId}
+        showDataset={showDataset}
       />
 
       <ToolSelectPluginSetting
@@ -373,8 +384,8 @@ export const ToolSelect = ({
       <ToolDatabaseSetting
         visible={databaseSettingVisible}
         value={databaseSettingValue || {}}
-        showUseGraph={libraries.some((lib: any) => lib?.kind === TOOL_TAB.DATABASE && lib?.graphSwitch === true)}
-        selectDataSet={libraries.filter((lib: any) => lib?.kind === TOOL_TAB.DATABASE)}
+        showUseGraph={newLibraries.some((lib: any) => lib?.kind === TOOL_TAB.DATABASE && lib?.graphSwitch === true)}
+        selectDataSet={newLibraries.filter((lib: any) => lib?.kind === TOOL_TAB.DATABASE)}
         onChange={(v) => {
           setDatabaseSettingValue({ ...databaseSettingValue, ...v });
         }}

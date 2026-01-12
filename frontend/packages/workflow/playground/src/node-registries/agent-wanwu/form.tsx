@@ -63,6 +63,13 @@ export const FormRender = () => {
         name={'inputs.toolInfoList'}
         afterChange={handleToolChange}
       />
+
+      {/* 知识库 */}
+      <ToolSelectField
+        name={'inputs.toolInfoList'}
+        afterChange={handleToolChange}
+        showDataset
+      />
       
       {/*隐藏域*/}
       <Field name="inputs.datasetSetting">
