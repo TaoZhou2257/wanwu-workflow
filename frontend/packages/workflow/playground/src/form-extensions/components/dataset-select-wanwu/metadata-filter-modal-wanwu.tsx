@@ -168,7 +168,10 @@ export const MetadataFilterModal = ({
         visible={visible}
         style={{width: '820px'}}
         centered
-        onCancel={handleClose}
+        onCancel={() => {
+          setCurrentMetaData(DEFAULT_METADATA)
+          handleClose?.()
+        }}
         content={
           <UICompositionModalMain className="px-[12px]">
             <div className="h-full">
