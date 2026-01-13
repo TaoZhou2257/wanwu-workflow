@@ -75,7 +75,7 @@ func GetHistorySchemaByWanwu(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp, err := appworkflow.SVC.GetWorkflowVersionSchema(ctx, &req)
+	resp, err := appworkflow.SVC.GetWorkflowVersionSchemaByWanwu(ctx, &req)
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
 		return

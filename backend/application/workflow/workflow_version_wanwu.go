@@ -103,7 +103,7 @@ func (w *ApplicationService) RollbackWorkflowVersionByWanwu(ctx context.Context,
 	}, nil
 }
 
-func (w *ApplicationService) GetWorkflowVersionSchema(ctx context.Context, req *workflow.GetHistorySchemaRequest) (
+func (w *ApplicationService) GetWorkflowVersionSchemaByWanwu(ctx context.Context, req *workflow.GetHistorySchemaRequest) (
 	resp *workflow.GetHistorySchemaResponse, err error) {
 	defer func() {
 		if panicErr := recover(); panicErr != nil {
@@ -122,6 +122,11 @@ func (w *ApplicationService) GetWorkflowVersionSchema(ctx context.Context, req *
 	}
 
 	var version string
+	var policy *vo.GetPolicy
+	policy = &vo.GetPolicy{
+		ID:    mustParseInt64(req.GetWorkflowID()),
+		QType: workflowModel.FromLatestVersion,
+	}
 	if req.CommitID != nil {
 		commitID := *req.CommitID
 		if idx := strings.LastIndex(commitID, "_"); idx != -1 && idx < len(commitID)-1 {
@@ -129,13 +134,12 @@ func (w *ApplicationService) GetWorkflowVersionSchema(ctx context.Context, req *
 		} else {
 			return nil, fmt.Errorf("invalid commit_id format: %s", req.CommitID)
 		}
+		policy = &vo.GetPolicy{
+			ID:      mustParseInt64(req.GetWorkflowID()),
+			QType:   workflowModel.FromSpecificVersion,
+			Version: version,
+		}
 	}
-	policy := &vo.GetPolicy{
-		ID:      mustParseInt64(req.GetWorkflowID()),
-		QType:   workflowModel.FromSpecificVersion,
-		Version: version,
-	}
-
 	wfEntity, err := GetWorkflowDomainSVC().Get(ctx, policy)
 	return &workflow.GetHistorySchemaResponse{
 		Data: &workflow.GetHistorySchemaData{

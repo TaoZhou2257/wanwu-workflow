@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/coze-dev/coze-studio/backend/api/model/playground"
-	pluginAPI "github.com/coze-dev/coze-studio/backend/api/model/plugin_develop"
-	"github.com/coze-dev/coze-studio/backend/api/model/plugin_develop/common"
 	resource "github.com/coze-dev/coze-studio/backend/api/model/resource/common"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
@@ -19,7 +17,6 @@ import (
 	model "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
 	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
 	search "github.com/coze-dev/coze-studio/backend/domain/search/entity"
-	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
 	"github.com/coze-dev/coze-studio/backend/pkg/i18n"
@@ -533,101 +530,6 @@ func (w *ApplicationService) GetWorkFlowSelectByWanwu(ctx context.Context, req *
 	}, nil
 }
 
-// GetPlaygroundPluginListByWanwu 参考GetPlaygroundPluginList
-func (w *ApplicationService) GetPlaygroundPluginListByWanwu(ctx context.Context, req *pluginAPI.GetPlaygroundPluginListRequest) (
-	resp *pluginAPI.GetPlaygroundPluginListResponse, err error,
-) {
-	defer func() {
-		if panicErr := recover(); panicErr != nil {
-			err = safego.NewPanicErr(panicErr, debug.Stack())
-		}
-
-		if err != nil {
-			err = vo.WrapIfNeeded(errno.ErrWorkflowOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
-		}
-	}()
-
-	currentUser := ctxutil.MustGetUIDFromCtx(ctx)
-	if err = checkUserSpace(ctx, currentUser, req.GetSpaceID()); err != nil {
-		return nil, err
-	}
-
-	var (
-		toolIDs []int64
-		wfs     []*entity.Workflow
-	)
-	if len(req.GetPluginIds()) > 0 {
-		toolIDs, err = slices.TransformWithErrorCheck(req.GetPluginIds(), func(a string) (int64, error) {
-			return strconv.ParseInt(a, 10, 64)
-		})
-		if err != nil {
-			return nil, err
-		}
-		// 修改QType从Draft中查找
-		wfs, _, err = GetWorkflowDomainSVC().MGet(ctx, &vo.MGetPolicy{
-			MetaQuery: vo.MetaQuery{
-				IDs:     toolIDs,
-				SpaceID: ptr.Of(req.GetSpaceID()),
-			},
-			QType: workflowModel.FromDraft,
-		})
-	} else if req.GetPage() > 0 && req.GetSize() > 0 {
-		wfs, _, err = GetWorkflowDomainSVC().MGet(ctx, &vo.MGetPolicy{
-			MetaQuery: vo.MetaQuery{
-				Page: &vo.Page{
-					Size: req.GetSize(),
-					Page: req.GetPage(),
-				},
-				SpaceID:       ptr.Of(req.GetSpaceID()),
-				PublishStatus: ptr.Of(vo.HasPublished),
-			},
-			QType: workflowModel.FromLatestVersion,
-		})
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	pluginInfoList := make([]*common.PluginInfoForPlayground, 0)
-	for _, wf := range wfs {
-		pInfo := &common.PluginInfoForPlayground{
-			ID:           strconv.FormatInt(wf.ID, 10),
-			Name:         wf.Name,
-			PluginIcon:   wf.IconURL,
-			DescForHuman: wf.Desc,
-			Creator: &common.Creator{
-				Self: wf.CreatorID == currentUser,
-			},
-			PluginType: common.PluginType_WORKFLOW,
-			//VersionName: wf.VersionMeta.Version,
-			//CreateTime:  strconv.FormatInt(wf.CreatedAt.Unix(), 10),
-			//UpdateTime:  strconv.FormatInt(wf.VersionCreatedAt.Unix(), 10),
-		}
-
-		pluginApi := &common.PluginApi{
-			APIID:    strconv.FormatInt(wf.ID, 10),
-			Name:     wf.Name,
-			Desc:     wf.Desc,
-			PluginID: strconv.FormatInt(wf.ID, 10),
-		}
-		pluginApi.Parameters, err = slices.TransformWithErrorCheck(wf.InputParams, toPluginParameter)
-		if err != nil {
-			return nil, err
-		}
-
-		pInfo.PluginApis = []*common.PluginApi{pluginApi}
-		pluginInfoList = append(pluginInfoList, pInfo)
-	}
-
-	return &pluginAPI.GetPlaygroundPluginListResponse{
-		Data: &common.GetPlaygroundPluginListData{
-			PluginList: pluginInfoList,
-			Total:      int32(len(pluginInfoList)),
-		},
-	}, nil
-}
-
 // LatestVersionRunByWanwu 参考 TestRun 执行已发布的工作流
 func (w *ApplicationService) LatestVersionRunByWanwu(ctx context.Context, req *workflow.WorkFlowTestRunRequest) (_ *workflow.WorkFlowTestRunResponse, err error) {
 	defer func() {
@@ -659,7 +561,7 @@ func (w *ApplicationService) LatestVersionRunByWanwu(ctx context.Context, req *w
 		From:         workflowModel.FromLatestVersion, // 这里是最新发布版本
 		CommitID:     req.GetCommitID(),
 		Operator:     uID,
-		Mode:         workflowModel.ExecuteModeRelease,// 发布模式（需要将应用广场运行的工作流中的数据库节点等资源指向正式环境）
+		Mode:         workflowModel.ExecuteModeRelease, // 发布模式（需要将应用广场运行的工作流中的数据库节点等资源指向正式环境）
 		AppID:        appID,
 		AgentID:      agentID,
 		ConnectorID:  consts.CozeConnectorID,
