@@ -96,7 +96,7 @@ func Register(r *hertz_server.Hertz) {
 		}
 		{
 			_plugin_api := _api.Group("/plugin_api", _plugin_apiMw()...)
-			_plugin_api.POST("/get_playground_plugin_list", append(_getplaygroundpluginlistMw(), coze.GetPlaygroundPluginListByWanwu)...)
+			_plugin_api.POST("/get_playground_plugin_list", append(_getplaygroundpluginlistMw(), coze.GetPlaygroundPluginList)...)
 		}
 		{
 			_developer := _api.Group("/developer", _developerMw()...)
