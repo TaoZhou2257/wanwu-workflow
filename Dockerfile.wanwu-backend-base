@@ -2,7 +2,9 @@
 # ！！！同步于：backend/Dockerfile
 # ！！！同步于：backend/Dockerfile
 
-FROM alpine:3.22
+ARG WANWU_ARCH
+
+FROM --platform=linux/$WANWU_ARCH alpine:3.22
 
 WORKDIR /app
 
@@ -13,6 +15,8 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 # pax-utils for scanelf, python3 for running Python, python3-dev for headers/shared libs
 # bind-tools for nslookup etc., file for debugging file types
 RUN apk add --no-cache pax-utils python3 python3-dev bind-tools file deno curl
+
+RUN deno run -A jsr:@eyurtsev/pyodide-sandbox -c "print('Hello, World')"
 
 # Install Python build dependencies, create venv, install packages, then remove build deps
 RUN apk add --no-cache --virtual .python-build-deps build-base py3-pip git && \
