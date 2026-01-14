@@ -363,6 +363,7 @@ export interface ListSelectRequest {
   page?: number;
   pageSize?: number;
   knowledgeId?: any;
+  metaDataList?: any;
 }
 
 export interface ListSelectResponse {

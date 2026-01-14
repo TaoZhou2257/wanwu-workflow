@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { useNodeTestId, type WorkflowDatabase } from '@coze-workflow/base';
+import { useNodeTestId } from '@coze-workflow/base';
 import { I18n } from '@coze-arch/i18n';
 
 import {

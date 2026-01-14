@@ -16,20 +16,18 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { I18n } from '@coze-arch/i18n';
-import { Modal, Toast } from '@coze-arch/coze-design';
+import { Modal } from '@coze-arch/coze-design';
 import { IconCozEdit } from '@coze-arch/coze-design/icons';
 import { SelectToolModal } from './components';
 import { ToolSelectPluginSetting } from './components/tool-select-modal-wanwu/tool-select-plugin-setting';
 import { ToolDatabaseSetting } from './components/tool-select-database-wanwu/tool-database-setting';
 import { useWorkflowNode } from '@coze-workflow/base';
-import { KnowledgeApi } from '@coze-arch/bot-api';
 
 import { useGlobalState } from '@/hooks';
 import { LibrarySelect } from '@/form-extensions/components/library-select-wanwu';
 import { MetadataFilterModal, DEFAULT_METADATA } from '@/form-extensions/components/dataset-select-wanwu/metadata-filter-modal-wanwu';
 import { TooltipAction } from '@/form-extensions/components/icon-name-desc-card-wanwu/tooltip-action';
 import { IconNameDescCard } from '@/form-extensions/components/icon-name-desc-card-wanwu';
-
 
 import { useModal } from './use-modal';
 import { type ToolSelectValue, TOOL_TAB } from './types';
@@ -66,13 +64,13 @@ export const ToolSelect = ({
   const [metaVisible, setMetaVisible] = useState(false);
   const [curDatasetId, setCurDatasetId] = useState<string>();
   const [currentMetaData, setCurrentMetaData] = useState<any>(DEFAULT_METADATA);
-  const [currentKeyList, setCurrentKeyList] = useState<any[]>([]);
   const [toolSettingVisible, setToolSettingVisible] = useState(false);
   const [currentTool, setCurrentTool] = useState<any>(null);
   const [tempApiKey, setTempApiKey] = useState<string>('');
   const latestApiKeyRef = useRef<string>('');
   const [databaseSettingVisible, setDatabaseSettingVisible] = useState(false);
   const [databaseSettingValue, setDatabaseSettingValue] = useState<any>(null);
+  const [knowledgeId, setKnowledgeId] = useState<string>('');
 
   const prevValueRef = useRef<any>(null);
   const prevToolInfoListRef = useRef<any>(null);
@@ -222,23 +220,11 @@ export const ToolSelect = ({
   const showEditMetaData = async (library: any) => {
     const { id, knowledgeId, metaDataFilterParams } = library || {};
     if (!knowledgeId && !id) return;
-    try {
-      const { data = {} } = await KnowledgeApi.getMetaSelectList({
-        knowledgeId: knowledgeId || id,
-      });
-      const knowledgeMetaList = data.knowledgeMetaList || [];
-      const metaDataKeyList = knowledgeMetaList
-        .map((item: any) => ({ key: item.metaKey, type: item.metaValueType }))
-        .filter((item: any) => item.key);
 
-      setCurDatasetId(id);
-      setCurrentKeyList(metaDataKeyList);
-      setCurrentMetaData(metaDataFilterParams || DEFAULT_METADATA);
-      setMetaVisible(true);
-    } catch (err: any) {
-      const { statusText, data } = err?.response || {};
-      Toast.error(data?.msg || statusText || 'Server Error');
-    }
+    setCurDatasetId(id);
+    setKnowledgeId(knowledgeId || id);
+    setCurrentMetaData(metaDataFilterParams || DEFAULT_METADATA);
+    setMetaVisible(true);
   };
 
 
@@ -267,7 +253,6 @@ export const ToolSelect = ({
   const newLibraries = showDataset
     ? libraries.filter((item: any) => item?.kind === 'database')
     : libraries.filter((item: any) => item?.kind !== 'database');
-  console.log(newLibraries, '=========================123')
 
   return (
     <>
@@ -335,7 +320,7 @@ export const ToolSelect = ({
         visible={metaVisible}
         handleClose={handleCloseMetaModal}
         defaultValue={currentMetaData}
-        currentKeyList={currentKeyList}
+        knowledgeId={knowledgeId}
         onSubmit={(metaDataFilterParams) => {
           if (curDatasetId) {
             updateMetaDataForLibrary(curDatasetId, metaDataFilterParams);

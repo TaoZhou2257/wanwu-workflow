@@ -462,6 +462,21 @@ export default class KnowledgeService<T> {
     return this.request({ url, method, params }, options);
   }
 
+  /** GET /user/api/v1/knowledge/doc/meta */
+  updateMetaSelectList(
+    req?: dataset.ListSelectRequest,
+    options?: T,
+  ): Promise<dataset.ListSelectResponse> {
+    const _req = req || {};
+    const url = this.genBaseURL('/user/api/v1/knowledge/doc/meta');
+    const method = 'POST';
+    const data = {
+      knowledgeId: _req['knowledgeId'],
+      metaDataList: _req['metaDataList'],
+    };
+    return this.request({ url, method, data }, options);
+  }
+
   /** GET /user/api/v1/model/select/rerank */
   getRerankModel(
     req?: dataset.ListSelectRequest,
