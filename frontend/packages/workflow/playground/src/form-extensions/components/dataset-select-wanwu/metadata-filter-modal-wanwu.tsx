@@ -32,7 +32,11 @@ import {
 import { Checkbox, Toast, UITable } from '@coze-arch/bot-semi';
 import { IconInfo } from '@coze-arch/bot-icons';
 import { IconCozPlus, IconCozTrashCan } from '@coze-arch/coze-design/icons';
-import { IllustrationNoContent } from "@douyinfe/semi-illustrations";
+import { IllustrationNoContent } from '@douyinfe/semi-illustrations';
+import { KnowledgeApi } from '@coze-arch/bot-api';
+import { MetadataCreateModal } from './metadata-create-modal-wanwu';
+
+import style from './index.module.less';
 
 interface ValueProps {
   dataset_id?: string,
@@ -77,7 +81,7 @@ const conditionList = {
   ],
 }
 
-export const DEFAULT_METADATA = {
+export const DEFAULT_METADATA:any = {
   filterEnable: false,
   filterLogicType: 'and',
   metaFilterParams: []
@@ -85,16 +89,16 @@ export const DEFAULT_METADATA = {
 
 export const MetadataFilterModal = ({
   defaultValue,
-  currentKeyList = [],
   visible = false,
   onSubmit,
-  handleClose
+  handleClose,
+  knowledgeId = '',
 }: {
-  defaultValue: any,
-  currentKeyList: any[],
+  defaultValue: any;
   visible: boolean;
   handleClose: () => void;
   onSubmit: (value: ValueProps[]) => void;
+  knowledgeId: string;
 }) => {
   const { getNodeSetterId } = useNodeTestId();
 
@@ -102,6 +106,12 @@ export const MetadataFilterModal = ({
   const [currentMetaData, setCurrentMetaData] = useState<any>(DEFAULT_METADATA);
   // metadata table value list, resolve the issue of constantly refreshing the table, input value flashing
   const [metaDataValueList, setMetaDataValueList] = useState<any[]>([]);
+  // create metadata modal visible
+  const [createVisible, setCreateVisible] = useState<boolean>(false);
+  // current key list -> format metadata list for workflow
+  const [currentKeyList, setCurrentKeyList] = useState<any[]>([]);
+  // metadata list
+  const [metaDataList, setMetaDataList] = useState<any[]>([]);
 
   const formatMetaDataValue = () => {
     // merge metaDataValueList to currentMetaData
@@ -123,20 +133,39 @@ export const MetadataFilterModal = ({
     return data.map((item, index) => ({...item, id: `metaFilterParams_${index}`}))
   }
 
+  const getMetaDataList = async () => {
+    try {
+      const { data } = await KnowledgeApi.getMetaSelectList({ knowledgeId });
+      const knowledgeMetaList = data?.knowledgeMetaList || [];
+      const newMetaDataList = knowledgeMetaList
+        .map((item: any) => ({ key: item.metaKey, type: item.metaValueType }))
+        .filter((item: any) => item.key);
+
+      setMetaDataList(knowledgeMetaList);
+      setCurrentKeyList(newMetaDataList);
+    } catch (err) {
+      const { statusText, data } = err?.response || {};
+      Toast.error(data?.msg || statusText || 'Server Error');
+    }
+  }
+
   useEffect(() => {
-    if (defaultValue) {
+    if (visible && knowledgeId) getMetaDataList()
+  }, [knowledgeId, visible]);
+
+  useEffect(() => {
+    if (visible && defaultValue) {
       setCurrentMetaData(defaultValue)
 
       // set metadata value list, resolve input value flicker issue
       const { metaFilterParams } = defaultValue || {}
       setMetaDataValueList(metaFilterParams?.map(item => item.value) || [])
     }
-  }, [defaultValue]);
+  }, [defaultValue, visible]);
 
   return (
     <div>
       <UICompositionModal
-        // type="base-composition"
         header={
           <div className="flex items-center">
             <div>{I18n.t('datasets_metadata_filter')}</div>
@@ -168,7 +197,10 @@ export const MetadataFilterModal = ({
         visible={visible}
         style={{width: '820px'}}
         centered
-        onCancel={handleClose}
+        onCancel={() => {
+          setCurrentMetaData(DEFAULT_METADATA)
+          handleClose?.()
+        }}
         content={
           <UICompositionModalMain className="px-[12px]">
             <div className="h-full">
@@ -183,13 +215,14 @@ export const MetadataFilterModal = ({
                     });
                     return
                   }
-                  if (!currentKeyList?.length) {
+                  // remove the judgment for adding new conditions, metadata can be added to the metadata list
+                  /*if (!currentKeyList?.length) {
                     Toast.warning({
                       content: I18n.t('datasets_metadata_no_data_hint'),
                       showClose: false,
                     });
                     return
-                  }
+                  }*/
                   const metaFilterParams = JSON.parse(JSON.stringify(currentMetaData.metaFilterParams ?? []))
                   const newMetaFilterItem = {
                     condition: conditionList[currentKeyList[0]?.type || STRING]?.[0]?.key || '',
@@ -206,7 +239,7 @@ export const MetadataFilterModal = ({
               {currentMetaData?.metaFilterParams?.length > 0 ? (
                 <div
                   className="mt-[20px] overflow-y-auto"
-                  style={{maxHeight: 'calc(100vh - 300px)'}}
+                  style={{ maxHeight: 'calc(100vh - 258px)' }}
                 >
                   <div className="flex items-center">
                     <div className="mr-[10px]">
@@ -239,6 +272,10 @@ export const MetadataFilterModal = ({
                                   className="w-[100px]"
                                   value={value}
                                   onChange={(v: any) => {
+                                    if (v === 'add') {
+                                      setCreateVisible(true)
+                                      return
+                                    }
                                     // key change -> change type\condition\value
                                     const metaFilterParams = JSON.parse(JSON.stringify(currentMetaData.metaFilterParams ?? []))
                                     const keyObj = currentKeyList.find(item => item.key === v) || {}
@@ -249,6 +286,9 @@ export const MetadataFilterModal = ({
                                     setCurrentMetaData({...currentMetaData, metaFilterParams})
                                   }}
                                 >
+                                  <Select.Option key="add" value="add" className={style['add-metadata']}>
+                                    {`+ ${I18n.t('Add_metadata')}`}
+                                  </Select.Option>
                                   {currentKeyList.map((itemKey: any) => (
                                     <Select.Option key={itemKey.key + index} value={itemKey.key}>
                                       {itemKey.key}
@@ -346,11 +386,7 @@ export const MetadataFilterModal = ({
                                     
                                     // 新增：如果删除后没有过滤条件了，自动提交空数组
                                     if (!metaFilterParams?.length) {
-                                      const metaDataFilterParams = formatMetaDataValue()
-                                      metaDataFilterParams.filterEnable = false
-                                      metaDataFilterParams.metaFilterParams = []
-                                      metaDataFilterParams.filterLogicType ='and'
-                                      onSubmit?.(metaDataFilterParams)
+                                      onSubmit?.(DEFAULT_METADATA)
                                     }
                                   }}
                                 />
@@ -366,6 +402,14 @@ export const MetadataFilterModal = ({
                       color="brand"
                       onClick={() => {
                         const metaDataFilterParams = formatMetaDataValue()
+                        const hasNullValue = metaDataFilterParams.metaFilterParams?.some(item => !(item.key && item.value))
+                        if (hasNullValue) {
+                          Toast.warning({
+                            content: I18n.t('datasets_metadata_filter_error'),
+                            showClose: false,
+                          })
+                          return
+                        }
                         onSubmit?.(metaDataFilterParams)
                       }}
                     >
@@ -384,6 +428,13 @@ export const MetadataFilterModal = ({
           </UICompositionModalMain>
         }
       ></UICompositionModal>
+      <MetadataCreateModal
+        visible={createVisible}
+        handleClose={() => setCreateVisible(false)}
+        metaDataList={metaDataList}
+        knowledgeId={knowledgeId}
+        reloadData={getMetaDataList}
+      />
     </div>
   );
 };

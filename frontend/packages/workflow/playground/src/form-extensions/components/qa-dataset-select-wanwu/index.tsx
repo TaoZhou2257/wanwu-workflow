@@ -26,15 +26,13 @@ import { useQAKnowledgeListModal } from '@coze-data/knowledge-modal-adapter';
 import { I18n } from '@coze-arch/i18n';
 import { ConfigProvider } from '@coze-arch/bot-semi';
 import { useGlobalState, useQADataSetInfos } from '@/hooks';
-import { KnowledgeApi } from '@coze-arch/bot-api';
-import { Toast } from "@coze-arch/coze-design";
 
 import { LibrarySelect } from '../qa-library-select-wanwu';
 import { MetadataFilterModal, DEFAULT_METADATA } from '../dataset-select-wanwu/metadata-filter-modal-wanwu'
 
 interface ValueProps {
-  dataset_id?: string,
-  name?: string
+  dataset_id?: string;
+  name?: string;
 }
 
 export const DatasetSelect = ({
@@ -69,6 +67,8 @@ export const DatasetSelect = ({
   const [currentMetaData, setCurrentMetaData] = useState<any>(DEFAULT_METADATA);
   // metadata key list
   const [currentKeyList, setCurrentKeyList] = useState<any[]>([]);
+  // knowledge id
+  const [knowledgeId, setKnowledgeId] = useState<string>('');
 
   const handleClose = () => {
     setVisible(false)
@@ -113,23 +113,11 @@ export const DatasetSelect = ({
     const { metaDataFilterParams } = currentValueItem
     // origin dataset data, get current dataset knowledgeId
     const currentDataset:any = dataSets.find(item => item.dataset_id === id) || {}
-    try {
-      const { data = {} } = await KnowledgeApi.getMetaSelectList({
-        knowledgeId: currentDataset.knowledgeId
-      });
-      const knowledgeMetaList = data.knowledgeMetaList || []
-      const metaDataKeyList = knowledgeMetaList
-        .map(item => ({key: item.metaKey, type: item.metaValueType}))
-        .filter(item => item.key)
 
-      setCurDateSetID(id);
-      setCurrentKeyList(metaDataKeyList)
-      setCurrentMetaData(metaDataFilterParams || DEFAULT_METADATA)
-      setVisible(true)
-    } catch (err) {
-      const { statusText, data } = err?.response || {};
-      Toast.error(data?.msg || statusText || 'Server Error');
-    }
+    setCurDateSetID(id);
+    setKnowledgeId(currentDataset.knowledgeId);
+    setCurrentMetaData(metaDataFilterParams || DEFAULT_METADATA);
+    setVisible(true);
   }
 
   useEffect(() => {
@@ -149,7 +137,7 @@ export const DatasetSelect = ({
         visible={visible}
         handleClose={handleClose}
         defaultValue={currentMetaData}
-        currentKeyList={currentKeyList}
+        knowledgeId={knowledgeId}
         onSubmit={(metaDataFilterParams) => {
           const newValue = value.map(item => (
             item.dataset_id === curDateSetID ? {...item, metaDataFilterParams} : {...item}

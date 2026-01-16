@@ -49,6 +49,7 @@ interface ToolSelectProps {
   addButtonTestID?: string;
   libraryCardTestID?: string;
   width?: string | number;
+  showDataset?: boolean | undefined;
 }
 
 type ToolTab = typeof TOOL_TAB[keyof typeof TOOL_TAB];
@@ -58,6 +59,7 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
   onClose,
   onAddTool,
   onRemoveTool,
+  showDataset,
   spaceId
 }) => {
   const { projectId } = useGlobalState();
@@ -86,6 +88,10 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
     setWorkFlowList(newWorkflowList);
     setMcpList(newMcpList);
   }, [form.getValueIn('inputs.toolInfoList')]);
+
+  useEffect(() => {
+    setActiveTab(showDataset ? TOOL_TAB.DATABASE : TOOL_TAB.TOOL)
+  }, [showDataset]);
 
   const workflowAddList = useMemo(() => {
     return mcpList.map(item => item.name);
@@ -139,7 +145,17 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
   const tabList = useMemo<
     Array<{ key: ToolTab; label: string }>
   >(
-    () => [
+    () => showDataset ? [
+      {
+        key: TOOL_TAB.DATABASE,
+        label: I18n.t(
+          'Datasets' as any,
+          {
+            resource: I18n.t('resource_type_database' as any),
+          },
+        ),
+      },
+    ] : [
       {
         key: TOOL_TAB.TOOL,
         label: I18n.t('workflow_tool_tab' as any, {}, '工具'),
@@ -150,15 +166,6 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
           'Submit_workflow_list' as any,
           {
             resource: I18n.t('library_resource_type_workflow' as any),
-          },
-        ),
-      },
-      {
-        key: TOOL_TAB.DATABASE,
-        label: I18n.t(
-          'Datasets' as any,
-          {
-            resource: I18n.t('resource_type_database' as any),
           },
         ),
       },
@@ -193,7 +200,7 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
 
   const renderContent = () => (
     <div className="w-full h-full flex flex-col">
-      {activeTab === TOOL_TAB.TOOL && (
+      {!showDataset && activeTab === TOOL_TAB.TOOL && (
         // 工具选择
         <div className="flex-1 flex flex-row min-h-0 h-full overflow-hidden">
           <div className="w-[200px] mr-[12px] border-r border-[rgba(255,255,255,0.06)] h-full overflow-y-auto">
@@ -205,7 +212,7 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
           </div>
         </div>
       )}
-      {activeTab === TOOL_TAB.WORKFLOW && (
+      {!showDataset && activeTab === TOOL_TAB.WORKFLOW && (
         // 工作流选择
         <div className="flex-1 flex flex-row min-h-0">
           <div className="w-[220px] mr-[12px] border-r border-[rgba(255,255,255,0.06)]">
@@ -217,7 +224,7 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
           </div>
         </div>
       )}
-      {activeTab === TOOL_TAB.DATABASE && (
+      {showDataset && activeTab === TOOL_TAB.DATABASE && (
         <ToolSelectDatabase
           spaceId={spaceId}
           projectID={projectId}
@@ -228,7 +235,7 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
         />
       )}
 
-      {activeTab === TOOL_TAB.MCP && (
+      {!showDataset && activeTab === TOOL_TAB.MCP && (
         <div className="flex-1 min-h-0">
           {mcpSelectParts.renderContent()}
         </div>
