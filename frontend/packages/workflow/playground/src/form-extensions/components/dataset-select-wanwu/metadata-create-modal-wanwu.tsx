@@ -172,7 +172,7 @@ export const MetadataCreateModal = ({
                           {
                             title: I18n.t('datasets_metadata_type'),
                             dataIndex: 'metaValueType',
-                            width: 100,
+                            width: 80,
                             render: (value: string, item: any, index: number) => {
                               return (
                                 <Select
@@ -196,20 +196,29 @@ export const MetadataCreateModal = ({
                           {
                             title: I18n.t('datasets_metadata_operation'),
                             align: 'center',
-                            width: 60,
+                            width: 50,
                             render: (value: string, item: any, index: number) => {
                               return (
                                 <>
-                                  <IconCozEdit
+                                  {/* v0.3.6: editing and deleting previous keys are prohibited */}
+                                  {/*<IconCozEdit
                                     className="mr-[10px]"
                                     onClick={() => {
                                       const newCurrentMetaDataList = [...currentMetaDataList];
-                                      newCurrentMetaDataList[index].option = 'update';
-                                      setCurrentMetaDataList(newCurrentMetaDataList);
+                                      if (!newCurrentMetaDataList[index].option) {
+                                        newCurrentMetaDataList[index].option = 'update';
+                                        setCurrentMetaDataList(newCurrentMetaDataList);
+                                      }
                                     }}
-                                  />
+                                  />*/}
                                   <IconCozTrashCan
+                                    style={
+                                      item.option !== 'add'
+                                        ? { cursor: 'not-allowed', opacity: 0.5 }
+                                        : {}
+                                    }
                                     onClick={() => {
+                                      if (item.option !== 'add') return
                                       const newCurrentMetaDataList = JSON.parse(JSON.stringify([...currentMetaDataList]));
                                       if (newCurrentMetaDataList[index]?.metaId) {
                                         const deleteData = [{
