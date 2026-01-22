@@ -93,6 +93,7 @@ func CreateChatModel(ctx context.Context, llmParams *vo.LLMParams) (modelbuilder
 			Capability: &developer_api.ModelAbility{
 				FunctionCall:       &functionCall,
 				ImageUnderstanding: &imageUnerstanding,
+				SupportMultiModal:  &imageUnerstanding,
 			},
 		},
 	}
