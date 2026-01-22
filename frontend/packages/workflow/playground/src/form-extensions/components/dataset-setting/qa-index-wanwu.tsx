@@ -200,6 +200,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
         <SearchStrategyWanwu
           readonly={readonly}
           value={matchType as MatchType}
+          isQaKnowledge={true}
           onChange={v => {
             onDataSetInfoChange(
               {
@@ -231,7 +232,9 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
 
       {matchType === MatchType.HybirdPriority && (<div className={s['setting-item']}>
         <TitleArea
-          title={`${I18n.t('dataset_lang')}${semanticsPriority} / ${I18n.t('dataset_keywords')}${1 - semanticsPriority}`}
+          title={
+            `${I18n.t('dataset_lang')}${semanticsPriority} / ${I18n.t('dataset_keywords')}${1 - (semanticsPriority || 0)}`
+          }
         />
         <div style={{position: 'relative'}}>
           <SliderArea
@@ -289,7 +292,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
               min={0}
               max={20}
               step={1}
-              value={topK}
+              value={topK || 0}
               customStyles={{
                 sliderAreaStyle: {
                   width: '160px',
