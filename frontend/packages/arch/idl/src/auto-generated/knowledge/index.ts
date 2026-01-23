@@ -424,6 +424,8 @@ export default class KnowledgeService<T> {
     const url = this.genBaseURL('/user/api/v1/knowledge/select');
     const method = 'POST';
     const data = {
+      category: 0, // 0：知识库
+      external: -1, // -1: 全部，0: 内部知识库，1：外部知识库
       name: _req['name'],
       page: _req['page'],
       pageSize: _req['pageSize'],

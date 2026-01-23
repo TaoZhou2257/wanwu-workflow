@@ -16,6 +16,7 @@
 
 import { type ReactNode } from 'react';
 export interface Library {
+  external?: number;
   id: string;
   iconUrl?: string;
   name?: string;

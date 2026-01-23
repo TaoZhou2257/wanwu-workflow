@@ -73,7 +73,7 @@ const getDatasetList = async (
   props: {
     name?: string;
     search_type?: OrderField;
-    space_id: string;
+    space_id?: string;
     scope_type?: DatasetScopeType;
     format_type?: FormatType;
     projectID?: string;

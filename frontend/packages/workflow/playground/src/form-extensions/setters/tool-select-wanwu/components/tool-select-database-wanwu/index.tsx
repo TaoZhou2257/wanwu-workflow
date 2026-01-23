@@ -27,6 +27,7 @@ interface ToolSelectDatabaseProps {
     ragName?: string;
     desc?: string;
     metaDataFilterParams?: any;
+    external?: any;
   }) => void;
 }
 
@@ -62,6 +63,7 @@ export const ToolSelectDatabase: FC<ToolSelectDatabaseProps> = ({
           name: lastItem.name,
           knowledgeId: lastItem.knowledgeId,
           graphSwitch: lastItem.graphSwitch,
+          external: lastItem.external,
           ragName: lastItem.ragName,
           desc: lastItem.description || '',
           metaDataFilterParams: lastItem.metaDataFilterParams
@@ -85,6 +87,7 @@ export const ToolSelectDatabase: FC<ToolSelectDatabaseProps> = ({
           name: lastItem.name,
           knowledgeId: lastItem.knowledgeId,
           graphSwitch: lastItem.graphSwitch,
+          external: lastItem.external,
           ragName: lastItem.ragName,
           desc: lastItem.description || '',
           metaDataFilterParams: lastItem.metaDataFilterParams

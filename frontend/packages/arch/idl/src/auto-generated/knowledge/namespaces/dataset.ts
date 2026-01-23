@@ -178,6 +178,7 @@ export interface CreateDatasetResponse {
 
 export interface Dataset {
   dataset_id?: string;
+  external?: number;
   /** 数据集名称 */
   name?: string;
   /** 文件列表 */
@@ -362,6 +363,7 @@ export interface ListDatasetRequest {
 export interface ListSelectRequest {
   page?: number;
   pageSize?: number;
+  name?: string;
   knowledgeId?: any;
   metaDataList?: any;
 }
