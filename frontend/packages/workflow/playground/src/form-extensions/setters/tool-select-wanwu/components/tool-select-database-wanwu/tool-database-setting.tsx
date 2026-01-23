@@ -1,8 +1,7 @@
-import { useState, useMemo } from 'react';
-
-import { Modal, Popover, Button, Toast } from '@coze-arch/coze-design';
-import { IconWarningInfo } from '@coze-arch/bot-icons';
+import { useEffect, useState } from 'react';
+import { Modal, Button, Toast } from '@coze-arch/coze-design';
 import { I18n } from '@coze-arch/i18n';
+import { isEmpty } from 'lodash-es';
 
 import {
   MatchType,
@@ -24,10 +23,6 @@ interface ToolDatabaseSettingProps {
   selectDataSet?: any[];
 }
 
-const SUGGEST_TOP_K = 5;
-const DEFAULT_MIN_SCORE = 0.4;
-const DEFAULT_TOP_K = 5;
-
 export const ToolDatabaseSetting = ({
   visible,
   value,
@@ -40,17 +35,30 @@ export const ToolDatabaseSetting = ({
   selectDataSet = [],
 }: ToolDatabaseSettingProps) => {
   const {
-    matchType = MatchType.FullText,
+    matchType,
     rerankModelId = '',
-    topK = DEFAULT_TOP_K,
-    threshold = DEFAULT_MIN_SCORE,
-    rewrite = true,
-    useGraph = false,
   } = value || {};
 
+  const [isInit, setIsInit] = useState<boolean>(true);
   const { dataSets, isReady } = useDataSetInfos({ 
     ids: selectDataSet.map(item => item?.dataset_id || item?.id).filter(Boolean) 
   });
+
+  const needRerankIdList:any = [MatchType.Semantic, MatchType.FullText, MatchType.Hybird]
+  const isAllExternalKnowledge = selectDataSet.every(item => item.external)
+
+  useEffect(() => {
+    if (!isInit && !isEmpty(value)) {
+      if (isAllExternalKnowledge) {
+        onChange?.({
+          ...value,
+          useGraph: false,
+          rewrite: false,
+        });
+      }
+    }
+    setIsInit(false);
+  }, [isAllExternalKnowledge]);
 
   return (
     <Modal
@@ -73,7 +81,7 @@ export const ToolDatabaseSetting = ({
         <Button
           type="primary"
           onClick={() => {
-            if (matchType !== 'mix_priority' && !rerankModelId) {
+            if (!isAllExternalKnowledge && needRerankIdList.includes(matchType) && !rerankModelId) {
               Toast.error(I18n.t('knowledge_rerank_placeholder' as any, {}, '请选择rerank模型'));
               return;
             }

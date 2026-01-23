@@ -37,23 +37,28 @@ const optionList = [
     value: MatchType.Hybird,
     label: I18n.t('knowledge_hybrid_search'),
   },
+];
+
+const otherOptionList = [
   {
     value: MatchType.HybirdPriority,
     label: I18n.t('knowledge_hybrid_priority_search'),
   },
-];
+]
 
 interface SearchStrategyProps {
   value: MatchType;
   onChange: (v: MatchType) => void;
   style?: React.CSSProperties;
   readonly?: boolean;
+  isQaKnowledge?: boolean;
 }
 
 export const SearchStrategyWanwu: React.FC<SearchStrategyProps> = props => {
-  const { value, onChange, style, readonly } = props;
+  const { value, onChange, style, readonly, isQaKnowledge } = props;
 
   const { getNodeSetterId } = useNodeTestId();
+  const options = isQaKnowledge ? optionList : [...optionList, ...otherOptionList]
 
   return (
     <Select
@@ -69,7 +74,7 @@ export const SearchStrategyWanwu: React.FC<SearchStrategyProps> = props => {
       // defaultValue={MatchType.Semantic}
       data-testid={getNodeSetterId('dataset-search-strategy')}
     >
-      {optionList.map(v => (
+      {options.map(v => (
         <Select.Option
           value={v.value}
           key={v.value}

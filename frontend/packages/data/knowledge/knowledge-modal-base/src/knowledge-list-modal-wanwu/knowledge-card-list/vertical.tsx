@@ -205,8 +205,11 @@ export const KnowledgeCardListVertical: FC<DatasetCardListVerticalProps> = ({
                   {item.orgName}
                 </UITag>
               )}
-              <UITag color="grey">
+              <UITag color="grey" className="mr-[5px]">
                 {item.share ? I18n.t('dataset_share_public') : I18n.t('dataset_share_private')}
+              </UITag>
+              <UITag color="grey">
+                {item.external ? I18n.t('dataset_share_external') : I18n.t('dataset_share_internal')}
               </UITag>
             </div>
             <div className={styles['tags-wapper']}>
