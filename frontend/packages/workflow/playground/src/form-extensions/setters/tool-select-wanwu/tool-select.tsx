@@ -168,7 +168,7 @@ export const ToolSelect = ({
   function canEdit(library: any) {
     const kind = library?.kind;
     const isBuiltin = library?.type === 'builtin';
-    return kind === TOOL_TAB.DATABASE || (kind === TOOL_TAB.TOOL && isBuiltin);
+    return (kind === TOOL_TAB.DATABASE && !library?.external) || (kind === TOOL_TAB.TOOL && isBuiltin);
   }
 
   const handleCloseMetaModal = () => {
@@ -249,7 +249,7 @@ export const ToolSelect = ({
   }, [value, toolInfoList]);
 
 
-  const isHideSettingButton = !showDataset // !libraries.some((lib: any) => lib?.kind === 'database');
+  const isHideSettingButton = !showDataset || !libraries.some((lib: any) => lib?.kind === 'database');
   const newLibraries = showDataset
     ? libraries.filter((item: any) => item?.kind === 'database')
     : libraries.filter((item: any) => item?.kind !== 'database');

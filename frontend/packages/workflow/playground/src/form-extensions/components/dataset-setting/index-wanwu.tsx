@@ -40,6 +40,7 @@ const DEFAULT_KEYWORD_PRIORITY = 1;
 const DEFAULT_MAX_HISTORY = 0;
 /** default maximum recall  */
 const DEFAULT_TOP_K = 5;
+const DEFAULT_MATCH_TYPE = MatchType.Semantic;
 
 export interface DataSetSettingProps {
   selectDataSet: any;
@@ -75,6 +76,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
     useGraph,
   } = dataSetInfo || {};
 
+  const isAllExternalKnowledge = selectDataSet.every(item => item?.external)
   const isShowGraph = selectDataSet.some(item => item.graphSwitch)
 
   const isDatasetWriteActive = true;
@@ -82,7 +84,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
   const isDatasetGraphActive = true;
 
   const [isDatasetEmpty, setDatasetEmpty] = useState(true);
-  const [isInit, setIsInit] = useState(true)
+  const [isInit, setIsInit] = useState(true);
 
   const isContainSqlDataSet = useMemo(
     () => dataSets?.some(dataset => dataset?.format_type === FormatType.Table),
@@ -112,7 +114,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
       const initDataSetInfo = {
         threshold: DEFAULT_MIN_SCORE,
         topK: DEFAULT_TOP_K,
-        matchType: MatchType.Semantic,
+        matchType: DEFAULT_MATCH_TYPE,
         rerankModelId: '',
         maxHistory: DEFAULT_MAX_HISTORY,
         rerankKeywordPriority: DEFAULT_KEYWORD_PRIORITY,
@@ -120,11 +122,11 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
       };
 
       if (isDatasetWriteActive) {
-        set(initDataSetInfo, 'rewrite', true);
+        set(initDataSetInfo, 'rewrite', !isAllExternalKnowledge);
       }
 
       if (isDatasetGraphActive) {
-        set(initDataSetInfo, 'useGraph', true);
+        set(initDataSetInfo, 'useGraph', isShowGraph);
       }
 
       if (!isDatasetKeywordPrioritySwitch) {
@@ -140,7 +142,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
       // The search policy for existing processes defaults to Hybird
       onDataSetInfoChange?.({
         ...dataSetInfo,
-        matchType: MatchType.Semantic,
+        matchType: DEFAULT_MATCH_TYPE,
       });
     } else if (
       // stock process supplement default value
@@ -178,14 +180,15 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
   ]);
 
   useEffect(() => {
-    if (!isInit) {
+    if (!isInit && !isDatasetEmpty) {
       onDataSetInfoChange?.({
         ...dataSetInfo,
         useGraph: isShowGraph,
+        rewrite: !isAllExternalKnowledge,
       });
     }
     setIsInit(false)
-  }, [isShowGraph])
+  }, [isShowGraph, isAllExternalKnowledge])
 
   useEffect(() => {
     if (!isReady) {
@@ -222,80 +225,88 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
   return (
     // Set the positioning to prevent the slider from overshifting
     <div className={s.setting} style={{...style, position: 'relative'}}>
-      <div className={s['setting-item']}>
-        <TitleArea
-          title={I18n.t('knowledge_search_strategy_title')}
-          tip={I18n.t('knowledge_search_strategy_tooltip')}
-        />
-        <SearchStrategyWanwu
-          readonly={readonly}
-          value={matchType as MatchType}
-          onChange={v => {
-            onDataSetInfoChange(
-              {
-                ...dataSetInfo,
-                matchType: v,
-              },
-            );
-          }}
-        />
-      </div>
-
-      {matchType !== MatchType.HybirdPriority && (<div className={s['setting-item']}>
-        <TitleArea
-          title={I18n.t('knowledge_rerank')}
-        />
-        <RerankModelWanwu
-          readonly={readonly}
-          value={rerankModelId as string}
-          onChange={v => {
-            onDataSetInfoChange(
-              {
-                ...dataSetInfo,
-                rerankModelId: v,
-              },
-            );
-          }}
-        />
-      </div>)}
-
-      {matchType === MatchType.HybirdPriority && (<div className={s['setting-item']}>
-        <TitleArea
-          title={`${I18n.t('dataset_lang')}${semanticsPriority} / ${I18n.t('dataset_keywords')}${1 - semanticsPriority}`}
-        />
-        <div style={{position: 'relative'}}>
-          <SliderArea
-            min={0}
-            max={1}
-            step={0.01}
-            customStyles={{
-              sliderAreaStyle: {
-                width: '160px',
-              },
-              boundaryStyle: {
-                width: '158px',
-                margin: 0,
-              },
-            }}
-            isDataSet
-            value={semanticsPriority as number}
-            marks={{markKey: DEFAULT_SEMANTICS_PRIORITY, markText: ''}}
-            disabled={readonly || disabled}
+      {!isAllExternalKnowledge && (
+        <div className={s['setting-item']}>
+          <TitleArea
+            title={I18n.t('knowledge_search_strategy_title')}
+            tip={I18n.t('knowledge_search_strategy_tooltip')}
+          />
+          <SearchStrategyWanwu
+            readonly={readonly}
+            value={matchType as MatchType}
             onChange={v => {
-              onDataSetInfoChange({
-                ...dataSetInfo,
-                semanticsPriority: v,
-              });
-            }}
-            onClickDefault={() => {
-              onDataSetInfoChange({
-                ...dataSetInfo,
-                semanticsPriority: DEFAULT_SEMANTICS_PRIORITY,
-              });
+              onDataSetInfoChange(
+                {
+                  ...dataSetInfo,
+                  matchType: v,
+                },
+              );
             }}
           />
         </div>
-      </div>)}
+      )}
+
+      {matchType !== MatchType.HybirdPriority && !isAllExternalKnowledge && (
+        <div className={s['setting-item']}>
+          <TitleArea
+            title={I18n.t('knowledge_rerank')}
+          />
+          <RerankModelWanwu
+            readonly={readonly}
+            value={rerankModelId as string}
+            onChange={v => {
+              onDataSetInfoChange(
+                {
+                  ...dataSetInfo,
+                  rerankModelId: v,
+                },
+              );
+            }}
+          />
+        </div>
+      )}
+
+      {matchType === MatchType.HybirdPriority && !isAllExternalKnowledge && (
+        <div className={s['setting-item']}>
+          <TitleArea
+            title={
+              `${I18n.t('dataset_lang')}${semanticsPriority} / ${I18n.t('dataset_keywords')}${1 - (semanticsPriority || 0)}`
+            }
+          />
+          <div style={{position: 'relative'}}>
+            <SliderArea
+              min={0}
+              max={1}
+              step={0.01}
+              customStyles={{
+                sliderAreaStyle: {
+                  width: '160px',
+                },
+                boundaryStyle: {
+                  width: '158px',
+                  margin: 0,
+                },
+              }}
+              isDataSet
+              value={semanticsPriority as number}
+              marks={{markKey: DEFAULT_SEMANTICS_PRIORITY, markText: ''}}
+              disabled={readonly || disabled}
+              onChange={v => {
+                onDataSetInfoChange({
+                  ...dataSetInfo,
+                  semanticsPriority: v,
+                });
+              }}
+              onClickDefault={() => {
+                onDataSetInfoChange({
+                  ...dataSetInfo,
+                  semanticsPriority: DEFAULT_SEMANTICS_PRIORITY,
+                });
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       <div className={s['setting-item']}>
         <TitleArea
@@ -319,7 +330,7 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
               min={0}
               max={20}
               step={1}
-              value={topK}
+              value={topK || 0}
               customStyles={{
                 sliderAreaStyle: {
                   width: '160px',
@@ -352,15 +363,6 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
                   topK: DEFAULT_TOP_K,
                 });
               }}
-              // Semi version is not high enough
-              // onMouseUp={e => {
-              //   console.info('e', { e });
-              // if (v > SUGGEST_TOP_K) {
-              //   setTopKSuggestVisible(true);
-              // } else {
-              //   setTopKSuggestVisible(false);
-              // }
-              // }}
               disabled={readonly || disabled}
             />
           </div>
@@ -503,21 +505,23 @@ export const DataSetSetting: FC<DataSetSettingProps> = ({
         </div>)}
       </>)}*/}
 
-      <div className={s['setting-item']}>
-        <CheckboxWithLabel
-          checked={rewrite}
-          onChange={checked => {
-            onDataSetInfoChange({
-              ...dataSetInfo,
-              rewrite: checked,
-            });
-          }}
-          readonly={readonly}
-          label={I18n.t('dataset_keywords_search')}
-          description={I18n.t('bot_edit_datasetsSettings_keywords')}
-          dataTestId={getNodeSetterId('dataset_use_rewrite')}
-        />
-      </div>
+      {!isAllExternalKnowledge &&(
+        <div className={s['setting-item']}>
+          <CheckboxWithLabel
+            checked={rewrite}
+            onChange={checked => {
+              onDataSetInfoChange({
+                ...dataSetInfo,
+                rewrite: checked,
+              });
+            }}
+            readonly={readonly}
+            label={I18n.t('dataset_keywords_search')}
+            description={I18n.t('bot_edit_datasetsSettings_keywords')}
+            dataTestId={getNodeSetterId('dataset_use_rewrite')}
+          />
+        </div>
+      )}
 
       {isShowGraph && (
         <div className={s['setting-item']}>

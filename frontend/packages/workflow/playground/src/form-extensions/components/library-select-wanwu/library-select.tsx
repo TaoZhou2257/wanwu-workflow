@@ -103,6 +103,7 @@ export const LibrarySelect = ({
               readonly={readonly}
               key={library.id}
               library={library}
+              showEditBtn={!library.external}
               onEdit={onEditLibrary}
               onDelete={onDeleteLibrary}
               onClick={id => {

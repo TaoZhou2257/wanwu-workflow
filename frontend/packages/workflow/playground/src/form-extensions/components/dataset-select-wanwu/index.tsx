@@ -96,6 +96,7 @@ export const DatasetSelect = ({
         name: item.name,
         knowledgeId: item.knowledgeId,
         graphSwitch: item.graphSwitch,
+        external: item.external,
         ragName: item.ragName,
         metaDataFilterParams: item.metaDataFilterParams
       })) as object[]);
@@ -159,11 +160,13 @@ export const DatasetSelect = ({
             dataset_id = '',
             name,
             description,
+            external,
             icon_url,
           }) => ({
             id: dataset_id,
             name,
             description,
+            external,
             iconUrl: icon_url,
             // Invalid Knowledge Base is disabled
             isInvalid: true,
