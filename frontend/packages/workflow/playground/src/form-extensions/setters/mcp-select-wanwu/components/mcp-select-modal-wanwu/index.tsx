@@ -211,8 +211,8 @@ export const useSelectMcpModal = ({
       <UIEmpty
         className="h-full"
         empty={{
-          btnText: I18n.t('mcp_create_btn'),
-          btnOnClick: handleAdd,
+          /*btnText: I18n.t('mcp_create_btn'),
+          btnOnClick: handleAdd,*/
           title: I18n.t('mcp_empty'),
           description: I18n.t('mcp_empty_desc'),
         }}
