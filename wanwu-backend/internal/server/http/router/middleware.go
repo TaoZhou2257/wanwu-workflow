@@ -74,6 +74,62 @@ func _getprojectvariablelistMw() []app.HandlerFunc {
 	return nil
 }
 
+func _databaseMw() []app.HandlerFunc {
+	return nil
+}
+
+func _adddatabaseMw() []app.HandlerFunc {
+	return nil
+}
+
+func _listdatabaseMw() []app.HandlerFunc {
+	return nil
+}
+
+func _getdatabasebyidMw() []app.HandlerFunc {
+	return nil
+}
+
+func _listdatabaserecordsMw() []app.HandlerFunc {
+	return nil
+}
+
+func _getconnectornameMw() []app.HandlerFunc {
+	return nil
+}
+
+func _updatedatabaserecordsMw() []app.HandlerFunc {
+	return nil
+}
+
+func _getdatabasetemplateMw() []app.HandlerFunc {
+	return nil
+}
+
+func _updatedatabaseMw() []app.HandlerFunc {
+	return nil
+}
+
+func _tableMw() []app.HandlerFunc {
+	return nil
+}
+
+func _resetbottableMw() []app.HandlerFunc {
+	return nil
+}
+
+func _knowledge0Mw() []app.HandlerFunc {
+	return nil
+}
+
+func _iconMw() []app.HandlerFunc {
+	return nil
+}
+
+func _geticonfordatasetMw() []app.HandlerFunc {
+	return nil
+}
+
 func _commonMw() []app.HandlerFunc {
 	// your code...
 	return nil
@@ -110,6 +166,16 @@ func _spaceMw() []app.HandlerFunc {
 }
 
 func _getspacelistv2Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _plugin_apiMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _getplaygroundpluginlistMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
@@ -164,6 +230,11 @@ func _getdeletestrategyMw() []app.HandlerFunc {
 	return nil
 }
 
+func _getexampleworkflowlistMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _getnodeexecutehistoryMw() []app.HandlerFunc {
 	// your code...
 	return nil
@@ -175,6 +246,11 @@ func _getworkflowprocessMw() []app.HandlerFunc {
 }
 
 func _gettracesdkMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _gethistoryschemaMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
@@ -274,6 +350,18 @@ func _getworkflowreferencesMw() []app.HandlerFunc {
 	return nil
 }
 
+func _getworkflowversionlistMw() []app.HandlerFunc {
+	return nil
+}
+
+func _updateworkflowversiondescriptionMw() []app.HandlerFunc {
+	return nil
+}
+
+func _rollbackworkflowversionMw() []app.HandlerFunc {
+	return nil
+}
+
 func _chat_flow_roleMw() []app.HandlerFunc {
 	// your code...
 	return nil
@@ -313,32 +401,21 @@ func _deleteprojectconversationdefMw() []app.HandlerFunc {
 	return nil
 }
 
+func _upload1Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _getworkflowuploadauthtokenMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
 
-func _plugin_apiMw() []app.HandlerFunc {
+func _developerMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
-
-func _getplaygroundpluginlistMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _getexampleworkflowlistMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _gethistoryschemaMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _upload1Mw() []app.HandlerFunc {
+func _geticonMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
@@ -360,14 +437,6 @@ func _getapimessagelistMw() []app.HandlerFunc {
 	return nil
 }
 
-func _conversation1Mw() []app.HandlerFunc {
-	return nil
-}
-
-func _openapicreateconversationMw() []app.HandlerFunc {
-	return nil
-}
-
 func _workflowsMw() []app.HandlerFunc {
 	return nil
 }
@@ -380,33 +449,23 @@ func _openapigetworkflowinfoMw() []app.HandlerFunc {
 	return nil
 }
 
+func _filesMw() []app.HandlerFunc {
+	return nil
+}
+
+func _uploadfileopenMw() []app.HandlerFunc {
+	return nil
+}
+
 func _workflowMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
 
-func _openapirunflowMw() []app.HandlerFunc {
-	// your code...
+func _conversation1Mw() []app.HandlerFunc {
 	return nil
 }
 
-func _developerMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-func _geticonMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _getworkflowversionlistMw() []app.HandlerFunc {
-	return nil
-}
-
-func _updateworkflowversiondescriptionMw() []app.HandlerFunc {
-	return nil
-}
-
-func _rollbackworkflowversionMw() []app.HandlerFunc {
+func _openapicreateconversationMw() []app.HandlerFunc {
 	return nil
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	appworkflow "github.com/coze-dev/coze-studio/backend/application/workflow"
-	workflowModel "github.com/coze-dev/coze-studio/backend/crossdomain/workflow/model"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
 )
@@ -84,13 +83,6 @@ func ExportWorkFlow(ctx context.Context, c *app.RequestContext) {
 		invalidParamRequestResponse(c, err.Error())
 		return
 	}
-
-	if req.Version != "" {
-		req.QType = workflowModel.FromSpecificVersion
-	} else {
-		req.QType = workflowModel.FromDraft
-	}
-
 	resp, err := appworkflow.SVC.GetCanvasInfoByWanwu(ctx, &req)
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
@@ -161,6 +153,8 @@ func cleanNode(node *vo.Node) {
 		cleanLoopNode(node)
 	case "22": // 意图识别节点
 		cleanIntentNode(node)
+	case "12", "42", "43", "44", "46": // 数据库节点
+		cleanDatabaseNode(node)
 	case "1006": // 知识库检索节点
 		cleanKnowledgeNode(node)
 	case "1009": // MCP节点
@@ -169,6 +163,10 @@ func cleanNode(node *vo.Node) {
 		cleanGUINode(node)
 	case "1004": // Tool节点
 		cleanToolNode(node)
+	case "1012": // 问答库检索节点
+		cleanQANode(node)
+	case "1013": // 智能体节点
+		cleanAgentNode(node)
 	}
 }
 
@@ -289,7 +287,68 @@ func cleanToolNode(node *vo.Node) {
 			}
 		}
 	}
+	// 清理 inputParameters 中的敏感信息
+	if node.Data.Inputs.InputParameters != nil {
+		for _, param := range node.Data.Inputs.InputParameters {
+			// 清理 query-key
+			if param.Name == "query-key" {
+				param.Input.Value.Content = ""
+			}
+		}
+	}
 	if node.Data.Inputs.WanwuToolParam != nil {
 		node.Data.Inputs.WanwuToolParam.ApiKey = ""
 	}
+}
+
+// cleanDatabaseNode 清理数据库节点 - 删除databaseInfoList
+func cleanDatabaseNode(node *vo.Node) {
+	if node == nil || node.Data == nil || node.Data.Inputs == nil {
+		return
+	}
+	// 清空databaseInfoList字段
+	node.Data.Inputs.DatabaseInfoList = nil
+}
+
+// cleanQANode 清理问答库检索节点（类型1012）- 只置空knowledgeList
+func cleanQANode(node *vo.Node) {
+	if node.Data == nil || node.Data.Inputs == nil {
+		return
+	}
+	for _, param := range node.Data.Inputs.DatasetParam {
+		if param != nil && param.Name == "knowledgeList" {
+			// 置空knowledgeList的Input内容
+			if param.Input != nil && param.Input.Value != nil {
+				// 将Value的内容置为空数组
+				param.Input.Value.Content = make([]any, 0)
+			}
+			break
+		}
+	}
+}
+
+// cleanAgentNode 清理智能体节点（类型1013）- 置空modelType和agentToolParams
+func cleanAgentNode(node *vo.Node) {
+	if node.Data == nil || node.Data.Inputs == nil {
+		return
+	}
+
+	// 1. 将llmParam中的modelType值置空
+	if paramSlice, ok := node.Data.Inputs.LLMParam.([]interface{}); ok {
+		for _, item := range paramSlice {
+			if itemMap, ok := item.(map[string]interface{}); ok {
+				if name, ok := itemMap["name"].(string); ok && name == "modelType" {
+					// 将modelType的值置空
+					if input, ok := itemMap["input"].(map[string]interface{}); ok {
+						if value, ok := input["value"].(map[string]interface{}); ok {
+							value["content"] = ""
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 2. 将agentToolParams置为空数组
+	node.Data.Inputs.AgentToolParams = nil
 }

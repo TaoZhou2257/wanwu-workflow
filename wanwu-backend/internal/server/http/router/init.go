@@ -55,6 +55,28 @@ func Register(r *hertz_server.Hertz) {
 					_variable.GET("/meta_list", append(_getprojectvariablelistMw(), coze.GetProjectVariableListByWanwu)...)
 				}
 			}
+			{
+				_database := _memory.Group("/database", _databaseMw()...)
+				_database.POST("/add", append(_adddatabaseMw(), coze.AddDatabase)...)
+				_database.POST("/list", append(_listdatabaseMw(), coze.ListDatabaseByWanwu)...)
+				_database.POST("/get_by_id", append(_getdatabasebyidMw(), coze.GetDatabaseByIDByWanwu)...)
+				_database.POST("/list_records", append(_listdatabaserecordsMw(), coze.ListDatabaseRecords)...)
+				_database.POST("/get_connector_name", append(_getconnectornameMw(), coze.GetConnectorNameByWanwu)...)
+				_database.POST("/update_records", append(_updatedatabaserecordsMw(), coze.UpdateDatabaseRecords)...)
+				_database.POST("/get_template", append(_getdatabasetemplateMw(), coze.GetDatabaseTemplate)...)
+				_database.POST("/update", append(_updatedatabaseMw(), coze.UpdateDatabase)...)
+				{
+					_table := _database.Group("/table", _tableMw()...)
+					_table.POST("/reset", append(_resetbottableMw(), coze.ResetBotTable)...)
+				}
+			}
+		}
+		{
+			_knowledge0 := _api.Group("/knowledge", _knowledge0Mw()...)
+			{
+				_icon := _knowledge0.Group("/icon", _iconMw()...)
+				_icon.POST("/get", append(_geticonfordatasetMw(), coze.GetIconForDatasetByWanwu)...)
+			}
 		}
 		{
 			_common := _api.Group("/common", _commonMw()...)
@@ -74,7 +96,7 @@ func Register(r *hertz_server.Hertz) {
 		}
 		{
 			_plugin_api := _api.Group("/plugin_api", _plugin_apiMw()...)
-			_plugin_api.POST("/get_playground_plugin_list", append(_getplaygroundpluginlistMw(), coze.GetPlaygroundPluginListByWanwu)...)
+			_plugin_api.POST("/get_playground_plugin_list", append(_getplaygroundpluginlistMw(), coze.GetPlaygroundPluginList)...)
 		}
 		{
 			_developer := _api.Group("/developer", _developerMw()...)
@@ -161,6 +183,10 @@ func Register(r *hertz_server.Hertz) {
 			_workflows.GET("/:workflow_id", append(_openapigetworkflowinfoMw(), coze.OpenAPIGetWorkflowInfoByWanwu)...)
 		}
 		{
+			_files := _v1.Group("/files", _filesMw()...)
+			_files.POST("/upload", append(_uploadfileopenMw(), coze.UploadFileOpen)...)
+		}
+		{
 			_workflow := _v1.Group("/workflow", _workflowMw()...)
 			{
 				_conversation1 := _workflow.Group("/conversation", _conversation1Mw()...)
@@ -171,7 +197,7 @@ func Register(r *hertz_server.Hertz) {
 			// --- wanwu adapt ---
 			_workflow.POST("/list_schema_by_wanwu", []app.HandlerFunc{coze.ListWorkFlowOpenAPIV3SchemaByWanwu}...)
 			_workflow.GET("/:workflow_id/schema_by_wanwu", []app.HandlerFunc{coze.GetWorkFlowOpenAPIV3SchemaByWanwu}...)
-			_workflow.POST("/:workflow_id/run_by_wanwu", append(_openapirunflowMw(), coze.OpenAPIRunWorkFlowByWanwu)...)
+			_workflow.POST("/:workflow_id/run_by_wanwu", []app.HandlerFunc{coze.OpenAPIRunWorkFlowByWanwu}...)
 			_workflow.POST("/chat_by_wanwu", []app.HandlerFunc{coze.OpenAPIChatFlowRunByWanwu}...)
 			_workflow.POST("/run_by_wanwu", []app.HandlerFunc{coze.RunWorkFlowLatestVersionByWanwu}...)
 		}

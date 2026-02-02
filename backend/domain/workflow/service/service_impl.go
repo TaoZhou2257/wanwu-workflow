@@ -709,7 +709,7 @@ func (i *impl) Publish(ctx context.Context, policy *vo.PublishPolicy) (err error
 		}
 
 		if !isIncremental(latestVersion, currentVersion) {
-			return fmt.Errorf("the version number is not self-incrementing, old version %v, current version is %v", *meta.LatestPublishedVersion, policy.Version)
+			return fmt.Errorf("最新版本 %v, 发布版本 %v, 版本号应递增，需大于上一个版本。", *meta.LatestPublishedVersion, policy.Version)
 		}
 	}
 

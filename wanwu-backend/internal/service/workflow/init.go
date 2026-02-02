@@ -17,6 +17,7 @@ import (
 	"github.com/UnicomAI/wanwu/pkg/log"
 	"github.com/cloudwego/eino/callbacks"
 	coze_app_conversation "github.com/coze-dev/coze-studio/backend/application/conversation"
+	coze_app_memory "github.com/coze-dev/coze-studio/backend/application/memory"
 	coze_app_openauth "github.com/coze-dev/coze-studio/backend/application/openauth"
 	coze_app_upload "github.com/coze-dev/coze-studio/backend/application/upload"
 	coze_app_user "github.com/coze-dev/coze-studio/backend/application/user"
@@ -25,6 +26,8 @@ import (
 	coze_cross_agentrun_impl "github.com/coze-dev/coze-studio/backend/crossdomain/agentrun/impl"
 	coze_cross_conversation "github.com/coze-dev/coze-studio/backend/crossdomain/conversation"
 	coze_cross_conversation_impl "github.com/coze-dev/coze-studio/backend/crossdomain/conversation/impl"
+	coze_cross_database "github.com/coze-dev/coze-studio/backend/crossdomain/database"
+	coze_cross_database_impl "github.com/coze-dev/coze-studio/backend/crossdomain/database/impl"
 	coze_cross_message "github.com/coze-dev/coze-studio/backend/crossdomain/message"
 	coze_cross_message_impl "github.com/coze-dev/coze-studio/backend/crossdomain/message/impl"
 	coze_cross_upload "github.com/coze-dev/coze-studio/backend/crossdomain/upload"
@@ -36,6 +39,8 @@ import (
 	coze_conversation_conversation "github.com/coze-dev/coze-studio/backend/domain/conversation/conversation/service"
 	coze_conversation_message_repo "github.com/coze-dev/coze-studio/backend/domain/conversation/message/repository"
 	coze_conversation_message "github.com/coze-dev/coze-studio/backend/domain/conversation/message/service"
+	coze_memory_database_service "github.com/coze-dev/coze-studio/backend/domain/memory/database/service"
+	coze_upload_service "github.com/coze-dev/coze-studio/backend/domain/upload/service"
 	coze_workflow "github.com/coze-dev/coze-studio/backend/domain/workflow"
 	coze_workflow_service "github.com/coze-dev/coze-studio/backend/domain/workflow/service"
 	coze_infra_cache "github.com/coze-dev/coze-studio/backend/infra/cache"
@@ -44,6 +49,9 @@ import (
 	coze_infra_code_impl "github.com/coze-dev/coze-studio/backend/infra/coderunner/impl"
 	coze_infra_idgen "github.com/coze-dev/coze-studio/backend/infra/idgen/impl/idgen"
 	coze_infra_imagex "github.com/coze-dev/coze-studio/backend/infra/imagex"
+	coze_infra_rdb_impl "github.com/coze-dev/coze-studio/backend/infra/rdb/impl/rdb"
+	coze_infra_sqlparser "github.com/coze-dev/coze-studio/backend/infra/sqlparser"
+	coze_infra_sqlparser_impl "github.com/coze-dev/coze-studio/backend/infra/sqlparser/impl/sqlparser"
 	coze_infra_storage "github.com/coze-dev/coze-studio/backend/infra/storage"
 	"gorm.io/gorm"
 )
@@ -89,10 +97,12 @@ func Init(ctx context.Context, infra Infra) error {
 	// workflow repo
 	workflowRepo, _ := coze_workflow_service.NewWorkflowRepositoryWanwu(idGen, infra.DB, infra.Cache, infra.Storage, cps, nil, config.Cfg().Workflow)
 	coze_workflow.SetRepository(workflowRepo)
-
+	coze_infra_sqlparser.New = coze_infra_sqlparser_impl.NewSQLParser
 	// domain workflow service
 	_workflowService = coze_workflow_service.NewWorkflowService(workflowRepo)
-
+	// domain database service
+	rdbSVC := coze_infra_rdb_impl.NewService(infra.DB, idGen)
+	databaseDomainSVC := coze_memory_database_service.NewService(rdbSVC, infra.DB, idGen, infra.Storage, infra.Cache)
 	// init application upload
 	coze_app_upload.InitService(&coze_app_upload.UploadComponents{Cache: infra.Cache, Oss: infra.Storage, DB: infra.DB, Idgen: idGen})
 	// init application user
@@ -105,6 +115,9 @@ func Init(ctx context.Context, infra Infra) error {
 	coze_app_workflow.SVC.TosClient = infra.Storage
 	coze_app_workflow.SVC.IDGenerator = idGen
 	coze_app_workflow.SetEventBus(crosssearchImpl.DefaultResourceEventBusMock())
+	// init application memory
+	coze_app_memory.DatabaseApplicationSVC.DomainSVC = databaseDomainSVC
+	coze_app_memory.SetEventBus(crosssearchImpl.DefaultResourceEventBusMock())
 	// init domain conversation conversation
 	c := coze_conversation_conversation.NewService(&coze_conversation_conversation.Components{
 		ConversationRepo: coze_conversation_conversation_repo.NewConversationRepo(infra.DB, idGen),
@@ -122,9 +135,16 @@ func Init(ctx context.Context, infra Infra) error {
 	})
 	coze_cross_message.SetDefaultSVC(coze_cross_message_impl.InitDomainService(m))
 	coze_app_conversation.ConversationSVC.MessageDomainSVC = m
+	cozeUploadSVC := coze_upload_service.NewUploadSVC(infra.DB, idGen, infra.Storage)
+	coze_app_conversation.OpenapiMessageSVC.UploaodDomainSVC = cozeUploadSVC
 	// init cross domain user
 	coze_cross_user.SetDefaultSVC(crossuserImpl.DefaultMock())
+	// init cross domain upload
 	coze_cross_upload.SetDefaultWanwuSVC(coze_cross_upload_impl.NewWanwuUploader(infra.Storage))
+	coze_cross_upload.SetDefaultSVC(coze_cross_upload_impl.InitDomainService(cozeUploadSVC))
+
+	// init cross domain database
+	coze_cross_database.SetDefaultSVC(coze_cross_database_impl.InitDomainService(databaseDomainSVC))
 	// init token callback handler
 	callbacks.AppendGlobalHandlers(coze_workflow_service.GetTokenCallbackHandler())
 

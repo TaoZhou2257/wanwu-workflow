@@ -10,6 +10,7 @@ const (
 	NodeTypeWanWuGUI                NodeType = "WanWuGUI"
 	NodeTypeWanWuTool               NodeType = "WanWuTool"
 	NodeTypeWanWuQARetriever        NodeType = "WanWuQARetriever"
+	NodeTypeWanWuAgent              NodeType = "WanWuAgent"
 )
 
 // Wanwu NodeTypeMetas Init
@@ -24,15 +25,14 @@ func init() {
 	// wanwu禁用一些节点
 	NodeTypeMetas[NodeTypePlugin].Disabled = true
 	NodeTypeMetas[NodeTypeKnowledgeRetriever].Disabled = true
-	NodeTypeMetas[NodeTypeDatabaseCustomSQL].Disabled = true
 	NodeTypeMetas[NodeTypeQuestionAnswer].Disabled = true
 	NodeTypeMetas[NodeTypeKnowledgeIndexer].Disabled = true
 	NodeTypeMetas[NodeTypeComment].Disabled = true
-	NodeTypeMetas[NodeTypeVariableAssigner].Disabled = true
 	NodeTypeMetas[NodeTypeDatabaseUpdate].Disabled = true
 	NodeTypeMetas[NodeTypeDatabaseQuery].Disabled = true
 	NodeTypeMetas[NodeTypeDatabaseDelete].Disabled = true
 	NodeTypeMetas[NodeTypeDatabaseInsert].Disabled = true
+	NodeTypeMetas[NodeTypeVariableAssigner].Disabled = true
 	NodeTypeMetas[NodeTypeKnowledgeDeleter].Disabled = true
 	// 和前端约定，反序列化节点ID 59 -> 1059
 	NodeTypeMetas[NodeTypeJsonDeserialization].ID = 1059
@@ -180,6 +180,24 @@ func init() {
 		},
 		EnUSName:        "Question and answer retrieval",
 		EnUSDescription: "In the selected qa pairs, the best matching information is recalled based on the input variable and returned as an Array.",
+	}
+
+	NodeTypeMetas[NodeTypeWanWuAgent] = &NodeTypeMeta{
+		ID:           1013,
+		Key:          NodeTypeWanWuAgent,
+		DisplayKey:   "Agent",
+		Name:         "智能体",
+		Category:     "",
+		Desc:         "调用智能体服务执行任务",
+		Color:        "#5C62FF",
+		SupportBatch: false,
+		ExecutableMeta: ExecutableMeta{
+			PreFillZero:       true,
+			PostFillNil:       true,
+			IncrementalOutput: true,
+		},
+		EnUSName:        "Agent",
+		EnUSDescription: "Call agent service to execute tasks",
 	}
 
 }

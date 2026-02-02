@@ -4,6 +4,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/knowledge"
+	wanwu_agent "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-agent"
 	wanwu_filegenerator "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-filegenerator"
 	wanwu_fileparser "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-fileparser"
 	wanwu_gui "github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes/wanwu-gui"
@@ -44,5 +45,9 @@ func RegisterWanwuAllNodeAdaptors() {
 	})
 	nodes.RegisterNodeAdaptor(entity.NodeTypeWanWuQARetriever, func() nodes.NodeAdaptor {
 		return &wanwu_qa.WanWuQARetrieveConfig{}
+	})
+
+	nodes.RegisterNodeAdaptor(entity.NodeTypeWanWuAgent, func() nodes.NodeAdaptor {
+		return &wanwu_agent.Config{}
 	})
 }
