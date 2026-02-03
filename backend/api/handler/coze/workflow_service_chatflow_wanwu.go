@@ -97,8 +97,12 @@ func OpenAPIChatFlowRunByWanwu(ctx context.Context, c *app.RequestContext) {
 	c.Response.Header.Set("Cache-Control", "no-cache")
 	c.Response.Header.Set("Connection", "keep-alive")
 	c.Response.Header.Set("Access-Control-Allow-Origin", "*")
-
-	sr, err := appworkflow.SVC.OpenAPIChatFlowRunByWanwu(ctx, &req)
+	//处理 parameters 字段，防止 JSON "null" 导致 map 变成 nil
+	if req.Parameters == nil || *req.Parameters == "" || *req.Parameters == "null" {
+		emptyJSON := "{}"
+		req.Parameters = &emptyJSON
+	}
+	sr, err := appworkflow.SVC.OpenAPIChatFlowRun(ctx, &req)
 	if err != nil {
 		internalServerErrorResponse(ctx, c, err)
 		return
