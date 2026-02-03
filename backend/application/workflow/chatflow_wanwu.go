@@ -85,10 +85,8 @@ func (w *ApplicationService) OpenAPICreateConversationByWanwu(ctx context.Contex
 		appID      = mustParseInt64(req.GetAppID())
 		apiKeyInfo = ctxutil.GetApiAuthFromCtx(ctx)
 		userID     = apiKeyInfo.UserID
-		// env     = ternary.IFElse(req.GetDraftMode(), vo.Draft, vo.Online)
-		// 无论是否draft，conversation template都创建在draft环境下
-		env = vo.Draft
-		cID int64
+		env        = ternary.IFElse(req.GetDraftMode(), vo.Draft, vo.Online)
+		cID        int64
 		// 先从req中获取spaceID（如果是前端调用，req中不会传orgId要从header中获取）
 		spaceID = req.GetSpaceID()
 
@@ -112,7 +110,8 @@ func (w *ApplicationService) OpenAPICreateConversationByWanwu(ctx context.Contex
 
 		safego.Go(ctx, func() {
 			defer wg.Done()
-			t, tplExisted, tplErr = GetWorkflowDomainSVC().GetTemplateByName(ctx, env, appID, req.GetConversationMame())
+			// 只从drafttemplate中获取
+			t, tplExisted, tplErr = GetWorkflowDomainSVC().GetTemplateByName(ctx, vo.Draft, appID, req.GetConversationMame())
 			if tplExisted {
 				// 需要给前端返回templateId
 				templateId = t.TemplateID
@@ -121,7 +120,7 @@ func (w *ApplicationService) OpenAPICreateConversationByWanwu(ctx context.Contex
 
 		safego.Go(ctx, func() {
 			defer wg.Done()
-			_, dcExisted, dcErr = GetWorkflowDomainSVC().GetDynamicConversationByName(ctx, env, appID, req.GetConnectorId(), userID, req.GetConversationMame())
+			_, dcExisted, dcErr = GetWorkflowDomainSVC().GetDynamicConversationByName(ctx, vo.Draft, appID, req.GetConnectorId(), userID, req.GetConversationMame())
 		})
 
 		wg.Wait()
@@ -275,9 +274,7 @@ func (w *ApplicationService) OpenAPIChatFlowRunByWanwu(ctx context.Context, req 
 		sectionID = cInfo.SectionID
 
 		// only trust the conversation name under the app
-		// conversationName, existed, err := GetWorkflowDomainSVC().GetConversationNameByID(ctx, ternary.IFElse(isDebug, vo.Draft, vo.Online), bizID, connectorID, conversationID)
-		// 无论是否debug，conversation template都从draft环境下查询
-		conversationName, existed, err := GetWorkflowDomainSVC().GetConversationNameByID(ctx, vo.Draft, bizID, connectorID, conversationID)
+		conversationName, existed, err := GetWorkflowDomainSVC().GetConversationNameByID(ctx, ternary.IFElse(isDebug, vo.Draft, vo.Online), bizID, connectorID, conversationID)
 		if err != nil {
 			return nil, err
 		}
