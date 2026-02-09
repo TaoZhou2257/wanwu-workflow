@@ -177,7 +177,7 @@ export const Conversations: React.FC<ConversationsProps> = ({
         project_id: projectId,
         project_version: globalState.projectCommitVersion,
         create_method: CreateMethod.ManualCreate,
-        create_env: CreateEnv.Draft,
+        create_env: CreateEnv.Release,
         nameLike: query ?? search,
         limit: MAX_LIMIT,
       });
