@@ -256,6 +256,26 @@ func RunWorkFlowLatestVersionByWanwu(ctx context.Context, c *app.RequestContext)
 	c.JSON(consts.StatusOK, resp)
 }
 
+// DeleteProjectConversationDefByWanwu 参考DeleteProjectConversationDef
+// @router /api/workflow_api/project_conversation/delete_by_wanwu [POST]
+func DeleteProjectConversationDefByWanwu(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req workflow.DeleteProjectConversationDefRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		invalidParamRequestResponse(c, err.Error())
+		return
+	}
+
+	resp, err := appworkflow.SVC.DeleteApplicationConversationDefByWanwu(ctx, &req)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, err)
+		return
+	}
+
+	c.JSON(consts.StatusOK, resp)
+}
+
 // --- internal ---
 
 func workflowDefaultIconURL(wf *workflow.Workflow) {
