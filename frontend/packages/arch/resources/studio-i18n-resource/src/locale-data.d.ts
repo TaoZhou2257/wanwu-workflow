@@ -6487,6 +6487,7 @@ export type I18nKeysNoOptionsType =
   | 'database_recalls_ltm_title'
   | 'dataide001'
   | 'dataide002'
+  | 'dataset_multimodal'
   | 'dataset_share_external'
   | 'dataset_share_internal'
   | 'dataset_share_private'
