@@ -332,7 +332,7 @@ func ragKnowledgeSearch(ctx context.Context, knowledgeHitParams *HitParams) (*Ra
 	result, err := http_client.GetDefaultClient().PostJson(ctx, &http_client.HttpRequestParams{
 		Url:        os.Getenv("WANWU_KNOWLEDGE_SEARCH_URL"),
 		Body:       paramsByte,
-		Timeout:    time.Duration(10) * time.Second,
+		Timeout:    time.Minute,
 		MonitorKey: "rag_knowledge_hit",
 		LogLevel:   http_client.LogAll,
 	})
