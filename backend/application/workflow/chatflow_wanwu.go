@@ -10,10 +10,9 @@ import (
 	"github.com/coze-dev/coze-studio/backend/api/model/workflow"
 	"github.com/coze-dev/coze-studio/backend/application/base/ctxutil"
 	crossconversation "github.com/coze-dev/coze-studio/backend/crossdomain/conversation"
-	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
-	"github.com/coze-dev/coze-studio/backend/pkg/ctxcache"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
+	"github.com/coze-dev/coze-studio/backend/pkg/lang/maps"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ternary"
 	"github.com/coze-dev/coze-studio/backend/pkg/safego"
@@ -76,18 +75,11 @@ func (w *ApplicationService) OpenAPICreateConversationByWanwu(ctx context.Contex
 		userID     = apiKeyInfo.UserID
 		env        = ternary.IFElse(req.GetDraftMode(), vo.Draft, vo.Online)
 		cID        int64
-		// 先从req中获取spaceID（如果是前端调用，req中不会传orgId要从header中获取）
-		spaceID = req.GetSpaceID()
-
-		templateId int64
-		t          *entity.ConversationTemplate
+		//spaceID = mustParseInt64(req.GetSpaceID())
+		//_       = spaceID
 	)
 
 	// todo  check permission
-
-	if spaceID == "" {
-		spaceID, _ = ctxcache.Get[string](ctx, "X-Org-Id")
-	}
 
 	if !req.GetGetOrCreate() {
 		cID, err = GetWorkflowDomainSVC().UpdateConversation(ctx, env, appID, req.GetConnectorId(), userID, req.GetConversationMame())
@@ -99,17 +91,12 @@ func (w *ApplicationService) OpenAPICreateConversationByWanwu(ctx context.Contex
 
 		safego.Go(ctx, func() {
 			defer wg.Done()
-			// 只从drafttemplate中获取
-			t, tplExisted, tplErr = GetWorkflowDomainSVC().GetTemplateByName(ctx, vo.Draft, appID, req.GetConversationMame())
-			if tplExisted {
-				// 需要给前端返回templateId
-				templateId = t.TemplateID
-			}
+			_, tplExisted, tplErr = GetWorkflowDomainSVC().GetTemplateByName(ctx, env, appID, req.GetConversationMame())
 		})
 
 		safego.Go(ctx, func() {
 			defer wg.Done()
-			_, dcExisted, dcErr = GetWorkflowDomainSVC().GetDynamicConversationByName(ctx, vo.Draft, appID, req.GetConnectorId(), userID, req.GetConversationMame())
+			_, dcExisted, dcErr = GetWorkflowDomainSVC().GetDynamicConversationByName(ctx, env, appID, req.GetConnectorId(), userID, req.GetConversationMame())
 		})
 
 		wg.Wait()
@@ -122,19 +109,7 @@ func (w *ApplicationService) OpenAPICreateConversationByWanwu(ctx context.Contex
 		}
 
 		if !tplExisted && !dcExisted {
-			// 应用广场用户新建会话，需要先创建conversation template
-			templateId, err = GetWorkflowDomainSVC().CreateDraftConversationTemplate(ctx, &vo.CreateConversationTemplateMeta{
-				AppID:   appID,
-				UserID:  userID,
-				SpaceID: mustParseInt64(spaceID),
-				Name:    *req.ConversationMame,
-			})
-			if err != nil {
-				return &workflow.CreateConversationResponse{
-					Code: errno.ErrConversationNotFoundForOperation,
-					Msg:  fmt.Sprintf("Conversation not found. Please create a conversation before attempting to perform any related operations. (%v)", err),
-				}, nil
-			}
+			// 去除coze原始代码检查数据是否存在，一定创建conversation
 		}
 
 		cID, _, err = GetWorkflowDomainSVC().GetOrCreateConversation(ctx, env, appID, req.GetConnectorId(), userID, req.GetConversationMame())
@@ -153,12 +128,68 @@ func (w *ApplicationService) OpenAPICreateConversationByWanwu(ctx context.Contex
 		ConversationData: &workflow.ConversationData{
 			Id:            cID,
 			LastSectionID: ptr.Of(cInfo.SectionID),
-			MetaData: map[string]string{
-				// 将templateId返回给前端
-				"uniqueId": strconv.Itoa(int(templateId)),
-				// 将appId返回给bff
-				"appId": req.GetAppID(),
-			},
 		},
 	}, nil
+}
+
+func (w *ApplicationService) DeleteApplicationConversationDefByWanwu(ctx context.Context, req *workflow.DeleteProjectConversationDefRequest) (resp *workflow.DeleteProjectConversationDefResponse, err error) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = safego.NewPanicErr(panicErr, debug.Stack())
+		}
+
+		if err != nil {
+			err = vo.WrapIfNeeded(errno.ErrConversationOfAppOperationFail, err, errorx.KV("cause", vo.UnwrapRootErr(err).Error()))
+		}
+	}()
+	var (
+		appID      = mustParseInt64(req.GetProjectID())
+		templateID = mustParseInt64(req.GetUniqueID())
+	)
+	if err := checkUserSpace(ctx, ctxutil.MustGetUIDFromCtx(ctx), mustParseInt64(req.GetSpaceID())); err != nil {
+		return nil, err
+	}
+	if req.GetCheckOnly() {
+		wfs, err := GetWorkflowDomainSVC().CheckWorkflowsToReplace(ctx, appID, templateID)
+		if err != nil {
+			return nil, err
+		}
+		resp = &workflow.DeleteProjectConversationDefResponse{NeedReplace: make([]*workflow.Workflow, 0)}
+		for _, wf := range wfs {
+			resp.NeedReplace = append(resp.NeedReplace, &workflow.Workflow{
+				Name:       wf.Name,
+				URL:        wf.IconURL,
+				WorkflowID: strconv.FormatInt(wf.ID, 10),
+			})
+		}
+		return resp, nil
+	}
+
+	wfID2ConversationName, err := maps.TransformKeyWithErrorCheck(req.GetReplace(), func(k1 string) (int64, error) {
+		return strconv.ParseInt(k1, 10, 64)
+	})
+
+	rowsAffected, err := GetWorkflowDomainSVC().DeleteDraftConversationTemplate(ctx, templateID, wfID2ConversationName)
+	if err != nil {
+		return nil, err
+	}
+	if rowsAffected > 0 {
+		return &workflow.DeleteProjectConversationDefResponse{
+			Success: true,
+		}, err
+	}
+	// vo.draft->vo.online 用于前端删除应用广场创建的对话
+	rowsAffected, err = GetWorkflowDomainSVC().DeleteDynamicConversation(ctx, vo.Online, templateID)
+	if err != nil {
+		return nil, err
+	}
+
+	if rowsAffected == 0 {
+		return nil, fmt.Errorf("delete conversation failed")
+	}
+
+	return &workflow.DeleteProjectConversationDefResponse{
+		Success: true,
+	}, nil
+
 }

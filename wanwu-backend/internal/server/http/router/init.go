@@ -153,7 +153,9 @@ func Register(r *hertz_server.Hertz) {
 				_project_conversation := _workflow_api.Group("/project_conversation", _project_conversationMw()...)
 				_project_conversation.GET("/list", append(_listprojectconversationdefMw(), coze.ListProjectConversationDef)...)
 				_project_conversation.POST("/create_by_wanwu", append(_createprojectconversationdefMw(), coze.CreateProjectConversationDefByWanwu)...)
+				// 先不动coze原有的DeleteProjectConversationDef接口(区别为删除的是dynamic conversation online)
 				_project_conversation.POST("/delete", append(_deleteprojectconversationdefMw(), coze.DeleteProjectConversationDef)...)
+				_project_conversation.POST("/delete_by_wanwu", append(_deleteprojectconversationdefMw(), coze.DeleteProjectConversationDefByWanwu)...)
 			}
 			{
 				_upload1 := _workflow_api.Group("/upload", _upload1Mw()...)
