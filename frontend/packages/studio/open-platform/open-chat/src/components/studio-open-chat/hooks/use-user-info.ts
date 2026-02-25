@@ -18,6 +18,7 @@ import { useMemo } from 'react';
 
 import { nanoid } from 'nanoid';
 import { type UserSenderInfo } from '@coze-common/chat-area';
+import { getUserInfoWanwu } from '../../../../../../../arch/bot-http';
 
 import { useChatAppStore } from '../store';
 export const useUserInfo = () => {
@@ -25,6 +26,8 @@ export const useUserInfo = () => {
 
   return useMemo<UserSenderInfo | null>(() => {
     const openUserInfo = userInfo;
+    const { userAvatar } = getUserInfoWanwu();
+
     if (!openUserInfo) {
       return {
         id: nanoid(),
@@ -37,6 +40,7 @@ export const useUserInfo = () => {
 
     const areaUserInfo: UserSenderInfo = {
       ...openUserInfo,
+      url: userAvatar ? `/user/api/${userAvatar}`: (openUserInfo.url || ''),
       userUniqueName: '',
       userLabel: null,
     };
