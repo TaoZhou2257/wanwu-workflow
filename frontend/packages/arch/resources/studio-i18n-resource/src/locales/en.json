@@ -13580,6 +13580,7 @@
   "workflow_qa_knowledge_node_empty": "请添加问答库到此节点",
   "workflow_detail_qa_knowledge_error_empty": "问答库不可为空",
   "workflow_detail_knowledge_error_empty": "Knowledge cannot be empty",
+  "workflow_detail_dataset_input_tooltip": "Enter the key information to be matched from knowledge, both Query and Image cannot be empty at the same time",
   "workflow_detail_knowledge_input_tooltip": "Enter the key information to be matched from knowledge",
   "workflow_detail_knowledge_introduction": "In the selected knowledge, the best matching information is recalled based on the input variable and returned as an Array",
   "workflow_detail_knowledge_knowledge": "Knowledge",
