@@ -39,6 +39,7 @@ export function transformOnInit(value) {
       inputs: {
         inputParameters: {
           Query: { type: 'ref', content: '' },
+          Image: { type: 'ref', content: '' },
         },
         datasetParameters: {
           datasetParam: [],
@@ -130,7 +131,7 @@ export function transformOnInit(value) {
 
 export function transformOnSubmit(value) {
   const { nodeMeta, inputs, outputs } = value;
-  const { inputParameters = { Query: { type: 'ref' } }, datasetParameters } =
+  const { inputParameters = { Query: { type: 'ref' }, Image: { type: 'ref' } }, datasetParameters } =
     inputs ?? {};
   const { datasetParam, datasetSetting } = datasetParameters ?? {};
   const actualData = {

@@ -40,9 +40,9 @@ export const DATASET_NODE_FORM_META: FormMetaV2<FormData> = {
   // validation rules
   validate: {
     nodeMeta: nodeMetaValidate,
-    'inputs.inputParameters.Query': createValueExpressionInputValidate({
+    /*'inputs.inputParameters.Query': createValueExpressionInputValidate({
       required: true,
-    }),
+    }),*/
     [datasetParamFieldName]: ({ value }) => {
       if (!value || value.length === 0) {
         return I18n.t('workflow_detail_knowledge_error_empty');

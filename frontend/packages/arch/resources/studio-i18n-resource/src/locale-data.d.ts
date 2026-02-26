@@ -15851,6 +15851,7 @@ export type I18nKeysNoOptionsType =
   | 'workflow_qa_knowledge_node_empty'
   | 'workflow_detail_qa_knowledge_error_empty'
   | 'workflow_detail_knowledge_error_empty'
+  | 'workflow_detail_dataset_input_tooltip'
   | 'workflow_detail_knowledge_input_tooltip'
   | 'workflow_detail_knowledge_introduction'
   | 'workflow_detail_knowledge_knowledge'
