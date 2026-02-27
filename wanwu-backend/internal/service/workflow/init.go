@@ -178,7 +178,7 @@ func executeSqlFile(db *gorm.DB, sqlFilePath string, skipExecErr bool) error {
 	if err != nil {
 		return fmt.Errorf("open %v err: %v", sqlFilePath, err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	// 过滤注释行
 	var b []byte
 	reader := bufio.NewReader(file)

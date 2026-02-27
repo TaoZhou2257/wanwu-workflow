@@ -15,7 +15,7 @@ build-arm64:
 check:
 	go vet ./...
 	go fmt ./...
-	docker run --rm -t -v $(PWD):/app -w /app golangci/golangci-lint:v1.64.8 bash -c 'golangci-lint run -v --timeout 10m'
+	docker run --rm -t -v $(PWD):/app -w /app golangci/golangci-lint:v2.10.1 bash -c 'golangci-lint run -v --timeout 10m'
 
 init:
 	cp ../docker/volumes/mysql/schema.sql configs
