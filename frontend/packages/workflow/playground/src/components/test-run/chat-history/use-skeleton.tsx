@@ -34,9 +34,9 @@ export const useSkeleton = () => {
                 <Skeleton.Image className={styles['skeleton-content']} />
               </div>
             </div>
-            <div className={styles['skeleton-item']}>
-              <Skeleton.Avatar className={styles['skeleton-avatar']} />
+            <div className={styles['skeleton-item']} style={{ justifyContent: 'end' }}>
               <Skeleton.Image className={styles['skeleton-content-mini']} />
+              <Skeleton.Avatar className={styles['skeleton-avatar']} />
             </div>
             <div className={styles['skeleton-item']}>
               <Skeleton.Avatar className={styles['skeleton-avatar']} />
