@@ -67,6 +67,12 @@ type HitParams struct {
 	MetaFilter            bool                   `json:"metadata_filtering"`            // 元数据过滤开关
 	MetaFilterConditions  []*MetadataFilterParam `json:"metadata_filtering_conditions"` // 元数据过滤条件
 	UseGraph              bool                   `json:"use_graph"`                     // 知识图谱
+	AttachmentList        []*AttachmentInfo      `json:"attachment_files"`              // 上传的文件
+}
+
+type AttachmentInfo struct {
+	FileType string `json:"file_type"`
+	FileUrl  string `json:"file_url"`
 }
 
 type MetadataFilterParam struct {
@@ -252,7 +258,7 @@ type WanWuRetrieve struct {
 
 type RagKnowledgeHitResp struct {
 	Code    int      `json:"code"`
-	Message string   `json:"message"`
+	Message string   `json:"msg"`
 	Data    *HitData `json:"data"`
 }
 
@@ -271,15 +277,25 @@ type ChunkSearchList struct {
 }
 
 func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[string]any, error) {
-	query, ok := input["Query"].(string)
-	if !ok {
-		return nil, errors.New("capital query key is required")
+	query, _ := input["Query"].(string)
+	image, _ := input["Image"].(string)
+
+	if query == "" && image == "" {
+		return nil, errors.New("Query和Image不可同时为空")
+	}
+	retrieveParams := kr.retrieveParams
+	if query == "" {
+		if retrieveParams.RerankModelId == "" {
+			return nil, errors.New("只输入Image必须选择多模态rerank模型")
+		}
+		if retrieveParams.MatchType == "text" {
+			return nil, errors.New("只输入Image不支持全文检索")
+		}
 	}
 
 	userId := ctxutil.MustGetUIDFromCtx(ctx)
 	userIdStr := strconv.Itoa(int(userId))
 
-	retrieveParams := kr.retrieveParams
 	priorityMatch := retrieveParams.PriorityMatch
 
 	var termWeightCoefficient *float64 = nil
@@ -289,6 +305,12 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 	params, err := buildMetaDataFilterParams(kr.knowledgeInfos)
 	if err != nil {
 		return nil, err
+	}
+	var attachmentList []*AttachmentInfo
+	if image != "" {
+		attachmentList = []*AttachmentInfo{
+			{FileType: "image", FileUrl: image},
+		}
 	}
 	req := &HitParams{
 		Question:              query,
@@ -306,12 +328,14 @@ func (kr *WanWuRetrieve) Invoke(ctx context.Context, input map[string]any) (map[
 		MetaFilter:            len(params) > 0,
 		MetaFilterConditions:  params,
 		UseGraph:              retrieveParams.UseGraph,
+		AttachmentList:        attachmentList,
 	}
 
 	response, err := ragKnowledgeSearch(ctx, req)
 	if err != nil {
 		return nil, err
 	}
+
 	result := make(map[string]any)
 	result[wanWuOutput] = map[string]any{
 		"prompt":     response.Data.Prompt,
