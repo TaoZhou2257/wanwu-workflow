@@ -23,23 +23,11 @@ import { OutputsField } from '@/node-registries/common/fields';
 import { NodeConfigForm } from '@/node-registries/common/components';
 import { Section } from '@/form';
 
-import { DatasetSelectFieldWanwu, DatasetSettingFieldWanwu } from './components';
-import { DatasetParamsField } from '../common/componets/dataset-params-field-wanwu';
+import { DatasetSelectFieldWanwu, DatasetSettingFieldWanwu, DatasetParamsFieldWanwu } from './components';
 
 const Render = () => (
   <NodeConfigForm>
-    <DatasetParamsField
-      inputFieldName="inputs.inputParameters.Query"
-      testId="/inputs/inputParameters/Query"
-      tooltip={I18n.t(
-        'workflow_detail_knowledge_input_tooltip',
-        {},
-        '输入需要从知识中匹配的关键信息',
-      )}
-      paramName={'Query'}
-      paramType={ViewVariableType.String}
-      inputType={ViewVariableType.String}
-    />
+    <DatasetParamsFieldWanwu />
     <Section
       title={I18n.t('workflow_detail_knowledge_knowledge', {}, '知识库')}
       tooltip={I18n.t(

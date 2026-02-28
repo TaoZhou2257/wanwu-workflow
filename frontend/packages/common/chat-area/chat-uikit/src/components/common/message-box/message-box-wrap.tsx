@@ -91,6 +91,7 @@ export const MessageBoxWrap: FC<
   const messageFooterRef = useRef<HTMLDivElement>(null);
   const eventCenter = useUiKitEventCenter();
   const isMobileLayout = layout === Layout.MOBILE;
+  const isAnswer = nickname;
   const refreshContainerWidthConditionally = useEventCallback(() => {
     if (!messageContainerRef.current || !messageFooterRef.current) {
       return;
@@ -169,7 +170,7 @@ export const MessageBoxWrap: FC<
             messageBoxWrapperClassname,
           )}
         >
-          <div
+          {isAnswer && (<div
             // chat-uikit-message-box-container__avatar-wrap
             className="mr-[12px] w-32px h-32px"
           >
@@ -183,7 +184,7 @@ export const MessageBoxWrap: FC<
                 ></Avatar>
               </AvatarWrap>
             ) : null}
-          </div>
+          </div>)}
           <div
             // chat-uikit-message-box-container__message
             className="flex-1 max-w-[calc(100%-44px)]"
@@ -192,6 +193,7 @@ export const MessageBoxWrap: FC<
             <div
               // chat-uikit-message-box-container__message__message-box
               className="relative flex flex-col w-fit max-w-full"
+              style={isAnswer ? {} : { float: 'right' }}
             >
               {showUserInfo && nickname ? (
                 <div
@@ -315,6 +317,21 @@ export const MessageBoxWrap: FC<
               </div>
             </div>
           </div>
+          {!isAnswer && (<div
+            // chat-uikit-message-box-container__avatar-wrap
+            className="ml-[12px] w-32px h-32px"
+          >
+            {showUserInfo ? (
+              <AvatarWrap>
+                <Avatar
+                  // chat-uikit-message-box-container__avatar-wrap__avatar
+                  size="small"
+                  src={botAvatar}
+                  onError={() => setBotAvatar(defaultAvatar)}
+                ></Avatar>
+              </AvatarWrap>
+            ) : null}
+          </div>)}
         </div>
       </div>
     </UIKitMessageBoxProvider>
