@@ -10216,6 +10216,7 @@
   "model_list_model_default_parameters_voice": "声纹信息",
   "model_list_model_deprecation_date": "将于 {date} 下线",
   "model_list_model_deprecation_notice": "当前选中的模型即将下架",
+  "model_select_public_model_hint": "您所选的模型为公有模型，若模型所有者下线该模型，将导致应用不可用，请谨慎选择。",
   "model_list_model_setting": "{model} 参数设置\n",
   "model_list_model_switch_announcement": "当前选中的「 {model_deprecated} 」将于 {date} 下架\n届时将自动切换为「 {model_up} 」\n",
   "model_list_new_model": "新模型",

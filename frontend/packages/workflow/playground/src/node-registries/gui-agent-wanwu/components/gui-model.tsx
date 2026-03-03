@@ -17,7 +17,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { useNodeTestId } from '@coze-workflow/base';
-import { Select } from '@coze-arch/coze-design';
+import { Select, Toast } from '@coze-arch/coze-design';
 import { KnowledgeApi } from '@coze-arch/bot-api';
 import { I18n } from '@coze-arch/i18n';
 
@@ -53,7 +53,16 @@ export const GuiModelWanwu: React.FC<GuiModelProps> = props => {
         pointerEvents: readonly ? 'none' : 'auto',
       }}
       placeholder={I18n.t('model_placeholder')}
-      onChange={onChange as (v: unknown) => void}
+      onChange={(v:any) => {
+        const model = guiModelList.find(item => item.modelId === v) || {};
+        if (!model?.allowEdit) {
+          Toast.warning({
+            showClose: false,
+            content: I18n.t('model_select_public_model_hint'),
+          });
+        }
+        onChange?.(v);
+      }}
       data-testid={getNodeSetterId('gui-model')}
     >
       {guiModelList.map(v => (
