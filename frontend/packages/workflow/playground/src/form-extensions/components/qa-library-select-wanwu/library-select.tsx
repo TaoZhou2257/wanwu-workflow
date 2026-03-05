@@ -80,6 +80,7 @@ export const LibrarySelect = ({
               isInvalid={isInvalid}
               readonly={readonly}
               key={library.id}
+              extraInfo={library?.extraInfo || {}}
               library={library}
               onEdit={onEditLibrary}
               onDelete={onDeleteLibrary}

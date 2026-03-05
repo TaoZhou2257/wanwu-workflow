@@ -22,4 +22,5 @@ export interface Library {
   nameExtra?: string | ReactNode;
   description?: string;
   isInvalid?: boolean;
+  extraInfo?: any;
 }

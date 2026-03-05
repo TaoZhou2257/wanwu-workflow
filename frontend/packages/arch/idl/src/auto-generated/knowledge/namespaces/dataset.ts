@@ -179,6 +179,9 @@ export interface CreateDatasetResponse {
 export interface Dataset {
   dataset_id?: string;
   external?: number;
+  orgName?: string;
+  share?: number;
+  category?: number;
   /** 数据集名称 */
   name?: string;
   /** 文件列表 */

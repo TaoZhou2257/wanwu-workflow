@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-import { type FC, type ReactNode } from 'react';
+import React, { type FC, type ReactNode } from 'react';
 
 import classnames from 'classnames';
 import { I18n } from '@coze-arch/i18n';
 import { IconCozTrashCan, IconCozEdit } from '@coze-arch/coze-design/icons';
+import { UITag } from '@coze-arch/bot-semi';
 import { Avatar } from '@coze-arch/coze-design';
 import { type Position } from '@coze-arch/bot-semi/Tooltip';
 
@@ -42,6 +43,8 @@ interface IconNameDescProps {
   alwaysShowActions?: boolean;
   className?: string;
   descriptionTooltipPosition?: Position;
+  extraInfo?: any;
+  isTagHidden?: boolean;
 }
 
 export const IconNameDescCard: FC<IconNameDescProps> = props => {
@@ -62,6 +65,8 @@ export const IconNameDescCard: FC<IconNameDescProps> = props => {
     alwaysShowActions = false,
     className,
     descriptionTooltipPosition,
+    extraInfo = {},
+    isTagHidden = false,
   } = props;
 
   return (
@@ -110,6 +115,30 @@ export const IconNameDescCard: FC<IconNameDescProps> = props => {
           text={description}
           tooltipPosition={descriptionTooltipPosition}
         />
+        {!isTagHidden && (
+          <div>
+            {extraInfo?.orgName && (
+              <UITag className="mr-[5px]" color="grey">
+                {extraInfo.orgName}
+              </UITag>
+            )}
+            <UITag color="grey" className="mr-[5px]">
+              {extraInfo.share ? I18n.t('dataset_share_public') : I18n.t('dataset_share_private')}
+            </UITag>
+            {/* category: 1 -> 问答库 */}
+            {extraInfo.category !== 1 && (
+              <UITag color="grey" className="mr-[5px]">
+                {extraInfo.external ? I18n.t('dataset_share_external') : I18n.t('dataset_share_internal')}
+              </UITag>
+            )}
+            {/* category: 2 -> 多模态知识库 */}
+            {extraInfo.category === 2 && (
+              <UITag color="grey">
+                {I18n.t('dataset_multimodal')}
+              </UITag>
+            )}
+          </div>
+        )}
       </div>
       <div
         className={classnames('flex-0', {
