@@ -18,7 +18,8 @@ import { type ReactNode, useRef, useState } from 'react';
 
 import { isBoolean } from 'lodash-es';
 import cls from 'classnames';
-import { Popover, type PopoverProps } from '@coze-arch/coze-design';
+import { Popover, type PopoverProps, Toast } from '@coze-arch/coze-design';
+import { I18n } from '@coze-arch/i18n';
 import { IconCozArrowDown } from '@coze-arch/bot-icons';
 import { type Model } from '@coze-arch/bot-api/developer_api';
 
@@ -174,6 +175,12 @@ export function ModelSelectUI({
               if (success && clickToHide) {
                 setPopoverVisible(false);
                 setDetailConfigVisible(false);
+              }
+              if (!m?.allowEdit) {
+                Toast.warning({
+                  showClose: false,
+                  content: I18n.t('model_select_public_model_hint'),
+                });
               }
               return success;
             }}

@@ -8961,6 +8961,7 @@
   "model_list_model_default_parameters_time": "Current time",
   "model_list_model_deprecation_date": "Will be deprecated on {date}",
   "model_list_model_deprecation_notice": "The currently selected model will be deprecated",
+  "model_select_public_model_hint": "The model you selected is a public model. If the model owner deactivates it, the application will become unavailable. Please choose carefully.",
   "model_list_model_setting": "{model} Setting",
   "model_list_model_switch_announcement": "The currently selected \"{model_deprecated}\" will be deprecated on {date}, and will automatically switch to \"{model_up}\"",
   "model_list_new_model": "New Model",

@@ -22,6 +22,7 @@ import { SelectToolModal } from './components';
 import { ToolSelectPluginSetting } from './components/tool-select-modal-wanwu/tool-select-plugin-setting';
 import { ToolDatabaseSetting } from './components/tool-select-database-wanwu/tool-database-setting';
 import { useWorkflowNode } from '@coze-workflow/base';
+import { useDataSetInfos } from '@/hooks';
 
 import { useGlobalState } from '@/hooks';
 import { LibrarySelect } from '@/form-extensions/components/library-select-wanwu';
@@ -118,7 +119,7 @@ export const ToolSelect = ({
       case TOOL_TAB.DATABASE:
         return itemData.knowledgeId || '';
       case TOOL_TAB.MCP:
-        return itemData.name|| '';
+        return itemData.name || '';
       default:
         return itemData.id || '';
     }
@@ -250,8 +251,11 @@ export const ToolSelect = ({
 
 
   const isHideSettingButton = !showDataset || !libraries.some((lib: any) => lib?.kind === 'database');
+  const dataSetLibraries = libraries.filter((item: any) => item?.kind === 'database');
+  const { dataSets } = useDataSetInfos({ ids: dataSetLibraries.map(item => item.dataset_id) });
+
   const newLibraries = showDataset
-    ? libraries.filter((item: any) => item?.kind === 'database')
+    ? dataSets.map((item: any, index: number) => ({...item, ...dataSetLibraries[index]}))
     : libraries.filter((item: any) => item?.kind !== 'database');
 
   return (
@@ -282,6 +286,8 @@ export const ToolSelect = ({
             libAny?.kind === TOOL_TAB.DATABASE
               ? I18n.t('datasets_metadata_filter')
               : I18n.t('edit_params' as any, {}, '编辑参数');
+          const { orgName, share, category, external } = libAny || {};
+          const extraInfo = { orgName, share, category, external };
           const canEditLib = canEdit(libAny);
           const actions = canEditLib ? (
             <TooltipAction
@@ -297,6 +303,8 @@ export const ToolSelect = ({
               name={libAny?.name}
               nameSuffix={libAny?.nameExtra}
               description={libAny?.description}
+              extraInfo={extraInfo}
+              isTagHidden={!showDataset}
               icon={null}
               onRemove={() => handleLibrarySelectDelete(getLibraryId(libAny, libAny.kind))}
               onEdit={canEditLib ? () => handleEditLibrary(libAny) : undefined}

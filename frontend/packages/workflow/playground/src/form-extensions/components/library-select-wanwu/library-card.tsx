@@ -28,6 +28,7 @@ interface LibraryCardProps {
   testID?: string;
   isInvalid?: boolean;
   showEditBtn?: boolean;
+  extraInfo?: any;
 }
 
 export const LibraryCard: FC<LibraryCardProps> = props => {
@@ -40,6 +41,7 @@ export const LibraryCard: FC<LibraryCardProps> = props => {
     testID = '',
     isInvalid,
     showEditBtn,
+    extraInfo = {},
   } = props;
 
   return (
@@ -55,6 +57,7 @@ export const LibraryCard: FC<LibraryCardProps> = props => {
       testID={testID}
       onClick={() => onClick?.(library.id)}
       isInvalid={isInvalid}
+      extraInfo={extraInfo}
     />
   );
 };

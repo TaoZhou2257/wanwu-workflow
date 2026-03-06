@@ -4434,6 +4434,8 @@ export interface Model {
   displayName?: string;
   model_type?: Int64;
   model_class?: ModelClass;
+  allowEdit?: boolean;
+  tags: any;
   /** model icon的url */
   model_icon?: string;
   model_input_price?: number;

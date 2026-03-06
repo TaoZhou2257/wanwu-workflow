@@ -104,6 +104,7 @@ export const LibrarySelect = ({
               key={library.id}
               library={library}
               showEditBtn={!library.external}
+              extraInfo={library?.extraInfo || {}}
               onEdit={onEditLibrary}
               onDelete={onDeleteLibrary}
               onClick={id => {

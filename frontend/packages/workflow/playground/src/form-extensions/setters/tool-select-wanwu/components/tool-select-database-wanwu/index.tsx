@@ -27,7 +27,7 @@ interface ToolSelectDatabaseProps {
     ragName?: string;
     desc?: string;
     metaDataFilterParams?: any;
-    external?: any;
+    external?: number;
   }) => void;
 }
 
