@@ -147,7 +147,15 @@ func OpenAPICreateConversationByWanwu(ctx context.Context, c *app.RequestContext
 		internalServerErrorResponse(ctx, c, err)
 		return
 	}
-
+	// 确保ConversationData不为nil
+	if resp.ConversationData == nil {
+		resp.ConversationData = &workflow.ConversationData{}
+	}
+	// 确保MetaData不为nil
+	if resp.ConversationData.MetaData == nil {
+		resp.ConversationData.MetaData = make(map[string]string)
+	}
+	resp.ConversationData.MetaData["appId"] = req.GetAppID()
 	c.JSON(consts.StatusOK, resp)
 }
 
