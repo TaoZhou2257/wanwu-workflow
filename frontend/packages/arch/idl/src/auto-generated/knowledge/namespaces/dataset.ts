@@ -210,6 +210,10 @@ export interface Dataset {
   space_id?: string;
   creator_name?: string;
   avatar_url?: string;
+  avatar?: {
+    path: string;
+    key: string;
+  }
   /** 处理失败的文件 */
   failed_file_list?: Array<string>;
   format_type?: common.FormatType;

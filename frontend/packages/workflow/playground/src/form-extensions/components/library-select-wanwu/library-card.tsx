@@ -50,7 +50,7 @@ export const LibraryCard: FC<LibraryCardProps> = props => {
       name={library?.name}
       nameSuffix={library?.nameExtra}
       description={library?.description}
-      icon={null}
+      icon={library?.avatar?.path}
       onEdit={() => onEdit?.(library.id)}
       onRemove={() => onDelete?.(library.id)}
       showEditBtn={showEditBtn}
