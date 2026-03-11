@@ -171,26 +171,31 @@ export const KnowledgeCardListVertical: FC<DatasetCardListVerticalProps> = ({
           key={item.dataset_id || ''}
           /*onClick={e => handleRow(e, item?.dataset_id || '')}*/
         >
-          {/*<Avatar shape="square" src={item.icon_url} className={styles.left} />*/}
-
-          <div
-            className={styles.content}
-            data-testid={`${BotE2e.BotKnowledgeSelectListModalName}.${item.name}`}
-            data-dtestid={`${BotE2e.BotKnowledgeSelectListModalName}.${item.name}`}
-          >
-            <Text className={styles.title} ellipsis={{ showTooltip: true }}>
-              {item.name || ''}
-            </Text>
-
-            {item.description ? (
-              <Typography.Text
-                className={styles.description}
-                ellipsis={{ rows: 1 }}
+          <div style={{display: 'flex', flexDirection: 'column', margin: '0 16px'}}>
+            <div style={{display: 'flex', alignItems: 'center'}}>
+              <Avatar
+                shape="square"
+                src={item.avatar.path}
+                className={styles.left}
+              />
+              <div
+                className={styles.content}
+                data-testid={`${BotE2e.BotKnowledgeSelectListModalName}.${item.name}`}
+                data-dtestid={`${BotE2e.BotKnowledgeSelectListModalName}.${item.name}`}
               >
-                {item.description}
-              </Typography.Text>
-            ) : null}
-            {/*{!item.description && !!item.file_list?.length && (
+                <Text className={styles.title} ellipsis={{showTooltip: true}}>
+                  {item.name || ''}
+                </Text>
+
+                {item.description ? (
+                  <Typography.Text
+                    className={styles.description}
+                    ellipsis={{rows: 1}}
+                  >
+                    {item.description}
+                  </Typography.Text>
+                ) : null}
+                {/*{!item.description && !!item.file_list?.length && (
               <Typography.Text
                 className={styles.description}
                 ellipsis={{ rows: 1 }}
@@ -199,24 +204,26 @@ export const KnowledgeCardListVertical: FC<DatasetCardListVerticalProps> = ({
               </Typography.Text>
             )}*/}
 
-            <div className="mt-[5px] mb-[-5px]">
-              {item.orgName && (
-                <UITag className="mr-[5px]" color="grey">
-                  {item.orgName}
-                </UITag>
-              )}
-              <UITag color="grey" className="mr-[5px]">
-                {item.share ? I18n.t('dataset_share_public') : I18n.t('dataset_share_private')}
-              </UITag>
-              <UITag color="grey" className="mr-[5px]">
-                {item.external ? I18n.t('dataset_share_external') : I18n.t('dataset_share_internal')}
-              </UITag>
-              {/* category: 2 -> 多模态知识库 */}
-              {item.category === 2 && (
-                <UITag color="grey">
-                  {I18n.t('dataset_multimodal')}
-                </UITag>
-              )}
+                <div className="mt-[5px] mb-[-5px]">
+                  {item.orgName && (
+                    <UITag className="mr-[5px]" color="grey">
+                      {item.orgName}
+                    </UITag>
+                  )}
+                  <UITag color="grey" className="mr-[5px]">
+                    {item.share ? I18n.t('dataset_share_public') : I18n.t('dataset_share_private')}
+                  </UITag>
+                  <UITag color="grey" className="mr-[5px]">
+                    {item.external ? I18n.t('dataset_share_external') : I18n.t('dataset_share_internal')}
+                  </UITag>
+                  {/* category: 2 -> 多模态知识库 */}
+                  {item.category === 2 && (
+                    <UITag color="grey">
+                      {I18n.t('dataset_multimodal')}
+                    </UITag>
+                  )}
+                </div>
+              </div>
             </div>
             <div className={styles['tags-wapper']}>
               {/*<SpaceTags {...item}></SpaceTags>*/}
