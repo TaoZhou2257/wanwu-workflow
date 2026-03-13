@@ -171,7 +171,10 @@ export const KnowledgeCardListVertical: FC<DatasetCardListVerticalProps> = ({
           key={item.dataset_id || ''}
           /*onClick={e => handleRow(e, item?.dataset_id || '')}*/
         >
-          <div style={{display: 'flex', flexDirection: 'column', margin: '0 16px'}}>
+          <div
+            className="w-[100%]"
+            style={{ display: 'flex', flexDirection: 'column', margin: '0 16px' }}
+          >
             <div style={{display: 'flex', alignItems: 'center'}}>
               <Avatar
                 shape="square"

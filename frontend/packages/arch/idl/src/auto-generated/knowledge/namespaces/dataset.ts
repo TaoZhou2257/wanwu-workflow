@@ -211,8 +211,8 @@ export interface Dataset {
   creator_name?: string;
   avatar_url?: string;
   avatar?: {
-    path: string;
-    key: string;
+    path?: string;
+    key?: string;
   }
   /** 处理失败的文件 */
   failed_file_list?: Array<string>;
