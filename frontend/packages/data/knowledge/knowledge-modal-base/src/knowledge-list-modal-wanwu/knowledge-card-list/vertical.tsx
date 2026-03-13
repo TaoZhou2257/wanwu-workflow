@@ -176,11 +176,13 @@ export const KnowledgeCardListVertical: FC<DatasetCardListVerticalProps> = ({
             style={{ display: 'flex', flexDirection: 'column', margin: '0 16px' }}
           >
             <div style={{display: 'flex', alignItems: 'center'}}>
-              <Avatar
-                shape="square"
-                src={item.avatar.path}
-                className={styles.left}
-              />
+              {item.avatar?.path && (
+                <Avatar
+                  shape="square"
+                  src={item.avatar.path}
+                  className={styles.left}
+                />
+              )}
               <div
                 className={styles.content}
                 data-testid={`${BotE2e.BotKnowledgeSelectListModalName}.${item.name}`}
