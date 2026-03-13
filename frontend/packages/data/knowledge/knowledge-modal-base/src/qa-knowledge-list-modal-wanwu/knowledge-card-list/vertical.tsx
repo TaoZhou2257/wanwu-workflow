@@ -171,26 +171,36 @@ export const QAKnowledgeCardListVertical: FC<DatasetCardListVerticalProps> = ({
           key={item.dataset_id || ''}
           /*onClick={e => handleRow(e, item?.dataset_id || '')}*/
         >
-          {/*<Avatar shape="square" src={item.icon_url} className={styles.left} />*/}
-
           <div
-            className={styles.content}
-            data-testid={`${BotE2e.BotKnowledgeSelectListModalName}.${item.name}`}
-            data-dtestid={`${BotE2e.BotKnowledgeSelectListModalName}.${item.name}`}
+            className="w-[100%]"
+            style={{ display: 'flex', flexDirection: 'column', margin: '0 16px' }}
           >
-            <Text className={styles.title} ellipsis={{ showTooltip: true }}>
-              {item.name || ''}
-            </Text>
-
-            {item.description ? (
-              <Typography.Text
-                className={styles.description}
-                ellipsis={{ rows: 1 }}
+            <div style={{display: 'flex', alignItems: 'center'}}>
+              {item.avatar?.path && (
+                <Avatar
+                  shape="square"
+                  src={item.avatar.path}
+                  className={styles.left}
+                />
+              )}
+              <div
+                className={styles.content}
+                data-testid={`${BotE2e.BotKnowledgeSelectListModalName}.${item.name}`}
+                data-dtestid={`${BotE2e.BotKnowledgeSelectListModalName}.${item.name}`}
               >
-                {item.description}
-              </Typography.Text>
-            ) : null}
-            {/*{!item.description && !!item.file_list?.length && (
+                <Text className={styles.title} ellipsis={{showTooltip: true}}>
+                  {item.name || ''}
+                </Text>
+
+                {item.description ? (
+                  <Typography.Text
+                    className={styles.description}
+                    ellipsis={{rows: 1}}
+                  >
+                    {item.description}
+                  </Typography.Text>
+                ) : null}
+                {/*{!item.description && !!item.file_list?.length && (
               <Typography.Text
                 className={styles.description}
                 ellipsis={{ rows: 1 }}
@@ -199,15 +209,17 @@ export const QAKnowledgeCardListVertical: FC<DatasetCardListVerticalProps> = ({
               </Typography.Text>
             )}*/}
 
-            <div className="mt-[5px] mb-[-5px]">
-              {item.orgName && (
-                <UITag className="mr-[5px]" color="grey">
-                  {item.orgName}
-                </UITag>
-              )}
-              <UITag color="grey">
-                {item.share ? I18n.t('dataset_share_public') : I18n.t('dataset_share_private')}
-              </UITag>
+                <div className="mt-[5px] mb-[-5px]">
+                  {item.orgName && (
+                    <UITag className="mr-[5px]" color="grey">
+                      {item.orgName}
+                    </UITag>
+                  )}
+                  <UITag color="grey">
+                    {item.share ? I18n.t('dataset_share_public') : I18n.t('dataset_share_private')}
+                  </UITag>
+                </div>
+              </div>
             </div>
             <div className={styles['tags-wapper']}>
               {/*<SpaceTags {...item}></SpaceTags>*/}

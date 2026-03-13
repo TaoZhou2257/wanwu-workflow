@@ -164,13 +164,13 @@ export const DatasetSelect = ({
             orgName,
             share,
             category,
-            icon_url,
+            avatar,
           }) => ({
             id: dataset_id,
             name,
             description,
             external,
-            iconUrl: icon_url,
+            avatar,
             extraInfo: { orgName, share, category, external },
 
             // Invalid Knowledge Base is disabled

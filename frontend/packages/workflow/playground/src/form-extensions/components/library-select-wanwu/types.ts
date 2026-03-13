@@ -16,6 +16,10 @@
 
 import { type ReactNode } from 'react';
 export interface Library {
+  avatar?: {
+    path?: string;
+    key?: string;
+  }
   external?: number;
   id: string;
   iconUrl?: string;
