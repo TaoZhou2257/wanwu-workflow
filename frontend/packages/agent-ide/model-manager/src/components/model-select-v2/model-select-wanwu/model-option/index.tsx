@@ -130,7 +130,7 @@ export function ModelOption({
           onClick();
         }}
       >
-        {/*<ModelOptionAvatar model={model} />*/}
+        <ModelOptionAvatar model={model} />
         <div
           className={cls(
             'h-[65px] py-[12px] w-full',

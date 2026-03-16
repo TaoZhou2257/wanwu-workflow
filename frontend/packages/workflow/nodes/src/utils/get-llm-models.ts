@@ -30,6 +30,7 @@ import {
   type ModelParameter,
 } from '@coze-arch/bot-api/developer_api';
 import { DeveloperApi as developerApi } from '@coze-arch/bot-api';
+import { getUserInfoWanwu } from '../../../../arch/bot-http';
 
 import { getLLMModelIds } from './get-llm-model-ids';
 
@@ -152,9 +153,19 @@ export const getLLMModels = async ({
           getTypeListParams.model_scene = ModelScene.Douyin;
         }
 
+        const { defaultIcons } = getUserInfoWanwu();
         const resp:any = isRunPage() ? {} : await developerApi.GetLLMList();
         const list = resp?.data?.list ?? [];
-        const _modelList: Model[] = list.map(item => ({...item, name: item.model, model_type: Number(item.modelId)}))
+        const _modelList: Model[] = list.map(item => ({
+          ...item,
+          name: item.model,
+          model_type: Number(item.modelId),
+          model_icon: item.avatar?.path
+            ? `/user/api/${item.avatar?.path}`
+            : defaultIcons?.modelIcon
+              ? `/user/api/${defaultIcons?.modelIcon}`
+              : ''
+        }))
 
         // From here to return modelList is all about wiping the butt of the backend
         // There is hard code here, you need to set the default value of the output format to JSON
