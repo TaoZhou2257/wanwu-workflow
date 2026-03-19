@@ -358,6 +358,9 @@ func llmParamsToLLMParam(params vo.LLMParam) (*vo.LLMParams, error) {
 				return nil, err
 			}
 			p.TopP = &floatVar
+		case "thinkingType":
+			strVal := param.Input.Value.Content.(string)
+			p.ThinkingType = strVal
 		default:
 			logs.Warnf("encountered unknown param when converting LLM Params, name= %s, "+
 				"value= %v", param.Name, param.Input.Value.Content)
