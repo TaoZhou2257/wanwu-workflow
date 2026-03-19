@@ -658,6 +658,9 @@ func llmParamsToLLMParam(params vo.LLMParam) (*vo.LLMParams, error) {
 				return nil, err
 			}
 			p.TopP = &floatVar
+		case "thinkingType":
+			strVal := param.Input.Value.Content.(string)
+			p.ThinkingType = strVal
 		default:
 			logs.Warnf("encountered unknown param when converting LLM Params, name= %s, "+
 				"value= %v", param.Name, param.Input.Value.Content)
@@ -686,8 +689,19 @@ func (c *Config) Build(ctx context.Context, ns *schema2.NodeSchema, _ ...schema2
 		ToolParams:      c.ToolParams,
 		HttpClient:      &http.Client{Timeout: 5 * time.Minute},
 	}
+	switch c.LLMParams.ThinkingType {
+	case "enabled":
+		agent.ModelParams.EnableThinking = intPtr(1)
+	case "disabled":
+		agent.ModelParams.EnableThinking = intPtr(0)
+	default:
+	}
 
 	return agent, nil
+}
+
+func intPtr(i int) *int {
+	return &i
 }
 
 func float64PtrToFloat32Ptr(src *float64) *float32 {
@@ -769,6 +783,7 @@ type ModelParams struct {
 	FrequencyPenalty *float32 `json:"frequencyPenalty,omitempty"` //频率惩罚
 	PresencePenalty  *float32 `json:"presence_penalty,omitempty"` //存在惩罚
 	MaxTokens        *int     `json:"max_tokens,omitempty"`       //模型输出最大token数
+	EnableThinking   *int     `json:"enable_thinking,omitempty"`  //是否启用思考
 }
 
 type PluginToolInfo struct {
