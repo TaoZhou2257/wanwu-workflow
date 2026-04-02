@@ -797,15 +797,29 @@ type MCPToolInfo struct {
 	ToolNameList []string `json:"toolNameList"` // MCP工具方法列表,会根据此方法名的列表进行mcp方法的过滤，如果此列为空，则标识不进行过滤
 }
 
+type EventData struct {
+	Status    int    `json:"status"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Profile   string `json:"profile"`
+	TimeCost  string `json:"timeCost"`
+	ParentID  string `json:"parentId"`
+	Order     int    `json:"order"`
+	EventType int    `json:"eventType"`
+}
+
 type SSEResponse struct {
 	Code           int                    `json:"code"`
 	Message        string                 `json:"message"`
 	Response       string                 `json:"response"`
+	Order          int                    `json:"order"`
+	EventType      int                    `json:"eventType"`
+	EventData      *EventData             `json:"eventData"`
 	GenFileURLList []string               `json:"gen_file_url_list"`
-	History        []interface{}          `json:"history"`
+	History        []any                  `json:"history"`
 	Finish         int                    `json:"finish"`
 	Usage          map[string]interface{} `json:"usage"`
-	SearchList     []interface{}          `json:"search_list"`
+	SearchList     []any                  `json:"search_list"`
 	QAType         int                    `json:"qa_type"`
 }
 
@@ -835,18 +849,26 @@ func (a *AgentNode) Invoke(ctx context.Context, input map[string]any) (map[strin
 	reqBytes, _ := json.Marshal(req)
 	logs.CtxDebugf(ctx, "[AgentNode] Built invoke request: %s", string(reqBytes))
 
-	response, searchListStr, err := a.callAgentService(ctx, req)
+	finalResult, err := a.callAgentService(ctx, req)
 	if err != nil {
 		logs.CtxErrorf(ctx, "[AgentNode] Call agent service failed: %v", err)
 		return nil, err
 	}
 
-	logs.CtxDebugf(ctx, "[AgentNode] Invoke completed successfully with result: %s", response)
+	// 构建兼容格式的输出
+	var searchListStr string
+	if len(finalResult.SearchList) > 0 {
+		searchListBytes, _ := json.Marshal(finalResult.SearchList)
+		searchListStr = string(searchListBytes)
+	}
+
+	logs.CtxDebugf(ctx, "[AgentNode] Invoke completed successfully with response: %s", finalResult.Response)
 
 	result := make(map[string]any)
 	result[AgentOutputKey] = map[string]any{
-		"response":   response,
-		"searchList": searchListStr,
+		"response":     finalResult.Response,
+		"searchList":   searchListStr,
+		"fullResponse": finalResultToMap(finalResult),
 	}
 
 	return result, nil
@@ -881,10 +903,101 @@ func (a *AgentNode) Stream(ctx context.Context, input map[string]any) (*schema.S
 	return a.streamAgentService(ctx, req)
 }
 
-func (a *AgentNode) callAgentService(ctx context.Context, req *AgentChatRequest) (string, string, error) {
+// SubConversation represents a single sub-conversation item in the response
+type SubConversation struct {
+	ID               string `json:"id"`
+	Response         string `json:"response"`
+	SearchList       any    `json:"searchList"`
+	ParentID         string `json:"parentId"`
+	Name             string `json:"name"`
+	Profile          string `json:"profile"`
+	TimeCost         string `json:"timeCost"`
+	Status           int    `json:"status"`
+	ConversationType string `json:"conversationType"`
+	Order            int    `json:"order"`
+}
+
+type ResponseItem struct {
+	Response string `json:"response"`
+	Order    int    `json:"order"`
+}
+
+type FinalResult struct {
+	ID                  string             `json:"id"`
+	Response            string             `json:"response"`
+	ResponseList        []ResponseItem     `json:"responseList"`
+	SearchList          []any              `json:"searchList"`
+	QAType              int                `json:"qa_type"`
+	SubConversationList []*SubConversation `json:"subConversationList"`
+}
+
+// mapEventTypeToConversationType converts event type to conversation type string
+func mapEventTypeToConversationType(eventType int) string {
+	switch eventType {
+	case 6:
+		return "agentThink"
+	case 3:
+		return "agentTool"
+	case 2:
+		return "agentKnowledge"
+	default:
+		return ""
+	}
+}
+
+// buildFinalResult constructs the final result from collected maps
+func buildFinalResult(responseMap map[int]string, eventMap map[int]*SubConversation, lastSearchList []any, lastQAType int) *FinalResult {
+	var responseList []ResponseItem
+	var lastResponse string
+
+	orders := getSortedOrders(responseMap)
+	for _, order := range orders {
+		response := responseMap[order]
+		responseList = append(responseList, ResponseItem{
+			Response: response,
+			Order:    order,
+		})
+		lastResponse = response // 保留最后一个
+	}
+
+	return &FinalResult{
+		ID:                  "",
+		Response:            lastResponse,
+		ResponseList:        responseList,
+		SearchList:          lastSearchList,
+		QAType:              lastQAType,
+		SubConversationList: getSubConversationList(eventMap),
+	}
+}
+
+func getSortedOrders[T any](m map[int]T) []int {
+	orders := make([]int, 0, len(m))
+	for order := range m {
+		orders = append(orders, order)
+	}
+	for i := 0; i < len(orders); i++ {
+		for j := i + 1; j < len(orders); j++ {
+			if orders[i] > orders[j] {
+				orders[i], orders[j] = orders[j], orders[i]
+			}
+		}
+	}
+	return orders
+}
+
+// getSubConversationList extracts sub-conversation items from eventMap
+func getSubConversationList(eventMap map[int]*SubConversation) []*SubConversation {
+	items := make([]*SubConversation, 0, len(eventMap))
+	for _, order := range getSortedOrders(eventMap) {
+		items = append(items, eventMap[order])
+	}
+	return items
+}
+
+func (a *AgentNode) callAgentService(ctx context.Context, req *AgentChatRequest) (*FinalResult, error) {
 	reqBody, err := json.Marshal(req)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to marshal request: %w", err)
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
 	agentURL := os.Getenv(WanWuAgentAPIUrlEnv)
@@ -892,15 +1005,15 @@ func (a *AgentNode) callAgentService(ctx context.Context, req *AgentChatRequest)
 
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", agentURL, bytes.NewReader(reqBody))
 	if err != nil {
-		return "", "", fmt.Errorf("failed to create HTTP request: %w", err)
+		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Accept", "text/event-stream") // 添加 SSE 接受头
+	httpReq.Header.Set("Accept", "text/event-stream")
 
 	resp, err := a.HttpClient.Do(httpReq)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to send HTTP request: %w", err)
+		return nil, fmt.Errorf("failed to send HTTP request: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -908,20 +1021,20 @@ func (a *AgentNode) callAgentService(ctx context.Context, req *AgentChatRequest)
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return "", "", fmt.Errorf("agent service returned status %d: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("agent service returned status %d: %s", resp.StatusCode, string(body))
 	}
 
 	scanner := bufio.NewScanner(resp.Body)
-	var result strings.Builder
-	var lastSSEResponse *SSEResponse
+	responseMap := make(map[int]string)
+	eventMap := make(map[int]*SubConversation)
+	var lastSearchList []any
+	var lastQAType int
 
 	for scanner.Scan() {
 		line := scanner.Text()
 		logs.CtxDebugf(ctx, "[AgentNode] Received line: %s", line)
 
-		if strings.HasPrefix(line, "data:") {
-			data := strings.TrimPrefix(line, "data:")
-
+		if data, ok := strings.CutPrefix(line, "data:"); ok {
 			var sseResp SSEResponse
 			if err := json.Unmarshal([]byte(data), &sseResp); err != nil {
 				logs.CtxWarnf(ctx, "[AgentNode] Failed to parse SSE response: %v, data: %s", err, data)
@@ -929,17 +1042,78 @@ func (a *AgentNode) callAgentService(ctx context.Context, req *AgentChatRequest)
 			}
 
 			if sseResp.Code != 0 {
-				return "", "", fmt.Errorf("agent service error: code=%d, message=%s", sseResp.Code, sseResp.Message)
+				return nil, fmt.Errorf("agent service error: code=%d, message=%s", sseResp.Code, sseResp.Message)
 			}
 
-			if sseResp.Response != "" {
-				result.WriteString(sseResp.Response)
-			}
+			if sseResp.EventData == nil {
+				if sseResp.Response != "" {
+					responseMap[sseResp.Order] += sseResp.Response
+				}
+			} else {
+				order := sseResp.EventData.Order
+				if order == 0 {
+					order = sseResp.Order
+				}
+				eventType := sseResp.EventData.EventType
+				if eventType == 0 {
+					eventType = sseResp.EventType
+				}
+				conversationType := mapEventTypeToConversationType(eventType)
 
-			// 保存最后一条SSE响应
-			lastSSEResponse = &sseResp
+				var searchListVal any
+				if eventType == 2 && len(sseResp.SearchList) > 0 {
+					searchListBytes, err := json.Marshal(sseResp.SearchList)
+					if err == nil {
+						searchListVal = string(searchListBytes)
+					}
+				}
+
+				subConv, exists := eventMap[order]
+				if !exists {
+					subConv = &SubConversation{
+						ID:               sseResp.EventData.ID,
+						SearchList:       searchListVal,
+						ParentID:         sseResp.EventData.ParentID,
+						Name:             sseResp.EventData.Name,
+						Profile:          sseResp.EventData.Profile,
+						TimeCost:         sseResp.EventData.TimeCost,
+						Status:           sseResp.EventData.Status,
+						ConversationType: conversationType,
+						Order:            order,
+					}
+					eventMap[order] = subConv
+				}
+
+				subConv.Response += sseResp.Response
+				if searchListVal != nil {
+					subConv.SearchList = searchListVal
+				}
+				if sseResp.EventData.Status != 0 {
+					subConv.Status = sseResp.EventData.Status
+				}
+				if subConv.ID == "" {
+					subConv.ID = sseResp.EventData.ID
+				}
+				if subConv.ParentID == "" {
+					subConv.ParentID = sseResp.EventData.ParentID
+				}
+				if subConv.Name == "" {
+					subConv.Name = sseResp.EventData.Name
+				}
+				if subConv.Profile == "" {
+					subConv.Profile = sseResp.EventData.Profile
+				}
+				if subConv.TimeCost == "" {
+					subConv.TimeCost = sseResp.EventData.TimeCost
+				}
+				if subConv.ConversationType == "" {
+					subConv.ConversationType = conversationType
+				}
+			}
 
 			if sseResp.Finish == 1 {
+				lastSearchList = sseResp.SearchList
+				lastQAType = sseResp.QAType
 				logs.CtxDebugf(ctx, "[AgentNode] Stream finished")
 				break
 			}
@@ -947,25 +1121,13 @@ func (a *AgentNode) callAgentService(ctx context.Context, req *AgentChatRequest)
 	}
 
 	if err := scanner.Err(); err != nil {
-		return "", "", fmt.Errorf("stream reading error: %w", err)
+		return nil, fmt.Errorf("stream reading error: %w", err)
 	}
 
-	finalResult := result.String()
-	logs.CtxDebugf(ctx, "[AgentNode] Collected complete result: %s", finalResult)
-
-	// 提取最后一条数据的search_list并转换为JSON字符串
-	var searchListJSON string
-	if lastSSEResponse != nil && len(lastSSEResponse.SearchList) > 0 {
-		searchListBytes, err := json.Marshal(lastSSEResponse.SearchList)
-		if err != nil {
-			logs.CtxWarnf(ctx, "[AgentNode] Failed to marshal search_list: %v", err)
-		} else {
-			searchListJSON = string(searchListBytes)
-			logs.CtxDebugf(ctx, "[AgentNode] Extracted search_list: %s", searchListJSON)
-		}
-	}
-
-	return finalResult, searchListJSON, nil
+	// 构建最终结果
+	finalResult := buildFinalResult(responseMap, eventMap, lastSearchList, lastQAType)
+	logs.CtxDebugf(ctx, "[AgentNode] Final result: response=%s, subConversations=%d", finalResult.Response, len(finalResult.SubConversationList))
+	return finalResult, nil
 }
 
 func (a *AgentNode) streamAgentService(ctx context.Context, req *AgentChatRequest) (*schema.StreamReader[map[string]any], error) {
@@ -1232,3 +1394,47 @@ func buildValueData(valueType string, value string, condition string) (interface
 	}
 	return value, nil
 }
+
+// finalResultToMap 将 FinalResult 转换为 map[string]any 格式
+// 这样可以被框架的 convertToObject 正确处理
+func finalResultToMap(result *FinalResult) map[string]any {
+	if result == nil {
+		return nil
+	}
+
+	// 将 ResponseItem 列表转换为 []any
+	var responseListAny []any
+	for _, item := range result.ResponseList {
+		responseListAny = append(responseListAny, map[string]any{
+			"response": item.Response,
+			"order":    item.Order,
+		})
+	}
+
+	// 将 SubConversation 列表转换为 []any
+	var subConvListAny []any
+	for _, subConv := range result.SubConversationList {
+		subConvListAny = append(subConvListAny, map[string]any{
+			"id":               subConv.ID,
+			"response":         subConv.Response,
+			"searchList":       subConv.SearchList,
+			"parentId":         subConv.ParentID,
+			"name":             subConv.Name,
+			"profile":          subConv.Profile,
+			"timeCost":         subConv.TimeCost,
+			"status":           subConv.Status,
+			"conversationType": subConv.ConversationType,
+			"order":            subConv.Order,
+		})
+	}
+
+	return map[string]any{
+		"id":                  result.ID,
+		"response":            result.Response,
+		"responseList":        responseListAny,
+		"searchList":          result.SearchList,
+		"qa_type":             result.QAType,
+		"subConversationList": subConvListAny,
+	}
+}
+
