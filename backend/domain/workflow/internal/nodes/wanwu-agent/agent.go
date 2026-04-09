@@ -46,6 +46,8 @@ const (
 	MCPTypeMCPServer              = "mcpserver"
 	ToolTypeBuiltIn               = "builtin" // 内置工具
 	ToolTypeCustom                = "custom"  // 自定义工具
+	MCPTransportSSE               = "sse"
+	MCPTransportStreamable        = "streamable"
 )
 
 type Config struct {
@@ -339,14 +341,14 @@ func (c *Config) setToolConfig(ctx context.Context, inputs *vo.Inputs) error {
 	for _, mcpInfo := range inputs.AgentMCPParams {
 		info, exists := mcpInfoMap[mcpInfo.MCPID]
 		if !exists {
-			sseURL, err := mcpRequest(mcpInfo.MCPID, mcpInfo.MCPType)
+			result, err := mcpRequest(mcpInfo.MCPID, mcpInfo.MCPType)
 			if err != nil {
 				return fmt.Errorf("mcp request failed: %w", err)
 			}
 
 			info = &MCPToolInfo{
-				URL:          sseURL,
-				Transport:    "sse",
+				URL:          result.URL,
+				Transport:    result.Transport,
 				ToolNameList: make([]string, 0),
 			}
 			mcpInfoMap[mcpInfo.MCPID] = info
@@ -402,20 +404,28 @@ func (c *Config) setToolConfig(ctx context.Context, inputs *vo.Inputs) error {
 }
 
 type MCPInfo struct {
-	SSEURL string `json:"sseUrl"`
+	SSEURL        string `json:"sseUrl"`
+	StreamableURL string `json:"streamableUrl"`
+	Transport     string `json:"transport"`
 }
 
 type MCPServerDetail struct {
 	SSEURL        string `json:"sseUrl"`
 	StreamableURL string `json:"streamableUrl"`
+	Transport     string `json:"transport"`
 }
 
-func mcpRequest(id, mcpType string) (string, error) {
+type MCPRequestResult struct {
+	URL       string
+	Transport string
+}
+
+func mcpRequest(id, mcpType string) (*MCPRequestResult, error) {
 	switch mcpType {
 	case MCPTypeMCP:
 		url, err := url.JoinPath(os.Getenv(WanWuMCPGetUrlEnv))
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		var res response
 		var ret MCPInfo
@@ -425,24 +435,29 @@ func mcpRequest(id, mcpType string) (string, error) {
 			SetQueryParam("mcpId", id).
 			SetResult(&res).Get(url)
 		if err != nil {
-			return "", fmt.Errorf("request %v err: %v", url, err)
+			return nil, fmt.Errorf("request %v err: %v", url, err)
 		}
 		if resp.StatusCode() >= 300 {
-			return "", fmt.Errorf("request %v http status %v msg: %v", url, resp.StatusCode(), res.Msg)
+			return nil, fmt.Errorf("request %v http status %v msg: %v", url, resp.StatusCode(), res.Msg)
 		}
 		marshal, err := sonic.Marshal(res.Data)
 		if err != nil {
-			return "", fmt.Errorf("request %v marshal response body: %v", url, err)
+			return nil, fmt.Errorf("request %v marshal response body: %v", url, err)
 		}
 		if err = sonic.Unmarshal(marshal, &ret); err != nil {
-			return "", fmt.Errorf("request %v unmarshal response body: %v", url, err)
+			return nil, fmt.Errorf("request %v unmarshal response body: %v", url, err)
 		}
-		return ret.SSEURL, nil
+		// 根据 transport 类型选择正确的 URL
+		mcpReq, err := selectMCPUrl(ret.SSEURL, ret.StreamableURL, ret.Transport)
+		if err != nil {
+			return nil, fmt.Errorf("request %v err: %v", url, err)
+		}
+		return mcpReq, nil
 
 	case MCPTypeMCPServer:
 		url, err := url.JoinPath(os.Getenv(WanWuMCPServerGetUrlEnv))
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		var res response
 		var ret MCPServerDetail
@@ -452,21 +467,38 @@ func mcpRequest(id, mcpType string) (string, error) {
 			SetQueryParam("mcpServerId", id).
 			SetResult(&res).Get(url)
 		if err != nil {
-			return "", fmt.Errorf("request %v err: %v", url, err)
+			return nil, fmt.Errorf("request %v err: %v", url, err)
 		}
 		if resp.StatusCode() >= 300 {
-			return "", fmt.Errorf("request %v http status %v msg: %v", url, resp.StatusCode(), res.Msg)
+			return nil, fmt.Errorf("request %v http status %v msg: %v", url, resp.StatusCode(), res.Msg)
 		}
 		marshal, err := sonic.Marshal(res.Data)
 		if err != nil {
-			return "", fmt.Errorf("request %v marshal response body: %v", url, err)
+			return nil, fmt.Errorf("request %v marshal response body: %v", url, err)
 		}
 		if err = sonic.Unmarshal(marshal, &ret); err != nil {
-			return "", fmt.Errorf("request %v unmarshal response body: %v", url, err)
+			return nil, fmt.Errorf("request %v unmarshal response body: %v", url, err)
 		}
-		return ret.SSEURL, nil
+		// 根据 transport 类型选择正确的 URL
+		mcpReq, err := selectMCPUrl(ret.SSEURL, ret.StreamableURL, ret.Transport)
+		if err != nil {
+			return nil, fmt.Errorf("request %v err: %v", url, err)
+		}
+		return mcpReq, nil
 	}
-	return "", errors.New("unsupported mcp type")
+	return nil, errors.New("unsupported mcp type")
+}
+
+// selectMCPUrl 根据 transport 类型选择正确的 URL
+func selectMCPUrl(sseUrl, streamableUrl, transport string) (*MCPRequestResult, error) {
+	switch transport {
+	case MCPTransportStreamable:
+		return &MCPRequestResult{URL: streamableUrl, Transport: MCPTransportStreamable}, nil
+	case MCPTransportSSE:
+		return &MCPRequestResult{URL: sseUrl, Transport: MCPTransportSSE}, nil
+	default:
+		return nil, fmt.Errorf("unsupported mcp transport %v", transport)
+	}
 }
 
 func toolRequest(toolId, toolType, userApiKey string) (string, *openapi3_util.Auth, error) {
@@ -1437,4 +1469,3 @@ func finalResultToMap(result *FinalResult) map[string]any {
 		"subConversationList": subConvListAny,
 	}
 }
-
