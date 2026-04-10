@@ -15,6 +15,7 @@ export const OUTPUTS = [
     name: 'output',
     type: ViewVariableType.Object,
     children: [
+      { key: nanoid(), name: 'fullResponse', type: ViewVariableType.Object },
       { key: nanoid(), name: 'response', type: ViewVariableType.String },
       { key: nanoid(), name: 'searchList', type: ViewVariableType.String }
     ]
