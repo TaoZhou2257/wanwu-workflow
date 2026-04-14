@@ -120,6 +120,8 @@ export const ToolSelect = ({
         return itemData.knowledgeId || '';
       case TOOL_TAB.MCP:
         return itemData.name || '';
+      case TOOL_TAB.SKILL:
+        return itemData.skillId || '';
       default:
         return itemData.id || '';
     }
@@ -144,6 +146,10 @@ export const ToolSelect = ({
       case TOOL_TAB.MCP:
         onChange?.([...currentValue, { ...item.data, kind: TOOL_TAB.MCP, id: item.data.mcpId , description: item.data.description}]);
         setLibraries([...(libraries || []), { ...item.data, kind: TOOL_TAB.MCP, id: item.data.mcpId , description: item.data.description }]);
+        break;
+      case TOOL_TAB.SKILL:
+        onChange?.([...currentValue, { ...item.data, kind: TOOL_TAB.SKILL, id: item.data.skillId, description: item.data.desc, name: item.data.skillName }]);
+        setLibraries([...(libraries || []), { ...item.data, kind: TOOL_TAB.SKILL, id: item.data.skillId, description: item.data.desc, name: item.data.skillName }]);
         break;
       default:
         break;
