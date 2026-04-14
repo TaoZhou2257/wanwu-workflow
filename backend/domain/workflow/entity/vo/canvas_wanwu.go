@@ -5,8 +5,10 @@ type WanWuMCPTool struct {
 }
 
 type WanWuMCPToolInfo struct {
-	MCPServerURL string `json:"serverUrl"`
-	ToolName     string `json:"name"`
+	MCPServerURL  string `json:"serverUrl"`
+	ToolName      string `json:"name"`
+	Transport     string `json:"transport"`     // 传输协议: "sse" 或 "streamable"
+	StreamableURL string `json:"streamableUrl"` // Streamable HTTP URL
 }
 
 type WanWuGUIParam struct {

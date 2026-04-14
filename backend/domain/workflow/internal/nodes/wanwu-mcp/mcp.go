@@ -21,12 +21,16 @@ import (
 )
 
 const (
-	WanWuMCPResult = "result"
+	WanWuMCPResult         = "result"
+	MCPTransportSSE        = "sse"
+	MCPTransportStreamable = "streamable"
 )
 
 type Config struct {
-	SseUrl      string
-	McpToolName string
+	SseUrl        string
+	McpToolName   string
+	Transport     string // 传输协议: "sse" 或 "streamable"
+	StreamableUrl string // Streamable HTTP URL
 }
 
 func (c *Config) Adapt(_ context.Context, n *vo.Node, _ ...nodes.AdaptOption) (*schema.NodeSchema, error) {
@@ -37,6 +41,8 @@ func (c *Config) Adapt(_ context.Context, n *vo.Node, _ ...nodes.AdaptOption) (*
 		mcpInfo := mcpToolInfoList[0]
 		c.SseUrl = mcpInfo.MCPServerURL
 		c.McpToolName = mcpInfo.ToolName
+		c.Transport = mcpInfo.Transport
+		c.StreamableUrl = mcpInfo.StreamableURL
 	} else {
 		return nil, errors.New("未找到MCP工具配置信息")
 	}
@@ -60,8 +66,22 @@ func (c *Config) Adapt(_ context.Context, n *vo.Node, _ ...nodes.AdaptOption) (*
 }
 
 func (c *Config) Build(_ context.Context, ns *schema.NodeSchema, _ ...schema.BuildOption) (any, error) {
-	if c.SseUrl == "" {
-		return nil, errors.New("sse url is required")
+	// 根据 transport 类型选择 URL
+	var serverUrl string
+	var transportType string
+	switch c.Transport {
+	case MCPTransportStreamable:
+		serverUrl = c.StreamableUrl
+		transportType = MCPTransportStreamable
+	case MCPTransportSSE:
+		serverUrl = c.SseUrl
+		transportType = MCPTransportSSE
+	default:
+		return nil, errors.New("transport not support")
+	}
+
+	if serverUrl == "" {
+		return nil, errors.New("server url is required")
 	}
 
 	if c.McpToolName == "" {
@@ -69,33 +89,57 @@ func (c *Config) Build(_ context.Context, ns *schema.NodeSchema, _ ...schema.Bui
 	}
 
 	tool := &WanWuMCPTool{
-		sseUrl:      c.SseUrl,
-		mcpToolName: c.McpToolName,
+		serverUrl:     serverUrl,
+		mcpToolName:   c.McpToolName,
+		transportType: transportType,
 	}
 	return tool, nil
 }
 
 type WanWuMCPTool struct {
-	sseUrl      string
-	mcpToolName string
-	mcpToolArgs map[string]any
+	serverUrl     string
+	mcpToolName   string
+	transportType string
+	mcpToolArgs   map[string]any
+}
+
+// httpClient 创建共享的 HTTP 客户端，跳过证书验证
+var httpClient = &http.Client{
+	Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	},
 }
 
 func (i *WanWuMCPTool) Invoke(ctx context.Context, in map[string]any) (map[string]any, error) {
 	i.mcpToolArgs = in
 
-	transportClient, err := transport.NewSSEClientTransport(i.sseUrl,
-		transport.WithSSEClientOptionReceiveTimeout(time.Minute*2),
-		transport.WithSSEClientOptionLogger(logs.DefaultLogger()),
-		transport.WithSSEClientOptionHTTPClient(&http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		}))
-	if err != nil {
-		return nil, err
+	var transportClient transport.ClientTransport
+	var err error
+
+	switch i.transportType {
+	case MCPTransportStreamable:
+		// 创建 StreamableHTTP 传输客户端
+		transportClient, err = transport.NewStreamableHTTPClientTransport(i.serverUrl,
+			transport.WithStreamableHTTPClientOptionLogger(logs.DefaultLogger()),
+			transport.WithStreamableHTTPClientOptionHTTPClient(httpClient),
+		)
+		if err != nil {
+			return nil, err
+		}
+	case MCPTransportSSE:
+		// 默认使用 SSE 传输客户端
+		transportClient, err = transport.NewSSEClientTransport(i.serverUrl,
+			transport.WithSSEClientOptionReceiveTimeout(time.Minute*2),
+			transport.WithSSEClientOptionLogger(logs.DefaultLogger()),
+			transport.WithSSEClientOptionHTTPClient(httpClient),
+		)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, errors.New("transport not support")
 	}
 
 	mcpClient, err := client.NewClient(transportClient)
