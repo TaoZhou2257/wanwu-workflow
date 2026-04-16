@@ -41,6 +41,7 @@ interface ToolListProps {
   libraryCardTestID?: string;
   form?: any;
   showDataset?: boolean | undefined;
+  onlyShowSkill?: boolean | undefined;
 }
 
 export const ToolSelect = ({
@@ -51,6 +52,7 @@ export const ToolSelect = ({
   libraryCardTestID,
   form,
   showDataset,
+  onlyShowSkill,
 }: ToolListProps) => {
   const { spaceId, projectId, getProjectApi, playgroundProps } =
     useGlobalState();
@@ -325,7 +327,9 @@ export const ToolSelect = ({
         emptyText={
           showDataset
             ? I18n.t('workflow_knowledge_node_empty')
-            : I18n.t('workflow_agnet_tool_database_empty' as any)
+            : onlyShowSkill
+              ? I18n.t('workflow_skill_node_skills_empty')
+              : I18n.t('workflow_agnet_tool_database_empty')
         }
         addButtonTestID={addButtonTestID}
         libraryCardTestID={libraryCardTestID}
@@ -352,6 +356,7 @@ export const ToolSelect = ({
         enterFrom={TOOL_TAB.WORKFLOW}
         projectID={projectId}
         showDataset={showDataset}
+        onlyShowSkill={onlyShowSkill}
       />
 
       <ToolSelectPluginSetting

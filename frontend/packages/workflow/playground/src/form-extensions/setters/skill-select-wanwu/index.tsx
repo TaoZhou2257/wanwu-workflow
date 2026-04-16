@@ -87,7 +87,7 @@ export const SkillSelect: FC<SkillSelectProps> = ({
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'builtin' | 'custom'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'builtin' | 'custom'>('builtin');
 
   // 将tab类型映射到skillType
   const getSkillType = (tab: 'all' | 'builtin' | 'custom') => {
@@ -162,7 +162,12 @@ export const SkillSelect: FC<SkillSelectProps> = ({
   }, []);
 
   // 过滤技能列表
-  const filteredSkillList = data?.list || [];
+  const filteredSkillList = data?.list.filter(item => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'builtin' && item.skillType === 'builtin') return true;
+    if (activeTab === 'custom' && item.skillType === 'custom') return true;
+    return false;
+  }) || [];
 
   const renderSkillCard = (item: SkillInfo) => (
     <div

@@ -29,18 +29,18 @@ export interface SkillSelectSiderProps {
 }
 
 const tabList = [
-  {
+  /*{
     key: 'all',
     label: I18n.t('workflow_skill_tab_all' as any, {}, '全部'),
-  },
-  /*{
+  },*/
+  {
     key: 'builtin',
     label: I18n.t('workflow_skill_tab_builtin' as any, {}, '内置'),
   },
   {
     key: 'custom',
     label: I18n.t('workflow_skill_tab_custom' as any, {}, '自定义'),
-  },*/
+  },
 ];
 
 export const SkillSelectSider: FC<SkillSelectSiderProps> = ({

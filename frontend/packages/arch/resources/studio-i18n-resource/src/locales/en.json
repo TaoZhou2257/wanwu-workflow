@@ -14472,5 +14472,6 @@
   "workflow_node_from_cn_store": "From coze.cn store",
   "workflow_agnet_tool_select_title": "Tools",
   "workflow_agnet_tool_database_empty": "Add tools to this node",
+  "workflow_skill_node_skills_empty": "Add skills to this node",
   "workflow_agnet_tool_mcp_setting_apikey": "Edit API KEY"
 }
