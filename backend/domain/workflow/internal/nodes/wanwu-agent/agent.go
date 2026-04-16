@@ -39,6 +39,7 @@ const (
 	WanWuMCPGetUrlEnv             = "WANWU_CALLBACK_MCP_GET_URL"
 	WanWuMCPServerGetUrlEnv       = "WANWU_CALLBACK_MCP_SERVER_GET_URL"
 	WanWuWorkflowListSchemaUrlEnv = "WANWU_CALLBACK_WORKFLOW_LIST_SCHEMA_URL"
+	WanWuSkillDetailUrlEnv        = "WANWU_CALLBACK_SKILL_DETAIL_URL"
 	AgentOutputKey                = "output"
 	metaTypeNumber                = "number"
 	metaTypeTime                  = "time"
@@ -400,6 +401,15 @@ func (c *Config) setToolConfig(ctx context.Context, inputs *vo.Inputs) error {
 		}
 	}
 
+	c.ToolParams.SkillToolList = make([]*SkillToolInfo, 0, len(inputs.AgentSkillParams))
+	for _, skillParam := range inputs.AgentSkillParams {
+		info, err := skillRequest(skillParam.SkillId, skillParam.SkillType)
+		if err != nil {
+			return fmt.Errorf("skill request failed: %w", err)
+		}
+		c.ToolParams.SkillToolList = append(c.ToolParams.SkillToolList, info)
+	}
+
 	return nil
 }
 
@@ -570,6 +580,35 @@ func toolRequest(toolId, toolType, userApiKey string) (string, *openapi3_util.Au
 	return "", nil, errors.New("unsupported tool type")
 }
 
+func skillRequest(skillId, skillType string) (*SkillToolInfo, error) {
+	rawURL, err := url.JoinPath(os.Getenv(WanWuSkillDetailUrlEnv))
+	if err != nil {
+		return nil, err
+	}
+	var res response
+	var ret SkillToolInfo
+	resp, err := resty.New().SetTimeout(time.Minute).R().
+		SetHeader("Content-Type", "application/json").
+		SetHeader("Accept", "application/json").
+		SetQueryParam("skillId", skillId).
+		SetQueryParam("skillType", skillType).
+		SetResult(&res).Get(rawURL)
+	if err != nil {
+		return nil, fmt.Errorf("request %v err: %v", rawURL, err)
+	}
+	if resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("request %v http status %v msg: %v", rawURL, resp.StatusCode(), res.Msg)
+	}
+	marshal, err := sonic.Marshal(res.Data)
+	if err != nil {
+		return nil, fmt.Errorf("request %v marshal response body: %v", rawURL, err)
+	}
+	if err = sonic.Unmarshal(marshal, &ret); err != nil {
+		return nil, fmt.Errorf("request %v unmarshal response body: %v", rawURL, err)
+	}
+	return &ret, nil
+}
+
 type response struct {
 	Code int64  `json:"code"`
 	Data any    `json:"data"`
@@ -719,7 +758,11 @@ func (c *Config) Build(ctx context.Context, ns *schema2.NodeSchema, _ ...schema2
 		},
 		KnowledgeParams: buildKnowledgeParams(ctx, c.KnowledgeInfos, c.RetrieveParams),
 		ToolParams:      c.ToolParams,
-		HttpClient:      &http.Client{Timeout: 5 * time.Minute},
+		HttpClient: &http.Client{
+			Transport: &http.Transport{
+				ResponseHeaderTimeout: time.Minute,
+			},
+		},
 	}
 	switch c.LLMParams.ThinkingType {
 	case "enabled":
@@ -800,6 +843,7 @@ type CustomModelInfo struct {
 type ToolParams struct {
 	PluginToolList []*PluginToolInfo `json:"pluginTool,omitempty"`
 	McpToolList    []*MCPToolInfo    `json:"mcpToolList,omitempty"`
+	SkillToolList  []*SkillToolInfo  `json:"skillToolList,omitempty"`
 }
 
 type AgentBaseParams struct {
@@ -827,6 +871,17 @@ type MCPToolInfo struct {
 	URL          string   `json:"url"`
 	Transport    string   `json:"transport"`
 	ToolNameList []string `json:"toolNameList"` // MCP工具方法列表,会根据此方法名的列表进行mcp方法的过滤，如果此列为空，则标识不进行过滤
+}
+
+type SkillType string
+
+type SkillToolInfo struct {
+	SkillId    string    `json:"skillId"`
+	SkillType  SkillType `json:"skillType"`
+	Name       string    `json:"name"`
+	Desc       string    `json:"desc"`
+	Avatar     string    `json:"avatar"`
+	ObjectPath string    `json:"objectPath"`
 }
 
 type EventData struct {
@@ -972,6 +1027,8 @@ func mapEventTypeToConversationType(eventType int) string {
 		return "agentTool"
 	case 2:
 		return "agentKnowledge"
+	case 20:
+		return "subText"
 	default:
 		return ""
 	}
