@@ -33,6 +33,7 @@ import { useGlobalState } from '@/hooks';
 import { useSelectMcpModal } from '../../../mcp-select-wanwu/components/mcp-select-modal-wanwu';
 import { type ToolSelectValue } from '../../types';
 import { ToolSelectDatabase } from '../tool-select-database-wanwu';
+import { SkillSelect } from '../../../skill-select-wanwu';
 import { useForm } from '@/form';
 
 interface ToolSelectProps {
@@ -76,17 +77,22 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
   const [mcpList, setMcpList] = useState<any[]>(
     form.getValueIn('inputs.toolInfoList')?.filter(item => item.kind === TOOL_TAB.MCP) || []
   );
+  const [skillList, setSkillList] = useState<any[]>(
+    form.getValueIn('inputs.toolInfoList')?.filter(item => item.kind === TOOL_TAB.SKILL) || []
+  );
 
- 
+
   useEffect(() => {
     const toolInfoList = form.getValueIn('inputs.toolInfoList') || [];
     if (!toolInfoList) return;
     const newPluginList = toolInfoList.filter(item => item.kind === TOOL_TAB.TOOL);
     const newWorkflowList = toolInfoList.filter(item => item.kind === TOOL_TAB.WORKFLOW);
     const newMcpList = toolInfoList.filter(item => item.kind === TOOL_TAB.MCP);
+    const newSkillList = toolInfoList.filter(item => item.kind === TOOL_TAB.SKILL);
     setPluginApiList(newPluginList);
     setWorkFlowList(newWorkflowList);
     setMcpList(newMcpList);
+    setSkillList(newSkillList);
   }, [form.getValueIn('inputs.toolInfoList')]);
 
   useEffect(() => {
@@ -96,6 +102,10 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
   const workflowAddList = useMemo(() => {
     return mcpList.map(item => item.name);
   }, [mcpList]);
+
+  const skillAddList = useMemo(() => {
+    return skillList.map(item => item.id);
+  }, [skillList]);
 
   const pluginModalParts = usePluginModalParts({
     pluginApiList,
@@ -173,6 +183,10 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
         key: TOOL_TAB.MCP,
         label: 'MCP',
       },
+      {
+        key: TOOL_TAB.SKILL,
+        label: 'Skills',
+      },
     ],
     [],
   );
@@ -238,6 +252,22 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
       {!showDataset && activeTab === TOOL_TAB.MCP && (
         <div className="flex-1 min-h-0">
           {mcpSelectParts.renderContent()}
+        </div>
+      )}
+
+      {!showDataset && activeTab === TOOL_TAB.SKILL && (
+        <div className="flex-1 min-h-0">
+          <SkillSelect
+            spaceId={spaceId}
+            projectID={projectId}
+            skillList={skillAddList}
+            onAddSkill={(item) => {
+              onAddTool?.({ kind: TOOL_TAB.SKILL, data: item });
+            }}
+            onRemoveSkill={(id) => {
+              onRemoveTool(id);
+            }}
+          />
         </div>
       )}
     </div>
