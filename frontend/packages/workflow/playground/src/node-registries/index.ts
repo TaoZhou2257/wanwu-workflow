@@ -30,6 +30,7 @@ export { MULTI_FILE_PARSE_WANWU_NODE_REGISTRY } from './multi-file-parse-wanwu';
 export { GUI_AGENT_WANWU_NODE_REGISTRY } from './gui-agent-wanwu'
 export { JSON_PARSER_WANWU_NODE_REGISTRY } from './json-parser-wanwu';
 export { AGENT_WANWU_NODE_REGISTRY } from './agent-wanwu';
+export { SKILL_WANWU_NODE_REGISTRY } from './skill-wanwu';
 export { DATASET_WRITE_NODE_REGISTRY } from './dataset/dataset-write';
 export { END_NODE_REGISTRY } from './end';
 export { HTTP_NODE_REGISTRY } from './http';

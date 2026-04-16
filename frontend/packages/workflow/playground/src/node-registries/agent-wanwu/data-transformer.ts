@@ -162,7 +162,13 @@ export function transformOnInit (value: FormData,context: NodeFormContext) {
     });
   })() as any[];
 
-  const toolInfoList = [...agentToolParams, ...agentWorkflowParams, ...agentMCPParams, ...datasetSelectParam, ...agentSkillParams];
+  const toolInfoList = [
+    ...agentToolParams,
+    ...agentWorkflowParams,
+    ...agentMCPParams,
+    ...datasetSelectParam,
+    ...agentSkillParams
+  ];
   const outputs = value?.outputs ?? OUTPUTS;
   return {
     nodeMeta: value?.nodeMeta,

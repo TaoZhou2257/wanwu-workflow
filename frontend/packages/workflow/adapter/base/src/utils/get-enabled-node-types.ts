@@ -39,6 +39,7 @@ export const getEnabledNodeTypes = (_params: {
     [StandardNodeType.JsonParserWanwu]: true,
     [StandardNodeType.GuiAgentWanwu]: true,
     [StandardNodeType.AgentWanwu]: true,
+    [StandardNodeType.SkillWanwu]: true,
     [StandardNodeType.If]: true,
     [StandardNodeType.SubWorkflow]: true,
     [StandardNodeType.Database]: true,
