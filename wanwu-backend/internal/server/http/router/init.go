@@ -140,6 +140,7 @@ func Register(r *hertz_server.Hertz) {
 			_workflow_api.POST("/workflow_detail_info", append(_getworkflowdetailinfoMw(), coze.GetWorkflowDetailInfoByWanwu)...)
 			_workflow_api.POST("/workflow_references", append(_getworkflowreferencesMw(), coze.GetWorkflowReferences)...)
 			_workflow_api.POST("/version_list", append(_getworkflowversionlistMw(), coze.GetWorkflowVersionListByWanwu)...)
+			_workflow_api.POST("/latest_version_list", append(_getworkflowlatestversionMw(), coze.MGetWorkflowLatestVersionByWanwu)...)
 			_workflow_api.PUT("/version_description", append(_updateworkflowversiondescriptionMw(), coze.UpdateWorkflowVersionDescriptionByWanwu)...)
 			_workflow_api.POST("/revert", append(_rollbackworkflowversionMw(), coze.RollbackWorkflowVersionByWanwu)...)
 
