@@ -95,13 +95,15 @@ export const useSelectMcpModal = ({
   };
 
   const fetchMcpToolList = async (reqParams: {
+    mcpId?: string;
     serverUrl: string;
+    transport?: string;
   }) => {
     try {
       setToolLoading(true)
       setToolList([])
 
-      const { data }: { data: any } = await MemoryApi.GetMcpToolSelect(reqParams) || {};
+      const { data }: { data: any } = await MemoryApi.GetMcpToolSelect(reqParams as any) || {};
       setToolList(data?.tools || [])
     } catch (err:any) {
       const { statusText, data } = err?.response || {};
@@ -147,11 +149,25 @@ export const useSelectMcpModal = ({
 
   const handleChange = (value: any) => {
     const currentKey = value.length ? value[value.length - 1] : 0
-    const currentObj:McpInfo = data?.list?.filter(item => item.mcpId === currentKey)?.[0] || {}
-    const serverUrl = currentObj.serverUrl || ''
+    const currentObj: any = data?.list?.filter(item => item.mcpId === currentKey)?.[0] || {}
+    const mcpId = currentObj.mcpId || ''
+    // 根据传输协议类型选择正确的 URL
+    const transport = currentObj.transport || ''
+    let serverUrl = ''
+    if (transport === 'streamable') {
+      // streamable 协议优先使用 streamableUrl，fallback 到 serverUrl
+      serverUrl = currentObj.streamableUrl || currentObj.serverUrl || ''
+    } else {
+      // 默认使用 serverUrl (sse url)
+      serverUrl = currentObj.serverUrl || ''
+    }
 
     setActiveKey([currentKey])
-    if (serverUrl) fetchMcpToolList({serverUrl})
+    // 优先传递 mcpId，后端会根据 mcpId 查询正确的 serverUrl 和 transport
+    // 如果没有 mcpId，则传递 serverUrl 和 transport
+    if (mcpId || serverUrl) {
+       fetchMcpToolList({ mcpId, serverUrl, transport })
+    }
   }
   
   const renderList = () => (
@@ -186,7 +202,7 @@ export const useSelectMcpModal = ({
                       workflowAddList?.includes(it.name)
                     )
                   }
-                  onAdd={() => handleAddMcp({...it, serverUrl: item.serverUrl, mcpId: item.mcpId, id: item.mcpId})}
+                  onAdd={() => handleAddMcp({...it, serverUrl: item.serverUrl, streamableUrl: item.streamableUrl, transport: item.transport, mcpId: item.mcpId, id: item.mcpId})}
                   // onRemove={() => handleRemoveMcp(item)}
                   //需要删除的是工具节点，所以根据it.name判断是否删除过
                   onRemove={() => handleRemoveMcp(it)}

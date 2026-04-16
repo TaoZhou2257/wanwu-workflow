@@ -1448,7 +1448,9 @@ export default class MemoryService<T> {
     const url = this.genBaseURL('/use/model/api/v1/mcp/tool/list');
     const method = 'GET';
     const params = {
+      mcpId: _req['mcpId'],
       serverUrl: _req['serverUrl'],
+      transport: _req['transport'],
     };
     return this.request({ url, method, params }, options);
   }

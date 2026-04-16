@@ -394,6 +394,8 @@ export interface McpInfo {
   serverUrl?: string;
   serverFrom?: string;
   uniqueId?: string;
+  streamableUrl?: string;
+  transport?: string;
 }
 
 export interface DateDefault {
@@ -717,7 +719,9 @@ export interface ListDatabaseRecordsResponse {
 }
 
 export interface ListMcpToolRequest {
+  mcpId?: string,
   serverUrl?: string,
+  transport?: string,
 }
 
 export interface ListRequest {
