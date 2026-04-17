@@ -58,13 +58,9 @@ export const SkillSelectSider: FC<SkillSelectSiderProps> = ({
           value={searchKeyword}
           onChange={onSearchChange}
           className="w-full"
+          showClear
           prefix={
-            <IconSearch
-              /*onClick={event => {
-                event.stopPropagation();
-                onSearch?.(inputValue);
-              }}*/
-            />
+            <IconSearch />
           }
         />
       </UICompositionModalSider.Header>

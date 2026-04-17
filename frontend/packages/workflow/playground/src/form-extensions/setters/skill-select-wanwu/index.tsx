@@ -281,9 +281,10 @@ export const SkillSelect: FC<SkillSelectProps> = ({
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         <div className="overflow-y-auto relative w-full flex-1 flex justify-center items-center">
           <UIEmpty
+            isNotFound
             className="text-center py-8 coz-fg-secondary"
-            empty={{
-              title: I18n.t('empty_text' as any, {}, '暂无数据'),
+            notFound={{
+              title: I18n.t('inifinit_search_not_found', {}, '没有找到内容'),
             }}
           ></UIEmpty>
         </div>
