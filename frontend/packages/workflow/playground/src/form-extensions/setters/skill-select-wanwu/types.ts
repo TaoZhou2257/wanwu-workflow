@@ -13,27 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export interface Tool {
-  actionID: string;
-  actionName: string;
-  toolType: string;
-  apiKey: string;
-  toolId: string;
-  toolName: string;
+
+export interface SkillInfo {
+  skillId: string;
+  skillName: string;
+  desc?: string;
+  type?: 'builtin' | 'custom';
+  author?: string;
+  avatar?: {
+    key?: string;
+    path: string;
+  };
+  [key: string]: any;
 }
-
-export type ToolSelectValue = Tool[];
-
-export interface DatabaseSelectContextProps {
-  changeTool: (id: string) => void;
-  clearTool: () => void;
-  readonly?: boolean;
-}
-
-export const TOOL_TAB = {
-  TOOL: 'tool',
-  WORKFLOW: 'workflow',
-  DATABASE: 'database',
-  MCP: 'mcp',
-  SKILL: 'skill',
-} as const;

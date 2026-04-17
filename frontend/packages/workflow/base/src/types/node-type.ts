@@ -27,6 +27,7 @@ export enum StandardNodeType {
   GuiAgentWanwu = '1010',
   QADatasetWanwu = '1012',
   AgentWanwu = '1013',
+  SkillWanwu = '1014',
 
   Start = '1',
   End = '2',

@@ -33,6 +33,7 @@ import { useGlobalState } from '@/hooks';
 import { useSelectMcpModal } from '../../../mcp-select-wanwu/components/mcp-select-modal-wanwu';
 import { type ToolSelectValue } from '../../types';
 import { ToolSelectDatabase } from '../tool-select-database-wanwu';
+import { SkillSelect } from '../../../skill-select-wanwu';
 import { useForm } from '@/form';
 
 interface ToolSelectProps {
@@ -50,6 +51,7 @@ interface ToolSelectProps {
   libraryCardTestID?: string;
   width?: string | number;
   showDataset?: boolean | undefined;
+  onlyShowSkill?: boolean | undefined;
 }
 
 type ToolTab = typeof TOOL_TAB[keyof typeof TOOL_TAB];
@@ -60,6 +62,7 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
   onAddTool,
   onRemoveTool,
   showDataset,
+  onlyShowSkill,
   spaceId
 }) => {
   const { projectId } = useGlobalState();
@@ -76,26 +79,35 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
   const [mcpList, setMcpList] = useState<any[]>(
     form.getValueIn('inputs.toolInfoList')?.filter(item => item.kind === TOOL_TAB.MCP) || []
   );
+  const [skillList, setSkillList] = useState<any[]>(
+    form.getValueIn('inputs.toolInfoList')?.filter(item => item.kind === TOOL_TAB.SKILL) || []
+  );
 
- 
+
   useEffect(() => {
     const toolInfoList = form.getValueIn('inputs.toolInfoList') || [];
     if (!toolInfoList) return;
     const newPluginList = toolInfoList.filter(item => item.kind === TOOL_TAB.TOOL);
     const newWorkflowList = toolInfoList.filter(item => item.kind === TOOL_TAB.WORKFLOW);
     const newMcpList = toolInfoList.filter(item => item.kind === TOOL_TAB.MCP);
+    const newSkillList = toolInfoList.filter(item => item.kind === TOOL_TAB.SKILL);
     setPluginApiList(newPluginList);
     setWorkFlowList(newWorkflowList);
     setMcpList(newMcpList);
+    setSkillList(newSkillList);
   }, [form.getValueIn('inputs.toolInfoList')]);
 
   useEffect(() => {
-    setActiveTab(showDataset ? TOOL_TAB.DATABASE : TOOL_TAB.TOOL)
-  }, [showDataset]);
+    setActiveTab(showDataset ? TOOL_TAB.DATABASE : onlyShowSkill ? TOOL_TAB.SKILL : TOOL_TAB.TOOL)
+  }, [showDataset, onlyShowSkill]);
 
   const workflowAddList = useMemo(() => {
     return mcpList.map(item => item.name);
   }, [mcpList]);
+
+  const skillAddList = useMemo(() => {
+    return skillList.map(item => item.id);
+  }, [skillList]);
 
   const pluginModalParts = usePluginModalParts({
     pluginApiList,
@@ -155,6 +167,11 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
           },
         ),
       },
+    ] : onlyShowSkill ? [
+      {
+        key: TOOL_TAB.SKILL,
+        label: 'Skills',
+      },
     ] : [
       {
         key: TOOL_TAB.TOOL,
@@ -172,6 +189,10 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
       {
         key: TOOL_TAB.MCP,
         label: 'MCP',
+      },
+      {
+        key: TOOL_TAB.SKILL,
+        label: 'Skills',
       },
     ],
     [],
@@ -200,7 +221,7 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
 
   const renderContent = () => (
     <div className="w-full h-full flex flex-col">
-      {!showDataset && activeTab === TOOL_TAB.TOOL && (
+      {!showDataset && !onlyShowSkill && activeTab === TOOL_TAB.TOOL && (
         // 工具选择
         <div className="flex-1 flex flex-row min-h-0 h-full overflow-hidden">
           <div className="w-[200px] mr-[12px] border-r border-[rgba(255,255,255,0.06)] h-full overflow-y-auto">
@@ -212,7 +233,7 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
           </div>
         </div>
       )}
-      {!showDataset && activeTab === TOOL_TAB.WORKFLOW && (
+      {!showDataset && !onlyShowSkill &&  activeTab === TOOL_TAB.WORKFLOW && (
         // 工作流选择
         <div className="flex-1 flex flex-row min-h-0">
           <div className="w-[220px] mr-[12px] border-r border-[rgba(255,255,255,0.06)]">
@@ -235,9 +256,25 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
         />
       )}
 
-      {!showDataset && activeTab === TOOL_TAB.MCP && (
+      {!showDataset && !onlyShowSkill && activeTab === TOOL_TAB.MCP && (
         <div className="flex-1 min-h-0">
           {mcpSelectParts.renderContent()}
+        </div>
+      )}
+
+      {!showDataset && activeTab === TOOL_TAB.SKILL && (
+        <div className="flex-1 min-h-0">
+          <SkillSelect
+            spaceId={spaceId}
+            projectID={projectId}
+            skillList={skillAddList}
+            onAddSkill={(item) => {
+              onAddTool?.({ kind: TOOL_TAB.SKILL, data: item });
+            }}
+            onRemoveSkill={(id) => {
+              onRemoveTool(id);
+            }}
+          />
         </div>
       )}
     </div>
@@ -252,7 +289,7 @@ export const SelectToolModal: FC<ToolSelectProps> = ({
       closable
       visible={visible}
       onCancel={onClose}
-      header={renderHeader()}
+      header={onlyShowSkill ? null : renderHeader()}
       sider={null}
       style={{ width: '1200px' }}
       content={

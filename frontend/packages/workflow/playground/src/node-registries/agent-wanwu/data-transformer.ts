@@ -144,8 +144,31 @@ export function transformOnInit (value: FormData,context: NodeFormContext) {
       };
     });
   })() as any[];
-  
-  const toolInfoList = [...agentToolParams, ...agentWorkflowParams, ...agentMCPParams, ...datasetSelectParam];
+  //skill
+  const agentSkillParams = (() => {
+    const rawData = get(value, 'inputs.agentSkillParams', []);
+    if (!Array.isArray(rawData)) return [];
+    return rawData.map(item => {
+      if (typeof item !== 'object' || item === null) {
+        return { kind: 'skill', id: '', name: '', description: '' };
+      }
+      return {
+        ...(item as any),
+        kind: 'skill',
+        id: String((item as any).skillId || ''),
+        name: String((item as any).skillName || ''),
+        description: String((item as any).desc || '')
+      };
+    });
+  })() as any[];
+
+  const toolInfoList = [
+    ...agentToolParams,
+    ...agentWorkflowParams,
+    ...agentMCPParams,
+    ...datasetSelectParam,
+    ...agentSkillParams
+  ];
   const outputs = value?.outputs ?? OUTPUTS;
   return {
     nodeMeta: value?.nodeMeta,
@@ -169,6 +192,7 @@ export function transformOnSubmit (value,context: NodeFormContext){
   const agentToolParams: any[] = [];
   const agentWorkflowParams: any[] = [];
   const agentMCPParams: any[] = [];
+  const agentSkillParams: any[] = [];
 
   toolInfoList.forEach(tool => {
     if (tool.kind === 'workflow') {
@@ -196,6 +220,13 @@ export function transformOnSubmit (value,context: NodeFormContext){
         toolId: tool.plugin_id,
         toolName: tool.plugin_name,
         description: tool.desc,
+      });
+    } else if (tool.kind === 'skill') {
+      agentSkillParams.push({
+        ...tool,
+        skillId: tool.id,
+        skillName: tool.name,
+        description: tool.description || tool.desc,
       });
     }
   });
@@ -371,7 +402,7 @@ export function transformOnSubmit (value,context: NodeFormContext){
   const safeInputParameters = Array.isArray(inputParameters) ? inputParameters : [];
  
   return {
-    nodeMeta: value?.nodeMeta, 
+    nodeMeta: value?.nodeMeta,
     inputs: {
       inputParameters: safeInputParameters,
       llmParam,
@@ -379,6 +410,7 @@ export function transformOnSubmit (value,context: NodeFormContext){
       agentToolParams,
       agentWorkflowParams,
       agentMCPParams,
+      agentSkillParams,
     },
     outputs: value.outputs,
   } as NodeDataDTO;

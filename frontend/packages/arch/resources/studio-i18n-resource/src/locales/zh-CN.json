@@ -16804,5 +16804,6 @@
   "workflow_node_from_cn_store": "来自 coze.cn 商店",
   "workflow_agnet_tool_select_title": "工具",
   "workflow_agnet_tool_database_empty": "请添加工具到此节点",
+  "workflow_skill_node_skills_empty": "请添加Skill到此节点",
   "workflow_agnet_tool_mcp_setting_apikey": "编辑API KEY"
 }

@@ -550,6 +550,20 @@ export default class WorkflowApiService<T> {
     return this.request({ url, method, params }, options);
   }
 
+  /** GET /user/api/v1/agent/skill/select */
+  getSkillsWanwu(
+    req?: workflow.ListSelectRequest,
+    options?: T,
+  ): Promise<workflow.ListSelectResponse> {
+    const _req = req;
+    const url = this.genBaseURL('/user/api/v1/agent/skill/select');
+    const method = 'GET';
+    const params = {
+      name: _req['name'],
+    };
+    return this.request({ url, method, params }, options);
+  }
+
   /**
    * POST /api/workflow_api/publish
    *

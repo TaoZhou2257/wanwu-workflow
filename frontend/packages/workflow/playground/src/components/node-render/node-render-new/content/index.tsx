@@ -35,6 +35,7 @@ import { FileGenerateWanwuContent } from '@/node-registries/file-generate-wanwu'
 import { JsonParserWanwuContent } from '@/node-registries/json-parser-wanwu';
 import { GuiAgentWanwuContent } from '@/node-registries/gui-agent-wanwu';
 import { AgentWanwuContent } from '@/node-registries/agent-wanwu';
+import { SkillWanwuContent } from '@/node-registries/skill-wanwu';
 import { IntentContent } from '@/node-registries/intent';
 import { InputContent } from '@/node-registries/input';
 import { ImageCanvasContent } from '@/node-registries/image-canvas';
@@ -75,6 +76,7 @@ const ContentMap = {
   [StandardNodeType.JsonParserWanwu]: JsonParserWanwuContent,
   [StandardNodeType.GuiAgentWanwu]: GuiAgentWanwuContent,
   [StandardNodeType.AgentWanwu]: AgentWanwuContent,
+  [StandardNodeType.SkillWanwu]: SkillWanwuContent,
   [StandardNodeType.LLM]: LLMWanwuContent,
   [StandardNodeType.Start]: StartContent,
   [StandardNodeType.End]: EndContent,

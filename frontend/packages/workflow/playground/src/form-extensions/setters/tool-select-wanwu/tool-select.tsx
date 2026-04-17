@@ -41,6 +41,7 @@ interface ToolListProps {
   libraryCardTestID?: string;
   form?: any;
   showDataset?: boolean | undefined;
+  onlyShowSkill?: boolean | undefined;
 }
 
 export const ToolSelect = ({
@@ -51,6 +52,7 @@ export const ToolSelect = ({
   libraryCardTestID,
   form,
   showDataset,
+  onlyShowSkill,
 }: ToolListProps) => {
   const { spaceId, projectId, getProjectApi, playgroundProps } =
     useGlobalState();
@@ -120,6 +122,8 @@ export const ToolSelect = ({
         return itemData.knowledgeId || '';
       case TOOL_TAB.MCP:
         return itemData.name || '';
+      case TOOL_TAB.SKILL:
+        return itemData.skillId || '';
       default:
         return itemData.id || '';
     }
@@ -144,6 +148,10 @@ export const ToolSelect = ({
       case TOOL_TAB.MCP:
         onChange?.([...currentValue, { ...item.data, kind: TOOL_TAB.MCP, id: item.data.mcpId , description: item.data.description}]);
         setLibraries([...(libraries || []), { ...item.data, kind: TOOL_TAB.MCP, id: item.data.mcpId , description: item.data.description }]);
+        break;
+      case TOOL_TAB.SKILL:
+        onChange?.([...currentValue, { ...item.data, kind: TOOL_TAB.SKILL, id: item.data.skillId, description: item.data.desc, name: item.data.skillName }]);
+        setLibraries([...(libraries || []), { ...item.data, kind: TOOL_TAB.SKILL, id: item.data.skillId, description: item.data.desc, name: item.data.skillName }]);
         break;
       default:
         break;
@@ -319,7 +327,9 @@ export const ToolSelect = ({
         emptyText={
           showDataset
             ? I18n.t('workflow_knowledge_node_empty')
-            : I18n.t('workflow_agnet_tool_database_empty' as any)
+            : onlyShowSkill
+              ? I18n.t('workflow_skill_node_skills_empty')
+              : I18n.t('workflow_agnet_tool_database_empty')
         }
         addButtonTestID={addButtonTestID}
         libraryCardTestID={libraryCardTestID}
@@ -346,6 +356,7 @@ export const ToolSelect = ({
         enterFrom={TOOL_TAB.WORKFLOW}
         projectID={projectId}
         showDataset={showDataset}
+        onlyShowSkill={onlyShowSkill}
       />
 
       <ToolSelectPluginSetting

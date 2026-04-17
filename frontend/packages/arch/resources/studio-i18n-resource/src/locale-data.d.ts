@@ -16809,6 +16809,8 @@ export type I18nKeysNoOptionsType =
   | 'workspace_share_url_page_desc'
   | 'workspace_subtitle_all_folders'
   | 'workspace_subtitle_project'
+  | 'workflow_skill_node_skills_empty'
+  | 'workflow_agnet_tool_database_empty'
   | 'x_offset'
   | 'y_offset'
   | 'you_need_to_configure_a_trigger_event_on_the_page_or_a_component_to_invoke_this_'
