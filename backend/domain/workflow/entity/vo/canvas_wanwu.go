@@ -28,6 +28,11 @@ type WanWuWorkflow struct {
 	WorkflowID string `json:"workflowId"`
 }
 
+type WanWuSkillParams struct {
+	SkillType string `json:"skillType"`
+	SkillId   string `json:"skillId"`
+}
+
 type WanWuMCP struct {
 	MCPID       string `json:"mcpId"`
 	MCPType     string `json:"mcpType"`
@@ -37,7 +42,8 @@ type WanWuMCP struct {
 type WanWuAgent struct {
 	//模型参数复用llm节点
 	//知识库参数复用知识库检索节点
-	AgentToolParams     []*WanWuTool     `json:"agentToolParams,omitempty"`
-	AgentMCPParams      []*WanWuMCP      `json:"agentMCPParams,omitempty"`
-	AgentWorkflowParams []*WanWuWorkflow `json:"agentWorkflowParams,omitempty"`
+	AgentToolParams     []*WanWuTool        `json:"agentToolParams,omitempty"`
+	AgentMCPParams      []*WanWuMCP         `json:"agentMCPParams,omitempty"`
+	AgentWorkflowParams []*WanWuWorkflow    `json:"agentWorkflowParams,omitempty"`
+	AgentSkillParams    []*WanWuSkillParams `json:"agentSkillParams,omitempty"`
 }

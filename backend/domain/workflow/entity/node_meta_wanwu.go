@@ -11,6 +11,7 @@ const (
 	NodeTypeWanWuTool               NodeType = "WanWuTool"
 	NodeTypeWanWuQARetriever        NodeType = "WanWuQARetriever"
 	NodeTypeWanWuAgent              NodeType = "WanWuAgent"
+	NodeTypeWanWuSkill              NodeType = "WanWuSkill"
 )
 
 // Wanwu NodeTypeMetas Init
@@ -198,6 +199,24 @@ func init() {
 		},
 		EnUSName:        "Agent",
 		EnUSDescription: "Call agent service to execute tasks",
+	}
+
+	NodeTypeMetas[NodeTypeWanWuSkill] = &NodeTypeMeta{
+		ID:           1014,
+		Key:          NodeTypeWanWuSkill,
+		DisplayKey:   "Skills",
+		Name:         "Skills",
+		Category:     "utilities",
+		Desc:         "调用skill执行任务",
+		Color:        "#5C62FF",
+		SupportBatch: false,
+		ExecutableMeta: ExecutableMeta{
+			PreFillZero:       true,
+			PostFillNil:       true,
+			IncrementalOutput: true,
+		},
+		EnUSName:        "Skills",
+		EnUSDescription: "Call skill to execute tasks",
 	}
 
 }
