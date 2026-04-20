@@ -26,3 +26,5 @@ export interface SkillInfo {
   };
   [key: string]: any;
 }
+
+export type SkillType = 'all' | 'builtin' | 'custom';

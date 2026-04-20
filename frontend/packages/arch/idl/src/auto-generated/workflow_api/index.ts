@@ -560,6 +560,7 @@ export default class WorkflowApiService<T> {
     const method = 'GET';
     const params = {
       name: _req['name'],
+      skillType: _req['skillType']
     };
     return this.request({ url, method, params }, options);
   }
