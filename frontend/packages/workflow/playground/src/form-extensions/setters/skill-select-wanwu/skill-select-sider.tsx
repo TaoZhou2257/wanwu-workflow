@@ -36,11 +36,11 @@ const tabList = [
   },*/
   {
     key: 'builtin',
-    label: I18n.t('workflow_skill_tab_builtin' as any, {}, '内置'),
+    label: I18n.t('builtin_wanwu', {}, '内置'),
   },
   {
     key: 'custom',
-    label: I18n.t('workflow_skill_tab_custom' as any, {}, '自定义'),
+    label: I18n.t('custom_wanwu' as any, {}, '自定义'),
   },
 ];
 

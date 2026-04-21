@@ -190,6 +190,11 @@ export const SkillSelect: FC<SkillSelectProps> = ({
             {item.skillName}
           </Typography.Text>
         </div>
+        <div className="flex items-center mb-1">
+          <Typography.Text className="!coz-fg-secondary !leading-mini !font-normal !text-base truncate">
+            {I18n.t('skill_author_wanwu', {}, '作者：')}{item.author || '--'}
+          </Typography.Text>
+        </div>
         <Typography.Text
           className="!coz-fg-secondary !leading-mini !font-normal !text-base truncate"
           ellipsis={{ showTooltip: false }}
@@ -247,7 +252,7 @@ export const SkillSelect: FC<SkillSelectProps> = ({
         >
           {filteredSkillList?.length === 0 ? (
             <div className="text-center py-8 coz-fg-secondary">
-              {I18n.t('empty_text' as any, {}, '暂无数据')}
+              {I18n.t('query_data_empty', {}, '暂无数据')}
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-[12px]">
