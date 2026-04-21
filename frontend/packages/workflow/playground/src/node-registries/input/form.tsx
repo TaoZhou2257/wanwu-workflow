@@ -33,5 +33,6 @@ export const FormRender = withNodeConfigForm(() => (
     emptyPlaceholder={I18n.t('workflow_start_no_parameter')}
     maxLimit={20}
     hasFeedback={false}
+    hiddenTypes={[]}
   />
 ));
