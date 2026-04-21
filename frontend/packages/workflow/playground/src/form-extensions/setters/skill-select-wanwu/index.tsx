@@ -34,7 +34,7 @@ import { Typography, UIEmpty } from '@coze-arch/bot-semi';
 import { type ButtonProps } from '@coze-arch/bot-semi/Button';
 import { workflowApi } from '@coze-workflow/base/api';
 
-import { type SkillInfo } from './types';
+import { type SkillInfo, type SkillType } from './types';
 import { SkillSelectSider } from './skill-select-sider';
 interface SkillSelectProps {
   spaceId: string;
@@ -87,13 +87,11 @@ export const SkillSelect: FC<SkillSelectProps> = ({
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'builtin' | 'custom'>('builtin');
+  const [activeTab, setActiveTab] = useState<SkillType>('builtin');
 
-  // 将tab类型映射到skillType
-  const getSkillType = (tab: 'all' | 'builtin' | 'custom') => {
-    if (tab === 'builtin') return 'builtin';
-    if (tab === 'custom') return 'custom';
-    return '';
+  const getSkillType = (tab: SkillType) => {
+    if (tab === 'all') return '';
+    return tab;
   };
 
   const fetchSkillList = async (reqParams: {
@@ -125,6 +123,10 @@ export const SkillSelect: FC<SkillSelectProps> = ({
       };
     }
   };
+
+  const changeTab = (tab: SkillType) => {
+    setActiveTab(tab);
+  }
 
   const { loading, data, loadingMore, reload } = useInfiniteScroll(
     (newData?: GetSkillListData): Promise<GetSkillListData> =>
@@ -161,13 +163,8 @@ export const SkillSelect: FC<SkillSelectProps> = ({
     reload();
   }, []);
 
-  // 过滤技能列表
-  const filteredSkillList = data?.list.filter(item => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'builtin' && item.skillType === 'builtin') return true;
-    if (activeTab === 'custom' && item.skillType === 'custom') return true;
-    return false;
-  }) || [];
+  // 技能列表
+  const filteredSkillList = data?.list || [];
 
   const renderSkillCard = (item: SkillInfo) => (
     <div
@@ -235,7 +232,7 @@ export const SkillSelect: FC<SkillSelectProps> = ({
         <SkillSelectSider
           activeTab={activeTab}
           searchKeyword={searchKeyword}
-          onTabChange={setActiveTab}
+          onTabChange={changeTab}
           onSearchChange={setSearchKeyword}
           searchPlaceholder={I18n.t('Search', {}, '搜索')}
         />
@@ -273,7 +270,7 @@ export const SkillSelect: FC<SkillSelectProps> = ({
         <SkillSelectSider
           activeTab={activeTab}
           searchKeyword={searchKeyword}
-          onTabChange={setActiveTab}
+          onTabChange={changeTab}
           onSearchChange={setSearchKeyword}
           searchPlaceholder={I18n.t('Search', {}, '搜索')}
         />
