@@ -19,11 +19,12 @@ import { type FC } from 'react';
 import { I18n } from '@coze-arch/i18n';
 import { UICompositionModalSider, UIInput } from '@coze-arch/bot-semi';
 import { IconSearch } from '@douyinfe/semi-icons';
+import { type SkillType } from './types';
 
 export interface SkillSelectSiderProps {
-  activeTab: 'all' | 'builtin' | 'custom';
+  activeTab: SkillType;
   searchKeyword: string;
-  onTabChange: (key: 'all' | 'builtin' | 'custom') => void;
+  onTabChange: (key: SkillType) => void;
   onSearchChange: (keyword: string) => void;
   searchPlaceholder?: string;
 }
@@ -35,11 +36,11 @@ const tabList = [
   },*/
   {
     key: 'builtin',
-    label: I18n.t('workflow_skill_tab_builtin' as any, {}, '内置'),
+    label: I18n.t('builtin_skills_wanwu', {}, 'Skill广场'),
   },
   {
     key: 'custom',
-    label: I18n.t('workflow_skill_tab_custom' as any, {}, '自定义'),
+    label: I18n.t('custom_skills_wanwu' as any, {}, '我创建的'),
   },
 ];
 
@@ -77,7 +78,7 @@ export const SkillSelectSider: FC<SkillSelectSiderProps> = ({
                   : 'px-[12px] py-[10px] rounded-[8px] text-[14px] mb-[8px] text-[var(--Text-coz-text-primary,#1d2129)] cursor-pointer'
               }
               onClick={() => {
-                onTabChange(item.key as 'all' | 'builtin' | 'custom');
+                onTabChange(item.key as SkillType);
               }}
             >
               {item.label}
