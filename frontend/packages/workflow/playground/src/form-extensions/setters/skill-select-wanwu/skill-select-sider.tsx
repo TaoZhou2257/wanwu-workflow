@@ -36,11 +36,11 @@ const tabList = [
   },*/
   {
     key: 'builtin',
-    label: I18n.t('builtin_wanwu', {}, '内置'),
+    label: I18n.t('builtin_skills_wanwu', {}, 'Skill广场'),
   },
   {
     key: 'custom',
-    label: I18n.t('custom_wanwu' as any, {}, '自定义'),
+    label: I18n.t('custom_skills_wanwu' as any, {}, '我创建的'),
   },
 ];
 
