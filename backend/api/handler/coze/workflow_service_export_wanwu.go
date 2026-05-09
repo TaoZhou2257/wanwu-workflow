@@ -104,11 +104,17 @@ func ExportWorkFlow(ctx context.Context, c *app.RequestContext) {
 		internalServerErrorResponse(ctx, c, fmt.Errorf("failed to clean workflow schema: %v", err))
 		return
 	}
-	// Wanwu 导出后处理：
+	// Wanwu 导出后处理（HTTP 节点的特殊路径）：
 	// - HTTP 节点 `authOpen=true`：清空 BEARER/CUSTOM/BASIC 的 token 值
 	// - 并补齐每个鉴权数组元素的顶层 `type`，避免前端初始化时报 `param.type === undefined`
 	//
-	// 这里在“序列化后的 map 层”处理，避免改动共享的 VO 结构体。
+	// 为什么不放进上面的 cleanNode switch（即 *vo.Node 那条链路）：
+	//   1. 前端期望的 `param.type` 在 vo.Param 里根本没有对应字段，传 *vo.Node 进去
+	//      即使设上也会在 marshal 时丢失，前端依旧会拿到 undefined。
+	//   2. wanwu 实际导出 JSON 里 auth 结构（含 basicAuthData、input.value.content 等）
+	//      和 vo.Auth 也并不完全对齐，先反序列化到结构体会丢字段。
+	// 因此这里把 schema 先 marshal 成 JSON、再 unmarshal 成 map[string]any，
+	// 在“序列化后的 map 层”做修改，既不污染共享 VO，又能保留/补齐所有原始字段。
 	schemaBytes, err := sonic.Marshal(schema)
 	if err != nil {
 		internalServerErrorResponse(ctx, c, fmt.Errorf("failed to marshal workflow schema bytes: %v", err))
@@ -187,11 +193,21 @@ func cleanNode(node *vo.Node) {
 	}
 }
 
-// cleanWANWUHTTPAuthInSchemaJSON：对 wanwu 导出的 workflow JSON 做 HTTP 鉴权清理与兼容补齐。
-// param.type 这个字段在你们当前 wanwu 导出用到的 Go 结构里并没有对应字段（vo.Param 里只有 name/input/left/right/variables，没有 type）。
-// 所以如果你把 node *vo.Node 传给处理函数，你在 Go struct 里加不了 param.type，最终 marshal 回 JSON 时也就补不回来，前端还是会拿到 undefined。
-// 实现方式：
-// - 直接在 map[string]any 层处理，避免修改共享的 VO 结构体。
+// cleanWANWUHTTPAuthInSchemaJSON 对 wanwu 导出的 workflow JSON 做 HTTP 节点（type="45"）的鉴权清理与字段补齐。
+//
+// 为什么 HTTP 节点要单独走 JSON map 这条路（而不是和其它节点一样在 cleanNode 里用 *vo.Node 改）：
+//  1. 前端初始化鉴权表单时会读取 `param.type`，但 vo.Param 结构体里只有
+//     name / input / left / right / variables，根本没有 type 字段。即使在 Go 侧
+//     给 *vo.Node 设上，marshal 回 JSON 时也会被丢掉，前端依旧拿到 undefined。
+//  2. wanwu 导出 JSON 里 auth 的实际形状（authData.bearerTokenData / basicAuthData /
+//     customData.data，每个元素再带 input.value.content 等）和 vo.Auth 不完全对齐，
+//     先反序列化到结构体会让多余字段被丢弃，再写回时无法保留。
+//
+// 因此实现选择：
+//   - 调用方先 Marshal(schema) → Unmarshal 到 map[string]any，本函数直接在 map 层修改，
+//     既不污染共享 VO 结构体，也能保留 wanwu 原始字段。
+//   - 顶层从 schemaMap["nodes"] 进入，再递归下钻 node["blocks"]
+//     （vo.Node.Blocks 的 JSON tag），保证嵌套在循环/批处理子画布里的 HTTP 节点也会被处理。
 func cleanWANWUHTTPAuthInSchemaJSON(schemaMap map[string]any) {
 	if schemaMap == nil {
 		return
@@ -201,83 +217,123 @@ func cleanWANWUHTTPAuthInSchemaJSON(schemaMap map[string]any) {
 	if !ok {
 		return
 	}
+	cleanWANWUHTTPAuthInNodesSlice(nodes)
+}
 
+// cleanWANWUHTTPAuthInNodesSlice 递归处理节点列表。
+//
+// 顶层画布的 schema.nodes 与复合节点（循环 type="21"、批处理等）的 node.blocks
+// 在 JSON 上是同构的——都是 []*vo.Node 序列化出的对象数组——所以共用同一套逻辑：
+//   - 当前节点本身若是 HTTP（type="45"），交给 cleanWANWUHTTPAuthInSingleNodeMap 处理；
+//   - 不论当前节点是不是复合节点，只要带有 blocks 子数组就继续下钻。
+//
+// 这里不限定父节点 type，是为了让任意带 blocks 的复合节点（包括将来新增的类型）
+// 内部嵌套的 HTTP 节点都能被覆盖到，避免漏改。
+func cleanWANWUHTTPAuthInNodesSlice(nodes []any) {
 	for _, nodeAny := range nodes {
 		node, ok := nodeAny.(map[string]any)
 		if !ok {
 			continue
 		}
-		nodeType, _ := node["type"].(string)
-		if nodeType != "45" { // HTTP 请求
-			continue
+		cleanWANWUHTTPAuthInSingleNodeMap(node)
+		// 非复合节点序列化时因 `omitempty` 不会出现 "blocks" 键，断言会直接失败跳过；
+		// 复合节点（如循环）则在此处下钻进入子画布。
+		if blocks, ok := node["blocks"].([]any); ok && len(blocks) > 0 {
+			cleanWANWUHTTPAuthInNodesSlice(blocks)
+		}
+	}
+}
+
+// cleanWANWUHTTPAuthInSingleNodeMap 对单个 HTTP 节点（type="45"）做鉴权字段清理与补齐。
+//
+// 处理路径（仅当节点存在且 authOpen=true 时才生效）：
+//
+//	node.data.inputs.auth.authData.{bearerTokenData[] | basicAuthData[] | customData.data[]}
+//
+// 对每个 param 元素：
+//   - 把 input.value.content 置空（隐藏 token / 密钥，避免随 schema 一并导出）；
+//   - 把 input.type 同步到顶层 param.type（前端表单初始化依赖该字段，但 vo.Param
+//     上没有此字段，所以必须在 JSON map 层手工补齐）。
+//
+// 沿途每一层都用类型断言软失败，遇到结构缺失就直接 return，确保对不规则导出 JSON 也不会 panic。
+func cleanWANWUHTTPAuthInSingleNodeMap(node map[string]any) {
+	nodeType, _ := node["type"].(string)
+	if nodeType != "45" { // HTTP 请求
+		return
+	}
+
+	data, ok := node["data"].(map[string]any)
+	if !ok {
+		return
+	}
+	inputs, ok := data["inputs"].(map[string]any)
+	if !ok {
+		return
+	}
+	auth, ok := inputs["auth"].(map[string]any)
+	if !ok {
+		return
+	}
+
+	// 没开鉴权就没有 token 需要清，直接放行；同时也跳过 param.type 补齐，
+	// 因为前端只在 authOpen 分支会读这些字段。
+	authOpen, _ := auth["authOpen"].(bool)
+	if !authOpen {
+		return
+	}
+
+	authData, ok := auth["authData"].(map[string]any)
+	if !ok {
+		return
+	}
+
+	// clearTokenValue 处理单个 param：清空敏感值 + 把 input.type 抬到顶层 param.type。
+	clearTokenValue := func(param map[string]any) {
+		if param == nil {
+			return
+		}
+		input, ok := param["input"].(map[string]any)
+		if !ok {
+			return
 		}
 
-		data, ok := node["data"].(map[string]any)
-		if !ok {
-			continue
-		}
-		inputs, ok := data["inputs"].(map[string]any)
-		if !ok {
-			continue
-		}
-		auth, ok := inputs["auth"].(map[string]any)
-		if !ok {
-			continue
+		// 前端初始化需要顶层 param.type；wanwu 导出源只在 input.type 里提供。
+		// 这一步是这条链路必须走 map 而不是 *vo.Node 的根本原因。
+		if inputType, ok := input["type"]; ok {
+			param["type"] = inputType
 		}
 
-		authOpen, _ := auth["authOpen"].(bool)
-		if !authOpen {
-			continue
-		}
-
-		authData, ok := auth["authData"].(map[string]any)
+		value, ok := input["value"].(map[string]any)
 		if !ok {
-			continue
+			return
 		}
+		// 注意：保留 value 其它字段（如 type/rawMeta），仅清掉真正的密文。
+		value["content"] = ""
+	}
 
-		// 清空单个鉴权条目的 token/值（并补齐前端需要的 param.type）。
-		clearTokenValue := func(param map[string]any) {
-			if param == nil {
-				return
-			}
-			input, ok := param["input"].(map[string]any)
+	// processParamList 遍历 authData 下某个数组字段（如 bearerTokenData）里的所有 param。
+	processParamList := func(container map[string]any, arrayKey string) {
+		arr, ok := container[arrayKey].([]any)
+		if !ok {
+			return
+		}
+		for _, itemAny := range arr {
+			item, ok := itemAny.(map[string]any)
 			if !ok {
-				return
+				continue
 			}
-
-			// 前端初始化需要顶层 param.type；wanwu 导出源只在 input.type 里提供。
-			if inputType, ok := input["type"]; ok {
-				param["type"] = inputType
-			}
-
-			value, ok := input["value"].(map[string]any)
-			if !ok {
-				return
-			}
-			value["content"] = ""
+			clearTokenValue(item)
 		}
+	}
 
-		processParamList := func(container map[string]any, arrayKey string) {
-			arr, ok := container[arrayKey].([]any)
-			if !ok {
-				return
-			}
-			for _, itemAny := range arr {
-				item, ok := itemAny.(map[string]any)
-				if !ok {
-					continue
-				}
-				clearTokenValue(item)
-			}
-		}
-
-		// 前端会遍历以下数组（只要导出 JSON 里存在相应字段）。
-		processParamList(authData, "bearerTokenData")
-		processParamList(authData, "basicAuthData")
-		if customData, ok := authData["customData"].(map[string]any); ok {
-			processParamList(customData, "data")
-		}
-
+	// 前端会遍历以下三类鉴权数组（只要导出 JSON 里存在相应字段）：
+	//   - bearerTokenData：Bearer Token 鉴权
+	//   - basicAuthData：HTTP Basic 鉴权
+	//   - customData.data：自定义 Header / Query 鉴权
+	processParamList(authData, "bearerTokenData")
+	processParamList(authData, "basicAuthData")
+	if customData, ok := authData["customData"].(map[string]any); ok {
+		processParamList(customData, "data")
 	}
 }
 
