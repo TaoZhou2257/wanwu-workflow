@@ -133,7 +133,7 @@ func (w *ApplicationService) GetWorkflowVersionSchemaByWanwu(ctx context.Context
 		if idx := strings.LastIndex(commitID, "_"); idx != -1 && idx < len(commitID)-1 {
 			version = commitID[idx+1:]
 		} else {
-			return nil, fmt.Errorf("invalid commit_id format: %s", req.CommitID)
+			return nil, fmt.Errorf("invalid commit_id format: %s", commitID)
 		}
 		policy = &vo.GetPolicy{
 			ID:      mustParseInt64(req.GetWorkflowID()),
@@ -248,10 +248,10 @@ type MGetWorkflowLatestVersionResponse struct {
 }
 
 type WorkflowVersionInfo struct {
-	WorkflowID         string `thrift:"workflow_id,1" form:"workflow_id" json:"workflow_id" query:"workflow_id"`
-	Version            string `thrift:"version,2" form:"version" json:"version" query:"version"`
-	VersionDescription string `thrift:"version_description,3" form:"version_description" json:"version_description" query:"version_description"`
-	CreatedAt          int64  `thrift:"created_at,4" form:"created_at" json:"created_at" query:"created_at"`
-	CommitID           string `thrift:"commit_id,5" form:"commit_id" json:"commit_id" query:"commit_id"`
+	WorkflowID         string               `thrift:"workflow_id,1" form:"workflow_id" json:"workflow_id" query:"workflow_id"`
+	Version            string               `thrift:"version,2" form:"version" json:"version" query:"version"`
+	VersionDescription string               `thrift:"version_description,3" form:"version_description" json:"version_description" query:"version_description"`
+	CreatedAt          int64                `thrift:"created_at,4" form:"created_at" json:"created_at" query:"created_at"`
+	CommitID           string               `thrift:"commit_id,5" form:"commit_id" json:"commit_id" query:"commit_id"`
 	Type               workflow.OperateType `thrift:"type,6" form:"type" json:"type" query:"type"`
 }

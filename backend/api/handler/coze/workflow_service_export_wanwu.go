@@ -104,25 +104,18 @@ func ExportWorkFlow(ctx context.Context, c *app.RequestContext) {
 		internalServerErrorResponse(ctx, c, fmt.Errorf("failed to clean workflow schema: %v", err))
 		return
 	}
-	// Wanwu 导出后处理：
-	// - HTTP 节点 `authOpen=true`：清空 BEARER/CUSTOM/BASIC 的 token 值
-	// - 并补齐每个鉴权数组元素的顶层 `type`，避免前端初始化时报 `param.type === undefined`
-	//
-	// 这里在“序列化后的 map 层”处理，避免改动共享的 VO 结构体。
-	schemaBytes, err := sonic.Marshal(schema)
+	// HTTP 节点导出后处理：
+	// - authOpen=true 时清空 token 内容；
+	// - 补齐 param.type，避免前端初始化鉴权表单报 undefined。
+	// 这里在 JSON map 层处理，保证保留 wanwu 导出里的原始字段。
+	schemaStr, err = sonic.MarshalString(schema)
 	if err != nil {
-		internalServerErrorResponse(ctx, c, fmt.Errorf("failed to marshal workflow schema bytes: %v", err))
-		return
-	}
-	var schemaMap map[string]any
-	if err := sonic.Unmarshal(schemaBytes, &schemaMap); err != nil {
-		internalServerErrorResponse(ctx, c, fmt.Errorf("failed to unmarshal workflow schema map: %v", err))
-		return
-	}
-	cleanWANWUHTTPAuthInSchemaJSON(schemaMap)
-
-	if schemaStr, err = sonic.MarshalString(schemaMap); err != nil {
 		internalServerErrorResponse(ctx, c, fmt.Errorf("failed to marshal workflow schema string: %v", err))
+		return
+	}
+	schemaStr, err = patchWANWUHTTPAuthForExportInSchemaString(schemaStr)
+	if err != nil {
+		internalServerErrorResponse(ctx, c, fmt.Errorf("failed to patch workflow schema string: %v", err))
 		return
 	}
 	// 创建导出数据
@@ -187,97 +180,89 @@ func cleanNode(node *vo.Node) {
 	}
 }
 
-// cleanWANWUHTTPAuthInSchemaJSON：对 wanwu 导出的 workflow JSON 做 HTTP 鉴权清理与兼容补齐。
-// param.type 这个字段在你们当前 wanwu 导出用到的 Go 结构里并没有对应字段（vo.Param 里只有 name/input/left/right/variables，没有 type）。
-// 所以如果你把 node *vo.Node 传给处理函数，你在 Go struct 里加不了 param.type，最终 marshal 回 JSON 时也就补不回来，前端还是会拿到 undefined。
-// 实现方式：
-// - 直接在 map[string]any 层处理，避免修改共享的 VO 结构体。
-func cleanWANWUHTTPAuthInSchemaJSON(schemaMap map[string]any) {
-	if schemaMap == nil {
-		return
+func patchWANWUHTTPAuthForExportInSchemaString(schemaStr string) (string, error) {
+	if schemaStr == "" {
+		return schemaStr, nil
 	}
+	var schemaMap map[string]any
+	if err := sonic.Unmarshal([]byte(schemaStr), &schemaMap); err != nil {
+		return "", err
+	}
+	patchWANWUHTTPAuthForExportInNodes(schemaMap["nodes"])
+	patched, err := sonic.MarshalString(schemaMap)
+	if err != nil {
+		return "", err
+	}
+	return patched, nil
+}
 
-	nodes, ok := schemaMap["nodes"].([]any)
+func patchWANWUHTTPAuthForExportInNodes(nodesAny any) {
+	nodes, ok := nodesAny.([]any)
 	if !ok {
 		return
 	}
-
 	for _, nodeAny := range nodes {
 		node, ok := nodeAny.(map[string]any)
 		if !ok {
 			continue
 		}
-		nodeType, _ := node["type"].(string)
-		if nodeType != "45" { // HTTP 请求
-			continue
-		}
+		patchWANWUHTTPAuthForExportInSingleNode(node)
+		patchWANWUHTTPAuthForExportInNodes(node["blocks"])
+	}
+}
 
-		data, ok := node["data"].(map[string]any)
+func patchWANWUHTTPAuthForExportInSingleNode(node map[string]any) {
+	nodeType, _ := node["type"].(string)
+	if nodeType != "45" {
+		return
+	}
+	data, ok := node["data"].(map[string]any)
+	if !ok {
+		return
+	}
+	inputs, ok := data["inputs"].(map[string]any)
+	if !ok {
+		return
+	}
+	auth, ok := inputs["auth"].(map[string]any)
+	if !ok {
+		return
+	}
+	authOpen, _ := auth["authOpen"].(bool)
+	if !authOpen {
+		return
+	}
+	authData, ok := auth["authData"].(map[string]any)
+	if !ok {
+		return
+	}
+	patchWANWUHTTPAuthForExportInList(authData, "bearerTokenData")
+	patchWANWUHTTPAuthForExportInList(authData, "basicAuthData")
+	if customData, ok := authData["customData"].(map[string]any); ok {
+		patchWANWUHTTPAuthForExportInList(customData, "data")
+	}
+}
+
+func patchWANWUHTTPAuthForExportInList(container map[string]any, listKey string) {
+	items, ok := container[listKey].([]any)
+	if !ok {
+		return
+	}
+	for _, itemAny := range items {
+		param, ok := itemAny.(map[string]any)
 		if !ok {
 			continue
 		}
-		inputs, ok := data["inputs"].(map[string]any)
+		input, ok := param["input"].(map[string]any)
 		if !ok {
 			continue
 		}
-		auth, ok := inputs["auth"].(map[string]any)
-		if !ok {
-			continue
+		if inputType, ok := input["type"]; ok {
+			param["type"] = inputType
 		}
-
-		authOpen, _ := auth["authOpen"].(bool)
-		if !authOpen {
-			continue
-		}
-
-		authData, ok := auth["authData"].(map[string]any)
-		if !ok {
-			continue
-		}
-
-		// 清空单个鉴权条目的 token/值（并补齐前端需要的 param.type）。
-		clearTokenValue := func(param map[string]any) {
-			if param == nil {
-				return
-			}
-			input, ok := param["input"].(map[string]any)
-			if !ok {
-				return
-			}
-
-			// 前端初始化需要顶层 param.type；wanwu 导出源只在 input.type 里提供。
-			if inputType, ok := input["type"]; ok {
-				param["type"] = inputType
-			}
-
-			value, ok := input["value"].(map[string]any)
-			if !ok {
-				return
-			}
+		if value, ok := input["value"].(map[string]any); ok {
 			value["content"] = ""
 		}
-
-		processParamList := func(container map[string]any, arrayKey string) {
-			arr, ok := container[arrayKey].([]any)
-			if !ok {
-				return
-			}
-			for _, itemAny := range arr {
-				item, ok := itemAny.(map[string]any)
-				if !ok {
-					continue
-				}
-				clearTokenValue(item)
-			}
-		}
-
-		// 前端会遍历以下数组（只要导出 JSON 里存在相应字段）。
-		processParamList(authData, "bearerTokenData")
-		processParamList(authData, "basicAuthData")
-		if customData, ok := authData["customData"].(map[string]any); ok {
-			processParamList(customData, "data")
-		}
-
 	}
 }
 
@@ -460,6 +445,8 @@ func cleanAgentNode(node *vo.Node) {
 		}
 	}
 
-	// 2. 将agentToolParams置为空数组
-	node.Data.Inputs.AgentToolParams = nil
+	// 2. 将agentToolParams置为空数组（WanWuAgent 可能为空，需防止空指针）
+	if node.Data.Inputs.WanWuAgent != nil {
+		node.Data.Inputs.AgentToolParams = nil
+	}
 }
