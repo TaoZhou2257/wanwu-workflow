@@ -708,7 +708,7 @@ func patchWANWUHTTPAuthParamTypeInSchemaString(schemaStr string) (string, error)
 	if err := sonic.Unmarshal([]byte(schemaStr), &schemaMap); err != nil {
 		return "", err
 	}
-	patchWANWUHTTPAuthParamTypeInSchemaMapForWanwu(schemaMap)
+	patchWANWUHTTPAuthParamTypeInNodes(schemaMap["nodes"])
 	patched, err := sonic.MarshalString(schemaMap)
 	if err != nil {
 		return "", err
@@ -716,31 +716,22 @@ func patchWANWUHTTPAuthParamTypeInSchemaString(schemaStr string) (string, error)
 	return patched, nil
 }
 
-func patchWANWUHTTPAuthParamTypeInSchemaMapForWanwu(schemaMap map[string]any) {
-	if schemaMap == nil {
-		return
-	}
-	nodes, ok := schemaMap["nodes"].([]any)
+func patchWANWUHTTPAuthParamTypeInNodes(nodesAny any) {
+	nodes, ok := nodesAny.([]any)
 	if !ok {
 		return
 	}
-	patchWANWUHTTPAuthParamTypeInNodesForWanwu(nodes)
-}
-
-func patchWANWUHTTPAuthParamTypeInNodesForWanwu(nodes []any) {
 	for _, nodeAny := range nodes {
-		nodeMap, ok := nodeAny.(map[string]any)
+		node, ok := nodeAny.(map[string]any)
 		if !ok {
 			continue
 		}
-		patchWANWUHTTPAuthParamTypeInNodeForWanwu(nodeMap)
-		if blocks, ok := nodeMap["blocks"].([]any); ok && len(blocks) > 0 {
-			patchWANWUHTTPAuthParamTypeInNodesForWanwu(blocks)
-		}
+		patchWANWUHTTPAuthParamTypeInSingleNode(node)
+		patchWANWUHTTPAuthParamTypeInNodes(node["blocks"])
 	}
 }
 
-func patchWANWUHTTPAuthParamTypeInNodeForWanwu(node map[string]any) {
+func patchWANWUHTTPAuthParamTypeInSingleNode(node map[string]any) {
 	nodeType, _ := node["type"].(string)
 	if nodeType != "45" {
 		return
@@ -761,38 +752,30 @@ func patchWANWUHTTPAuthParamTypeInNodeForWanwu(node map[string]any) {
 	if !ok {
 		return
 	}
+	patchWANWUHTTPAuthParamTypeInList(authData, "bearerTokenData")
+	patchWANWUHTTPAuthParamTypeInList(authData, "basicAuthData")
+	if customData, ok := authData["customData"].(map[string]any); ok {
+		patchWANWUHTTPAuthParamTypeInList(customData, "data")
+	}
+}
 
-	patchParamType := func(param map[string]any) {
-		if param == nil {
-			return
+func patchWANWUHTTPAuthParamTypeInList(container map[string]any, listKey string) {
+	items, ok := container[listKey].([]any)
+	if !ok {
+		return
+	}
+	for _, itemAny := range items {
+		param, ok := itemAny.(map[string]any)
+		if !ok {
+			continue
 		}
 		input, ok := param["input"].(map[string]any)
 		if !ok {
-			return
+			continue
 		}
 		if inputType, ok := input["type"]; ok {
 			param["type"] = inputType
 		}
-	}
-
-	patchParamList := func(container map[string]any, arrayKey string) {
-		arr, ok := container[arrayKey].([]any)
-		if !ok {
-			return
-		}
-		for _, itemAny := range arr {
-			param, ok := itemAny.(map[string]any)
-			if !ok {
-				continue
-			}
-			patchParamType(param)
-		}
-	}
-
-	patchParamList(authData, "bearerTokenData")
-	patchParamList(authData, "basicAuthData")
-	if customData, ok := authData["customData"].(map[string]any); ok {
-		patchParamList(customData, "data")
 	}
 }
 
